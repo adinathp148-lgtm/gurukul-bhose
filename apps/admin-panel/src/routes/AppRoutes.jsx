@@ -36,21 +36,15 @@ import { CMSSEOPage } from '@shared/pages/admin/cms/CMSSEOPage';
 import { CMSSettingsPage } from '@shared/pages/admin/cms/CMSSettingsPage';
 import { CMSActivityLogsPage } from '@shared/pages/admin/cms/CMSActivityLogsPage';
 
-// Redirect to Telecaller workspace
-const TelecallerRedirect = () => {
-  React.useEffect(() => {
-    window.location.href = '/telecaller';
-  }, []);
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-50">
-      <div className="text-center p-6 bg-white rounded-2xl shadow-xl max-w-sm">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600 mx-auto mb-3"></div>
-        <p className="text-sm font-bold text-slate-800">समुपदेशक पोर्टलकडे पुनर्निर्देशित करत आहे...</p>
-        <p className="text-xs text-slate-500 mt-1">Redirecting to Telecaller Portal...</p>
-      </div>
-    </div>
-  );
-};
+// Telecaller Dedicated Workspace Pages
+import { TelecallerLayout } from '@shared/layouts/TelecallerLayout';
+import { TelecallerDashboardPage } from '@shared/pages/telecaller/TelecallerDashboardPage';
+import { TelecallerLeadsPage } from '@shared/pages/telecaller/TelecallerLeadsPage';
+import { TelecallerLeadDetailsPage } from '@shared/pages/telecaller/TelecallerLeadDetailsPage';
+import { TelecallerFollowUpsPage } from '@shared/pages/telecaller/TelecallerFollowUpsPage';
+import { TelecallerProfilePage } from '@shared/pages/telecaller/TelecallerProfilePage';
+import { TelecallerChangePasswordPage } from '@shared/pages/telecaller/TelecallerChangePasswordPage';
+import { TelecallerLoginPage } from '@shared/pages/auth/TelecallerLoginPage';
 
 export const AppRoutes = () => {
   return (
@@ -59,7 +53,26 @@ export const AppRoutes = () => {
       <Route path="/login" element={<AdminLoginPage />} />
       <Route path="/admin/login" element={<AdminLoginPage />} />
       <Route path="/super-admin/login" element={<SuperAdminLoginPage />} />
-      <Route path="/telecaller/*" element={<TelecallerRedirect />} />
+      <Route path="/telecaller/login" element={<TelecallerLoginPage />} />
+
+      {/* 2. Protected Telecaller Dedicated Workspace (Accessible to Telecallers, Admin & Super Admin) */}
+      <Route
+        path="/telecaller"
+        element={
+          <ProtectedRoute allowedRoles={['telecaller', 'admin', 'super_admin', 'superadmin']}>
+            <TelecallerLayout />
+          </ProtectedRoute>
+        }
+      >
+        <Route index element={<Navigate to="/telecaller/dashboard" replace />} />
+        <Route path="dashboard" element={<TelecallerDashboardPage />} />
+        <Route path="leads" element={<TelecallerLeadsPage />} />
+        <Route path="leads/:leadId" element={<TelecallerLeadDetailsPage />} />
+        <Route path="follow-ups" element={<TelecallerFollowUpsPage />} />
+        <Route path="history" element={<TelecallerFollowUpsPage />} />
+        <Route path="profile" element={<TelecallerProfilePage />} />
+        <Route path="change-password" element={<TelecallerChangePasswordPage />} />
+      </Route>
 
       {/* 2. Protected Admin & Super Admin Workspace */}
       <Route

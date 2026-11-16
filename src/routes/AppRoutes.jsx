@@ -59,6 +59,7 @@ import { CMSActivityLogsPage } from '../pages/admin/cms/CMSActivityLogsPage';
 import { TelecallerDashboardPage } from '../pages/telecaller/TelecallerDashboardPage';
 import { TelecallerProfilePage } from '../pages/telecaller/TelecallerProfilePage';
 import { TelecallerLeadsPage } from '../pages/telecaller/TelecallerLeadsPage';
+import { TelecallerLeadDetailsPage } from '../pages/telecaller/TelecallerLeadDetailsPage';
 import { TelecallerFollowUpsPage } from '../pages/telecaller/TelecallerFollowUpsPage';
 import { TelecallerChangePasswordPage } from '../pages/telecaller/TelecallerChangePasswordPage';
 
@@ -157,6 +158,7 @@ export const AppRoutes = () => {
         <Route index element={<Navigate to="/telecaller/dashboard" replace />} />
         <Route path="dashboard" element={<TelecallerDashboardPage />} />
         <Route path="leads" element={<TelecallerLeadsPage />} />
+        <Route path="leads/:leadId" element={<TelecallerLeadDetailsPage />} />
         <Route path="follow-ups" element={<TelecallerFollowUpsPage />} />
         <Route path="history" element={<TelecallerFollowUpsPage />} />
         <Route path="profile" element={<TelecallerProfilePage />} />

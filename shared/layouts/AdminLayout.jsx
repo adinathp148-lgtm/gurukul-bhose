@@ -17,7 +17,8 @@ import {
   Shield, 
   ChevronRight,
   ChevronDown,
-  Flame
+  Flame,
+  Headset
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useCRM } from '../contexts/CRMContext';
@@ -65,6 +66,12 @@ export const AdminLayout = () => {
       title: isMarathi ? 'टेलिकॉलर व्यवस्थापन (Telecallers)' : 'Telecallers Management',
       path: '/admin/telecallers',
       icon: UserCheck,
+      roles: ['super_admin', 'superadmin', 'admin']
+    },
+    {
+      title: isMarathi ? 'टेलिकॉलर पोर्टल (Telecaller CRM)' : 'Telecaller Portal (CRM)',
+      path: '/telecaller/dashboard',
+      icon: Headset,
       roles: ['super_admin', 'superadmin', 'admin']
     },
     {

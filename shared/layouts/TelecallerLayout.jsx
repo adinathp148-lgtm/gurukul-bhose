@@ -26,7 +26,7 @@ import { LanguageSwitcher } from '../components/common/LanguageSwitcher';
 import { NotificationCenter } from '../components/common/NotificationCenter';
 
 export const TelecallerLayout = () => {
-  const { currentUser, userProfile, logout } = useAuth();
+  const { currentUser, userProfile, logout, isAdmin, isSuperAdmin } = useAuth();
   const { leads, getMetrics } = useCRM();
   const { isMarathi } = useLanguage();
   const location = useLocation();
@@ -50,6 +50,12 @@ export const TelecallerLayout = () => {
   };
 
   const navItems = [
+    ...((isAdmin || isSuperAdmin) ? [{
+      title: isMarathi ? '← अ‍ॅडमिन डॅशबोर्ड' : '← Back to Admin Panel',
+      path: '/admin/dashboard',
+      icon: LayoutDashboard,
+      badge: 'Admin'
+    }] : []),
     {
       title: isMarathi ? 'माझे डॅशबोर्ड (My Dashboard)' : 'My Dashboard',
       path: `${prefix}/dashboard` || '/dashboard',
@@ -257,6 +263,15 @@ export const TelecallerLayout = () => {
 
             {/* In-App Notification Center */}
             <NotificationCenter isTelecaller={true} />
+
+            {(isAdmin || isSuperAdmin) && (
+              <Link
+                to="/admin/dashboard"
+                className="h-8 inline-flex items-center gap-1.5 px-3 rounded-lg text-xs font-bold bg-gurukul-navy-900 text-white hover:bg-gurukul-navy-800 transition-colors shadow-xs"
+              >
+                <span>{isMarathi ? 'अ‍ॅडमिन पॅनेल' : 'Admin Panel'}</span>
+              </Link>
+            )}
 
             <Badge variant="Telecaller">
               TELECALLER

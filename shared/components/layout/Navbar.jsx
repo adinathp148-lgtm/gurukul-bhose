@@ -35,11 +35,11 @@ export const Navbar = ({ showAdminLink = true }) => {
 
   const isLocal = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
   const adminBaseUrl = import.meta.env?.VITE_ADMIN_PANEL_URL || (isLocal ? 'http://localhost:3001' : 'https://admin.gurukulbhose.com');
-  const telecallerBaseUrl = import.meta.env?.VITE_TELECALLER_PANEL_URL || (isLocal ? 'http://localhost:3002' : 'https://admin.gurukulbhose.com/telecaller');
+  const telecallerBaseUrl = import.meta.env?.VITE_TELECALLER_PANEL_URL || `${adminBaseUrl}/telecaller`;
 
   const crmUrls = {
     admin: `${adminBaseUrl}/admin/leads`,
-    telecaller: isLocal && telecallerBaseUrl.includes(':3002') ? `${telecallerBaseUrl}/leads` : `${telecallerBaseUrl}/leads`,
+    telecaller: `${telecallerBaseUrl}/leads`,
     login: `${adminBaseUrl}/admin/login`
   };
 
