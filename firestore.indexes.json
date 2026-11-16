@@ -160,6 +160,102 @@
         { "fieldPath": "recipientId", "order": "ASCENDING" },
         { "fieldPath": "createdAt", "order": "DESCENDING" }
       ]
+    },
+    {
+      "collectionGroup": "campus_visits",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "requestedDate", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "campus_visits",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "assignedStaffId", "order": "ASCENDING" },
+        { "fieldPath": "requestedDate", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "campus_visits",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "requestedDate", "order": "ASCENDING" },
+        { "fieldPath": "timeSlot", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "campus_visits",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "leadId", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "visit_slot_reservations",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "scheduledDate", "order": "ASCENDING" },
+        { "fieldPath": "timeSlot", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "admission_applications",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "currentStage", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "admission_applications",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "applyingClass", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "admission_applications",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "leadId", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "admission_stage_history",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "applicationId", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "visit_feedback",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "visitId", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "audit_logs",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "action", "order": "ASCENDING" },
+        { "fieldPath": "timestamp", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "audit_logs",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "userId", "order": "ASCENDING" },
+        { "fieldPath": "timestamp", "order": "DESCENDING" }
+      ]
     }
   ],
   "fieldOverrides": []

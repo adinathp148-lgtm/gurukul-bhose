@@ -21,6 +21,7 @@ import { VideosPage } from '../pages/VideosPage';
 import { NoticesPage } from '../pages/NoticesPage';
 import { ContactPage } from '../pages/ContactPage';
 import { AdmissionEnquiryPage } from '../pages/AdmissionEnquiryPage';
+import { CampusVisitPage } from '../pages/CampusVisitPage';
 
 // Dedicated Auth Login Pages
 import { SuperAdminLoginPage } from '../pages/auth/SuperAdminLoginPage';
@@ -34,10 +35,26 @@ import { TelecallersListPage } from '../pages/admin/TelecallersListPage';
 import { CreateTelecallerPage } from '../pages/admin/CreateTelecallerPage';
 import { TelecallerDetailsPage } from '../pages/admin/TelecallerDetailsPage';
 import { LeadsPage } from '../pages/admin/LeadsPage';
+import { LeadDetailsPage } from '../pages/admin/LeadDetailsPage';
 import { FollowUpsPage } from '../pages/admin/FollowUpsPage';
 import { AdmissionsPage } from '../pages/admin/AdmissionsPage';
 import { ParentCommunicationPage } from '../pages/admin/ParentCommunicationPage';
 import { MetaIntegrationPage } from '../pages/admin/MetaIntegrationPage';
+import { CallMonitoringPage } from '../pages/admin/CallMonitoringPage';
+import { TelecallerPerformancePage } from '../pages/admin/TelecallerPerformancePage';
+import { AdminVisitsPage } from '../pages/admin/AdminVisitsPage';
+import { AdminVisitDeskPage } from '../pages/admin/AdminVisitDeskPage';
+import { AdminVisitCalendarPage } from '../pages/admin/AdminVisitCalendarPage';
+import { AdminVisitSettingsPage } from '../pages/admin/AdminVisitSettingsPage';
+
+// Phase 9 Dedicated Admin Workspace Pages
+import { AdminEnquiriesPage } from '../pages/admin/AdminEnquiriesPage';
+import { AdminReportsPage } from '../pages/admin/AdminReportsPage';
+import { AdminNotificationsPage } from '../pages/admin/AdminNotificationsPage';
+import { AdminAuditLogsPage } from '../pages/admin/AdminAuditLogsPage';
+import { AdminSystemSettingsPage } from '../pages/admin/AdminSystemSettingsPage';
+import { AdminProfilePage } from '../pages/admin/AdminProfilePage';
+import { AdminManagementPage } from '../pages/admin/AdminManagementPage';
 
 // Website CMS Modules (Phase 4)
 import { CMSDashboardPage } from '../pages/admin/cms/CMSDashboardPage';
@@ -59,7 +76,11 @@ import { CMSActivityLogsPage } from '../pages/admin/cms/CMSActivityLogsPage';
 import { TelecallerDashboardPage } from '../pages/telecaller/TelecallerDashboardPage';
 import { TelecallerProfilePage } from '../pages/telecaller/TelecallerProfilePage';
 import { TelecallerLeadsPage } from '../pages/telecaller/TelecallerLeadsPage';
+import { TelecallerLeadDetailsPage } from '../pages/telecaller/TelecallerLeadDetailsPage';
 import { TelecallerFollowUpsPage } from '../pages/telecaller/TelecallerFollowUpsPage';
+import { TelecallerCallsPage } from '../pages/telecaller/TelecallerCallsPage';
+import { TelecallerCalendarPage } from '../pages/telecaller/TelecallerCalendarPage';
+import { TelecallerVisitsPage } from '../pages/telecaller/TelecallerVisitsPage';
 import { TelecallerChangePasswordPage } from '../pages/telecaller/TelecallerChangePasswordPage';
 
 export const AppRoutes = () => {
@@ -84,6 +105,8 @@ export const AppRoutes = () => {
         <Route path="/notices" element={<NoticesPage />} />
         <Route path="/contact" element={<ContactPage />} />
         <Route path="/admission-enquiry" element={<AdmissionEnquiryPage />} />
+        <Route path="/campus-visit" element={<CampusVisitPage />} />
+        <Route path="/schedule-visit" element={<CampusVisitPage />} />
       </Route>
 
       {/* 2. Public Authentication Portals */}
@@ -109,10 +132,30 @@ export const AppRoutes = () => {
         <Route path="telecallers/:id" element={<TelecallerDetailsPage />} />
         <Route path="users" element={<Navigate to="/admin/telecallers" replace />} />
 
-        {/* CRM Modules */}
+        {/* Phase 9 & CRM Modules */}
+        <Route path="enquiries" element={<AdminEnquiriesPage />} />
         <Route path="leads" element={<LeadsPage />} />
+        <Route path="leads/:leadId" element={<LeadDetailsPage />} />
+        <Route path="call-monitoring" element={<CallMonitoringPage />} />
+        <Route path="telecaller-performance" element={<TelecallerPerformancePage />} />
         <Route path="follow-ups" element={<FollowUpsPage />} />
         <Route path="admissions" element={<AdmissionsPage />} />
+        <Route path="parent-communication" element={<ParentCommunicationPage />} />
+        
+        {/* Phase 7 Campus Visits */}
+        <Route path="campus-visits" element={<AdminVisitsPage />} />
+        <Route path="visit-desk" element={<AdminVisitDeskPage />} />
+        <Route path="visit-calendar" element={<AdminVisitCalendarPage />} />
+        <Route path="visit-settings" element={<AdminVisitSettingsPage />} />
+
+        {/* Phase 9 Administrative Control Modules */}
+        <Route path="admins" element={<AdminManagementPage />} />
+        <Route path="reports" element={<AdminReportsPage />} />
+        <Route path="notifications" element={<AdminNotificationsPage />} />
+        <Route path="audit-logs" element={<AdminAuditLogsPage />} />
+        <Route path="settings" element={<AdminSystemSettingsPage />} />
+        <Route path="profile" element={<AdminProfilePage />} />
+
         {/* Website CMS Management Modules (Phase 4) */}
         <Route path="cms" element={<CMSDashboardPage />} />
         <Route path="cms/homepage" element={<CMSHomepagePage />} />
@@ -157,6 +200,10 @@ export const AppRoutes = () => {
         <Route index element={<Navigate to="/telecaller/dashboard" replace />} />
         <Route path="dashboard" element={<TelecallerDashboardPage />} />
         <Route path="leads" element={<TelecallerLeadsPage />} />
+        <Route path="leads/:leadId" element={<TelecallerLeadDetailsPage />} />
+        <Route path="calls" element={<TelecallerCallsPage />} />
+        <Route path="calendar" element={<TelecallerCalendarPage />} />
+        <Route path="visits" element={<TelecallerVisitsPage />} />
         <Route path="follow-ups" element={<TelecallerFollowUpsPage />} />
         <Route path="history" element={<TelecallerFollowUpsPage />} />
         <Route path="profile" element={<TelecallerProfilePage />} />

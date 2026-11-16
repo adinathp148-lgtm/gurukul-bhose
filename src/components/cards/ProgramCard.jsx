@@ -106,4 +106,3 @@ export const ProgramCard = ({ program }) => {
     </div>
   );
 };
-

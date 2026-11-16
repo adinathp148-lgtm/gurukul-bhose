@@ -14,8 +14,48 @@ import {
   orderBy,
   limit
 } from '../firebase/config';
-import { demoLeads, demoFollowUps, demoAdmissions, demoUsers } from '../data/initialData';
+import { 
+  demoLeads, 
+  demoFollowUps, 
+  demoAdmissions, 
+  demoUsers,
+  demoCampusVisits,
+  demoAdmissionApplications 
+} from '../data/initialData';
 import { useAuth } from './AuthContext';
+import {
+  VISIT_PURPOSES,
+  VISIT_STATUSES,
+  VISIT_INTEREST_LEVELS,
+  VISIT_NEXT_ACTIONS,
+  DEFAULT_SLOTS,
+  DEFAULT_VISIT_SCHEDULE_SETTINGS,
+  generateVisitNumber,
+  isHolidayOrClosed,
+  isPastDate,
+  getSlotAvailability,
+  createCampusVisit as serviceCreateCampusVisit,
+  approveCampusVisit as serviceApproveCampusVisit,
+  rejectCampusVisit as serviceRejectCampusVisit,
+  rescheduleCampusVisit as serviceRescheduleCampusVisit,
+  cancelCampusVisit as serviceCancelCampusVisit,
+  checkInCampusVisit as serviceCheckInCampusVisit,
+  checkOutCampusVisit as serviceCheckOutCampusVisit,
+  submitCampusVisitFeedback as serviceSubmitCampusVisitFeedback,
+  calculateVisitMetrics,
+  exportVisitsToCSV
+} from '../services/firestore/visitService';
+import {
+  ADMISSION_STAGES,
+  STAGE_CONFIG,
+  DOCUMENT_STATUSES,
+  DEFAULT_REQUIRED_DOCUMENTS,
+  getClassRequiredDocuments,
+  generateApplicationNumber,
+  createAdmissionApplication as serviceCreateAdmissionApplication,
+  updateAdmissionStage as serviceUpdateAdmissionStage,
+  reviewAdmissionDocument as serviceReviewAdmissionDocument
+} from '../services/firestore/admissionService';
 import {
   LEAD_STATUS_CONFIG,
   LEAD_STATUS_LIST,
@@ -45,6 +85,17 @@ import {
   exportPerformanceToCSV,
   exportCallMonitoringToCSV
 } from '../services/firestore/crmService';
+import {
+  DEFAULT_SYSTEM_SETTINGS,
+  SYSTEM_AUDIT_ACTIONS,
+  recordAuditLog,
+  fetchSystemAuditLogs,
+  fetchSystemSettings,
+  saveSystemSettings as serviceSaveSystemSettings,
+  broadcastAnnouncement as serviceBroadcastAnnouncement,
+  generateCRMReports,
+  exportReportToCSV
+} from '../services/firestore/systemService';
 
 const CRMContext = createContext(null);
 
@@ -115,6 +166,31 @@ export const CRMProvider = ({ children }) => {
     return saved ? JSON.parse(saved) : [];
   });
 
+  const [visits, setVisits] = useState(() => {
+    const saved = localStorage.getItem('gurukul_crm_campus_visits');
+    return saved ? JSON.parse(saved) : demoCampusVisits;
+  });
+
+  const [visitSettings, setVisitSettings] = useState(() => {
+    const saved = localStorage.getItem('gurukul_crm_visit_settings');
+    return saved ? JSON.parse(saved) : DEFAULT_VISIT_SCHEDULE_SETTINGS;
+  });
+
+  const [visitFeedback, setVisitFeedback] = useState(() => {
+    const saved = localStorage.getItem('gurukul_crm_visit_feedback');
+    return saved ? JSON.parse(saved) : [];
+  });
+
+  const [admissionApplications, setAdmissionApplications] = useState(() => {
+    const saved = localStorage.getItem('gurukul_crm_admission_applications');
+    return saved ? JSON.parse(saved) : demoAdmissionApplications;
+  });
+
+  const [admissionStageHistory, setAdmissionStageHistory] = useState(() => {
+    const saved = localStorage.getItem('gurukul_crm_stage_history');
+    return saved ? JSON.parse(saved) : [];
+  });
+
   const [notifications, setNotifications] = useState(() => {
     const saved = localStorage.getItem('gurukul_crm_notifications');
     return saved ? JSON.parse(saved) : [
@@ -129,6 +205,17 @@ export const CRMProvider = ({ children }) => {
     ];
   });
 
+  // Phase 9: System Settings and Audit Trail
+  const [systemSettings, setSystemSettings] = useState(() => {
+    const saved = localStorage.getItem('gurukul_system_settings');
+    return saved ? JSON.parse(saved) : DEFAULT_SYSTEM_SETTINGS;
+  });
+
+  const [auditLogs, setAuditLogs] = useState(() => {
+    const saved = localStorage.getItem('gurukul_audit_logs');
+    return saved ? JSON.parse(saved) : [];
+  });
+
   // Local storage synchronization
   useEffect(() => { localStorage.setItem('gurukul_crm_leads', JSON.stringify(leads)); }, [leads]);
   useEffect(() => { localStorage.setItem('gurukul_crm_followups', JSON.stringify(followUps)); }, [followUps]);
@@ -141,7 +228,14 @@ export const CRMProvider = ({ children }) => {
   useEffect(() => { localStorage.setItem('gurukul_crm_assignments', JSON.stringify(assignments)); }, [assignments]);
   useEffect(() => { localStorage.setItem('gurukul_crm_status_history', JSON.stringify(statusHistory)); }, [statusHistory]);
   useEffect(() => { localStorage.setItem('gurukul_crm_duplicates', JSON.stringify(duplicates)); }, [duplicates]);
+  useEffect(() => { localStorage.setItem('gurukul_crm_campus_visits', JSON.stringify(visits)); }, [visits]);
+  useEffect(() => { localStorage.setItem('gurukul_crm_visit_settings', JSON.stringify(visitSettings)); }, [visitSettings]);
+  useEffect(() => { localStorage.setItem('gurukul_crm_visit_feedback', JSON.stringify(visitFeedback)); }, [visitFeedback]);
+  useEffect(() => { localStorage.setItem('gurukul_crm_admission_applications', JSON.stringify(admissionApplications)); }, [admissionApplications]);
+  useEffect(() => { localStorage.setItem('gurukul_crm_stage_history', JSON.stringify(admissionStageHistory)); }, [admissionStageHistory]);
   useEffect(() => { localStorage.setItem('gurukul_crm_notifications', JSON.stringify(notifications)); }, [notifications]);
+  useEffect(() => { localStorage.setItem('gurukul_system_settings', JSON.stringify(systemSettings)); }, [systemSettings]);
+  useEffect(() => { localStorage.setItem('gurukul_audit_logs', JSON.stringify(auditLogs)); }, [auditLogs]);
 
   // 2. Live Firestore Subscriptions
   useEffect(() => {
@@ -243,6 +337,26 @@ export const CRMProvider = ({ children }) => {
       }
     }, () => {});
 
+    // K. Phase 9: System Settings subscription
+    const unsubSettings = onSnapshot(doc(db, 'system_settings', 'global_config'), (snapshot) => {
+      if (snapshot.exists()) {
+        setSystemSettings(prev => ({ ...prev, ...snapshot.data() }));
+      }
+    }, () => {});
+
+    // L. Phase 9: Audit Logs subscription
+    const qAudit = query(collection(db, 'audit_logs'), orderBy('timestamp', 'desc'), limit(150));
+    const unsubAudit = onSnapshot(qAudit, (snapshot) => {
+      if (!snapshot.empty) {
+        const logList = snapshot.docs.map(d => ({
+          id: d.id,
+          ...d.data(),
+          timestamp: d.data().timestamp?.toDate ? d.data().timestamp.toDate().toISOString() : (d.data().timestamp || d.data().createdAt)
+        }));
+        setAuditLogs(logList);
+      }
+    }, () => {});
+
     return () => {
       unsubEnquiries();
       unsubTelecallers();
@@ -254,6 +368,8 @@ export const CRMProvider = ({ children }) => {
       unsubFollowUps();
       unsubFuHistory();
       unsubDailyStats();
+      unsubSettings();
+      unsubAudit();
     };
   }, []);
 
@@ -282,6 +398,35 @@ export const CRMProvider = ({ children }) => {
     }
     return followUps;
   }, [followUps, isTelecaller, userProfile, currentUser]);
+
+  const visibleVisits = useMemo(() => {
+    if (isTelecaller && !isAdmin && !isSuperAdmin) {
+      const callerId = userProfile?.uid || currentUser?.uid;
+      const myAssignedLeadIds = new Set(
+        leads.filter(l => l.assignedTelecallerId === callerId || l.assignedTo === callerId).map(l => l.id || l.leadId)
+      );
+      return visits.filter(v => 
+        (v.leadId && myAssignedLeadIds.has(v.leadId)) ||
+        v.createdBy === callerId ||
+        v.assignedStaffId === callerId
+      );
+    }
+    return visits;
+  }, [visits, isTelecaller, isAdmin, isSuperAdmin, leads, userProfile, currentUser]);
+
+  const visibleApplications = useMemo(() => {
+    if (isTelecaller && !isAdmin && !isSuperAdmin) {
+      const callerId = userProfile?.uid || currentUser?.uid;
+      const myAssignedLeadIds = new Set(
+        leads.filter(l => l.assignedTelecallerId === callerId || l.assignedTo === callerId).map(l => l.id || l.leadId)
+      );
+      return admissionApplications.filter(a => 
+        (a.leadId && myAssignedLeadIds.has(a.leadId)) ||
+        a.assignedStaffId === callerId
+      );
+    }
+    return admissionApplications;
+  }, [admissionApplications, isTelecaller, isAdmin, isSuperAdmin, leads, userProfile, currentUser]);
 
   // 4. Duplicate Check Helper
   const checkDuplicateLead = (mobile, email, studentName, admissionClass) => {
@@ -963,13 +1108,298 @@ export const CRMProvider = ({ children }) => {
     return exportCallMonitoringToCSV(filteredCalls || calls, filteredFollowUps || followUps, userProfile || currentUser);
   };
 
+  // Phase 7 Actions
+  const scheduleCampusVisit = async (visitData) => {
+    const actor = userProfile || currentUser || { uid: 'PUBLIC', fullName: 'Public Visitor', role: 'public' };
+    const newVisit = await serviceCreateCampusVisit({
+      ...visitData,
+      createdBy: actor.uid,
+      creatorRole: actor.role,
+      existingVisits: visits,
+      settings: visitSettings
+    });
+
+    setVisits(prev => [newVisit, ...prev]);
+
+    // Update lead status to "School Visit Planned" if linked to a lead
+    if (newVisit.leadId) {
+      setLeads(prev => prev.map(l => {
+        if (l.id === newVisit.leadId || l.leadId === newVisit.leadId) {
+          return {
+            ...l,
+            leadStatus: 'School Visit Planned',
+            status: 'School Visit Planned',
+            lastContactDate: new Date().toISOString().split('T')[0],
+            notes: `${l.notes || ''}\n[Campus Visit]: Scheduled on ${newVisit.requestedDate} (${newVisit.timeSlot})`.trim()
+          };
+        }
+        return l;
+      }));
+    }
+
+    // Admin notification
+    const notif = {
+      id: `notif-${Date.now()}`,
+      recipientId: 'ADMIN',
+      title: 'नवीन शाळा भेट नोंदणी (Campus Visit)',
+      message: `${newVisit.studentName} (${newVisit.applyingClass}) - ${newVisit.requestedDate} (${newVisit.timeSlot})`,
+      category: 'visit',
+      visitId: newVisit.visitId,
+      visitNumber: newVisit.visitNumber,
+      read: false,
+      createdAt: new Date().toISOString()
+    };
+    setNotifications(prev => [notif, ...prev]);
+
+    return { success: true, visit: newVisit };
+  };
+
+  const approveVisit = async (visitId, { assignedStaffId, assignedStaffName, notes } = {}) => {
+    const adminUser = userProfile || currentUser;
+    const updated = await serviceApproveCampusVisit(visitId, {
+      adminUser,
+      assignedStaffId,
+      assignedStaffName,
+      notes
+    }, visits);
+
+    setVisits(prev => prev.map(v => v.visitId === visitId ? updated : v));
+    return { success: true, visit: updated };
+  };
+
+  const rejectVisit = async (visitId, { reason }) => {
+    const adminUser = userProfile || currentUser;
+    const updated = await serviceRejectCampusVisit(visitId, { adminUser, reason }, visits);
+    setVisits(prev => prev.map(v => v.visitId === visitId ? updated : v));
+    return { success: true, visit: updated };
+  };
+
+  const rescheduleVisit = async (visitId, { newDate, newSlot, reason }) => {
+    const adminUser = userProfile || currentUser;
+    const updated = await serviceRescheduleCampusVisit(visitId, {
+      newDate,
+      newSlot,
+      reason,
+      adminUser
+    }, visits, visitSettings);
+    setVisits(prev => prev.map(v => v.visitId === visitId ? updated : v));
+    return { success: true, visit: updated };
+  };
+
+  const cancelVisit = async (visitId, { reason }) => {
+    const cancelledBy = userProfile || currentUser;
+    const updated = await serviceCancelCampusVisit(visitId, { reason, cancelledBy }, visits);
+    setVisits(prev => prev.map(v => v.visitId === visitId ? updated : v));
+    return { success: true, visit: updated };
+  };
+
+  const checkInVisit = async (visitId, { arrivalTime, notes } = {}) => {
+    const staffUser = userProfile || currentUser;
+    const updated = await serviceCheckInCampusVisit(visitId, { staffUser, arrivalTime, notes }, visits);
+    setVisits(prev => prev.map(v => v.visitId === visitId ? updated : v));
+    return { success: true, visit: updated };
+  };
+
+  const checkOutVisit = async (visitId, { departureTime, completionNotes } = {}) => {
+    const staffUser = userProfile || currentUser;
+    const updated = await serviceCheckOutCampusVisit(visitId, { staffUser, departureTime, completionNotes }, visits);
+    setVisits(prev => prev.map(v => v.visitId === visitId ? updated : v));
+
+    // Update lead status to "Interested" or append visit completed
+    if (updated.leadId) {
+      setLeads(prev => prev.map(l => (l.id === updated.leadId || l.leadId === updated.leadId) ? {
+        ...l,
+        leadStatus: l.leadStatus === 'Admitted' ? l.leadStatus : 'Interested',
+        notes: `${l.notes || ''}\n[Campus Visit Completed]: ${departureTime || ''} - ${completionNotes || ''}`.trim()
+      } : l));
+    }
+
+    return { success: true, visit: updated };
+  };
+
+  const submitVisitFeedback = async (feedbackData) => {
+    const staffUser = userProfile || currentUser;
+    const feedback = await serviceSubmitCampusVisitFeedback({ ...feedbackData, staffUser });
+    setVisitFeedback(prev => [feedback, ...prev]);
+    return { success: true, feedback };
+  };
+
+  const updateVisitSettings = (newSettings) => {
+    setVisitSettings(prev => ({ ...prev, ...newSettings }));
+    return { success: true };
+  };
+
+  const createAdmissionApplication = async (appData) => {
+    const adminUser = userProfile || currentUser;
+    const { application, historyEntry } = await serviceCreateAdmissionApplication({
+      ...appData,
+      adminUser,
+      existingApplications: admissionApplications
+    });
+    setAdmissionApplications(prev => [application, ...prev]);
+    setAdmissionStageHistory(prev => [historyEntry, ...prev]);
+    return { success: true, application, historyEntry };
+  };
+
+  const changeAdmissionStage = async ({ applicationId, newStage, reason }) => {
+    const adminUser = userProfile || currentUser;
+    const { application, historyEntry } = await serviceUpdateAdmissionStage({
+      applicationId,
+      newStage,
+      reason,
+      adminUser,
+      existingApplications: admissionApplications
+    });
+
+    setAdmissionApplications(prev => prev.map(a => a.applicationId === applicationId ? application : a));
+    setAdmissionStageHistory(prev => [historyEntry, ...prev]);
+
+    // If stage changed to Admission Confirmed, update corresponding lead to "Admitted"
+    if (newStage === 'Admission Confirmed' && application.leadId) {
+      setLeads(prev => prev.map(l => (l.id === application.leadId || l.leadId === application.leadId) ? {
+        ...l,
+        leadStatus: 'Admitted',
+        status: 'Admitted'
+      } : l));
+    }
+
+    return { success: true, application, historyEntry };
+  };
+
+  const reviewAdmissionDocument = async ({ applicationId, documentType, status, reviewNotes }) => {
+    const adminUser = userProfile || currentUser;
+    const updatedApp = await serviceReviewAdmissionDocument({
+      applicationId,
+      documentType,
+      status,
+      reviewNotes,
+      adminUser,
+      existingApplications: admissionApplications
+    });
+    setAdmissionApplications(prev => prev.map(a => a.applicationId === applicationId ? updatedApp : a));
+    return { success: true, application: updatedApp };
+  };
+
+  const getVisitSlotAvailability = (dateStr) => {
+    return getSlotAvailability(dateStr, visits, visitSettings);
+  };
+
+  const getVisitMetrics = () => {
+    return calculateVisitMetrics(visits);
+  };
+
+  const exportVisitsCSV = (visitsToExport) => {
+    return exportVisitsToCSV(visitsToExport || visits);
+  };
+
   const getMetrics = () => {
+    const todayStr = new Date().toISOString().split('T')[0];
+    
+    // 1. Total Admission Enquiries
+    const totalEnquiries = leads.length;
+    
+    // 2. New Enquiries
+    const newEnquiries = leads.filter(l => (l.status === 'New' || l.leadStatus === 'New')).length;
+    
+    // 3. Assigned Leads
+    const assignedLeads = leads.filter(l => Boolean(l.assignedTo || l.assignedTelecallerId) || l.status === 'Assigned' || l.leadStatus === 'Assigned').length;
+    
+    // 4. Contacted Leads
+    const contactedLeads = leads.filter(l => l.status === 'Contacted' || l.leadStatus === 'Contacted').length;
+    
+    // 5. Interested Parents
+    const interestedParents = leads.filter(l => l.status === 'Interested' || l.leadStatus === 'Interested').length;
+    
+    // 6. Follow-ups Today
+    const todayFollowUps = followUps.filter(f => f.scheduledDate === todayStr && f.status !== 'Completed').length;
+    
+    // 7. Overdue Follow-ups
+    const overdueFollowUps = followUps.filter(f => f.status === 'Overdue' || (f.status !== 'Completed' && f.scheduledDate && f.scheduledDate < todayStr)).length;
+    
+    // 8. Completed Follow-ups
+    const completedFollowUps = followUps.filter(f => f.status === 'Completed').length;
+    
+    // 9. Admission Applications
+    const admissionApplicationsCount = admissionApplications.length;
+    
+    // 10. Confirmed Admissions
+    const confirmedAdmissions = leads.filter(l => l.status === 'Converted' || l.leadStatus === 'Converted' || l.leadStatus === 'Admitted').length ||
+      admissionApplications.filter(a => a.currentStage === 'Admission Confirmed' || a.approvalStatus === 'Approved').length;
+
+    const conversionRate = totalEnquiries > 0 ? ((confirmedAdmissions / totalEnquiries) * 100).toFixed(1) : '0.0';
+
     return {
       ...analytics,
-      todayFollowUps: analytics.pendingFollowUps,
-      overdueFollowUps: 0,
-      totalAdmissions: analytics.convertedLeads
+      totalEnquiries,
+      newEnquiries,
+      newLeads: newEnquiries,
+      assignedLeads,
+      contactedLeads,
+      interestedParents,
+      interestedLeads: interestedParents,
+      todayFollowUps,
+      overdueFollowUps,
+      completedFollowUps,
+      pendingFollowUps: todayFollowUps + overdueFollowUps,
+      admissionApplications: admissionApplicationsCount,
+      confirmedAdmissions,
+      totalAdmissions: confirmedAdmissions,
+      conversionRate
     };
+  };
+
+  // Phase 9 Actions
+  const updateSystemSettingsAction = async (newSettings) => {
+    const actor = userProfile || currentUser || { uid: 'ADMIN', role: 'admin' };
+    const res = await serviceSaveSystemSettings(newSettings, actor);
+    if (res.success) {
+      setSystemSettings(res.settings);
+    }
+    return res;
+  };
+
+  const sendAnnouncementAction = async (announcementData) => {
+    const sender = userProfile || currentUser || { uid: 'ADMIN', role: 'admin', displayName: 'Admin' };
+    const res = await serviceBroadcastAnnouncement({ ...announcementData, sender });
+    return res;
+  };
+
+  const getSystemReports = () => {
+    return generateCRMReports({
+      leads,
+      calls,
+      followUps,
+      telecallers,
+      admissionApplications
+    });
+  };
+
+  const exportReportCSV = (reportTitle, headers, rows, filename) => {
+    return exportReportToCSV(reportTitle, headers, rows, filename);
+  };
+
+  const exportAuditLogsCSV = (logsToExport) => {
+    const list = logsToExport || auditLogs;
+    const headers = ['तारीख व वेळ (Timestamp)', 'कृती (Action)', 'वापरकर्ता नाव (User Name)', 'भूमिका (Role)', 'रेकॉर्ड आयडी (Record ID)', 'तपशील (Details)'];
+    const rows = list.map(l => [
+      l.timestamp ? new Date(l.timestamp).toLocaleString('en-IN') : '',
+      l.action || '',
+      l.userName || l.userId || '',
+      l.userRole || '',
+      l.recordId || '',
+      l.details || ''
+    ]);
+    return exportReportToCSV('System_Audit_Logs', headers, rows, 'Gurukul_Audit_Logs');
+  };
+
+  const recordAuditEvent = async (eventData) => {
+    const actor = userProfile || currentUser || {};
+    return await recordAuditLog({
+      userId: actor.uid || actor.id,
+      userName: actor.displayName || actor.fullName,
+      userRole: actor.role || 'admin',
+      ...eventData
+    });
   };
 
   const value = {
@@ -992,6 +1422,15 @@ export const CRMProvider = ({ children }) => {
     unreadNotificationsCount: unreadCount,
     analytics,
 
+    // Phase 7 Collections & State
+    visits: visibleVisits,
+    allVisits: visits,
+    visitSettings,
+    visitFeedback,
+    admissionApplications: visibleApplications,
+    allAdmissionApplications: admissionApplications,
+    admissionStageHistory,
+
     // Status configs & metadata
     statusConfig: LEAD_STATUS_CONFIG,
     statusList: LEAD_STATUS_LIST,
@@ -1001,6 +1440,17 @@ export const CRMProvider = ({ children }) => {
     validInterestLevels: VALID_INTEREST_LEVELS,
     validPriorities: VALID_PRIORITIES,
     validFollowUpStatuses: VALID_FOLLOW_UP_STATUSES,
+
+    // Phase 7 Configs
+    visitPurposes: VISIT_PURPOSES,
+    visitStatuses: VISIT_STATUSES,
+    visitInterestLevels: VISIT_INTEREST_LEVELS,
+    visitNextActions: VISIT_NEXT_ACTIONS,
+    defaultVisitSlots: DEFAULT_SLOTS,
+    admissionStages: ADMISSION_STAGES,
+    stageConfig: STAGE_CONFIG,
+    documentStatuses: DOCUMENT_STATUSES,
+    defaultRequiredDocuments: DEFAULT_REQUIRED_DOCUMENTS,
 
     // Core actions
     submitAdmissionEnquiry,
@@ -1023,6 +1473,35 @@ export const CRMProvider = ({ children }) => {
     getPerformanceAnalytics,
     exportPerformanceCSV,
     exportCallMonitoringCSV,
+
+    // Phase 7 Actions
+    scheduleCampusVisit,
+    approveCampusVisit: approveVisit,
+    rejectCampusVisit: rejectVisit,
+    rescheduleCampusVisit: rescheduleVisit,
+    cancelCampusVisit: cancelVisit,
+    checkInCampusVisit: checkInVisit,
+    checkOutCampusVisit: checkOutVisit,
+    submitCampusVisitFeedback: submitVisitFeedback,
+    updateVisitScheduleSettings: updateVisitSettings,
+    createAdmissionApplication,
+    updateAdmissionStage: changeAdmissionStage,
+    reviewAdmissionDocument,
+    getVisitSlotAvailability,
+    getVisitMetrics,
+    exportVisitsCSV,
+
+    // Phase 9: System Settings, Audit, Announcements & Reports
+    systemSettings,
+    auditLogs,
+    systemAuditActions: SYSTEM_AUDIT_ACTIONS,
+    defaultSystemSettings: DEFAULT_SYSTEM_SETTINGS,
+    updateSystemSettings: updateSystemSettingsAction,
+    sendAnnouncement: sendAnnouncementAction,
+    getSystemReports,
+    exportReportCSV,
+    exportAuditLogsCSV,
+    recordAuditEvent,
 
     // Backward compatibility
     updateLead,

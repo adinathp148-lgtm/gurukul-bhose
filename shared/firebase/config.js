@@ -23,7 +23,8 @@ import {
   orderBy, 
   limit, 
   onSnapshot, 
-  serverTimestamp 
+  serverTimestamp,
+  runTransaction
 } from 'firebase/firestore';
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { getFunctions, httpsCallable } from 'firebase/functions';
@@ -106,6 +107,7 @@ export {
   limit,
   onSnapshot,
   serverTimestamp,
+  runTransaction,
   ref,
   uploadBytes,
   getDownloadURL,

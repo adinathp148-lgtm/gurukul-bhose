@@ -36,8 +36,10 @@ import { Badge } from '../../components/common/Badge';
 import { Button } from '../../components/common/Button';
 import { Modal } from '../../components/common/Modal';
 import { StatCard } from '../../components/common/StatCard';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 export const LeadsPage = () => {
+  const { isMarathi } = useLanguage();
   const navigate = useNavigate();
   const { 
     leads, 
@@ -314,14 +316,16 @@ export const LeadsPage = () => {
         <div>
           <div className="flex items-center gap-2">
             <h1 className="text-xl sm:text-2xl font-black text-slate-900">
-              प्रवेश नोंदणी व लीड व्यवस्थापन (Admission CRM)
+              {isMarathi ? 'प्रवेश नोंदणी व लीड व्यवस्थापन (Admission CRM)' : 'Admission Lead Management (CRM)'}
             </h1>
             <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-orange-100 text-gurukul-saffron-800 border border-orange-200">
-              {leads.length} एकूण लीड्स
+              {leads.length} {isMarathi ? 'एकूण लीड्स' : 'Total Leads'}
             </span>
           </div>
           <p className="text-xs text-slate-500 mt-0.5">
-            वेबसाईट, थेट संपर्क, फेसबुक ऍड्स व फोनवरून आलेली सर्व प्रवेश विचारणा माहिती
+            {isMarathi 
+              ? 'वेबसाईट, थेट संपर्क, फेसबुक ऍड्स व फोनवरून आलेली सर्व प्रवेश विचारणा माहिती' 
+              : 'All admission inquiries captured from website, direct walk-ins, phone calls and Meta ads'}
           </p>
         </div>
 
@@ -335,7 +339,7 @@ export const LeadsPage = () => {
               className="text-xs rounded-xl shadow-sm border-slate-300"
             >
               <FileSpreadsheet className="w-4 h-4 mr-1.5 text-emerald-600" />
-              <span>CSV निर्यात करा ({filteredLeads.length})</span>
+              <span>{isMarathi ? `CSV निर्यात करा (${filteredLeads.length})` : `Export CSV (${filteredLeads.length})`}</span>
             </Button>
           )}
 
@@ -348,7 +352,7 @@ export const LeadsPage = () => {
               className="text-xs rounded-xl shadow-md bg-gurukul-saffron-600 hover:bg-gurukul-saffron-700"
             >
               <Plus className="w-4 h-4 mr-1.5" />
-              <span>नवीन नोंदणी जोडा (Manual Entry)</span>
+              <span>{isMarathi ? 'नवीन नोंदणी जोडा (Manual Entry)' : 'Add New Lead (Manual Entry)'}</span>
             </Button>
           )}
         </div>
@@ -357,93 +361,93 @@ export const LeadsPage = () => {
       {/* 2. Top Metric Analytics - 10 Core Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3.5">
         <StatCard
-          title="एकूण नोंदणी (Total)"
+          title={isMarathi ? 'एकूण नोंदणी (Total)' : 'Total Enquiries'}
           value={analytics.totalEnquiries}
           icon={Users}
           color="navy"
-          subtitle="सर्व प्रवेश चौकशी"
+          subtitle={isMarathi ? 'सर्व प्रवेश चौकशी' : 'All Inquiries'}
         />
         <StatCard
-          title="नवीन लीड्स (New)"
+          title={isMarathi ? 'नवीन लीड्स (New)' : 'New Leads'}
           value={analytics.newLeads}
           icon={UserPlus}
           color="blue"
-          subtitle="अद्याप संपर्क बाकी"
+          subtitle={isMarathi ? 'अद्याप संपर्क बाकी' : 'Awaiting Contact'}
         />
         <StatCard
-          title="नेमणूक झालेल्या (Assigned)"
+          title={isMarathi ? 'नेमणूक झालेल्या (Assigned)' : 'Assigned Leads'}
           value={analytics.assignedLeads}
           icon={UserCheck}
           color="purple"
-          subtitle="समुपदेशकाकडे वाटप"
+          subtitle={isMarathi ? 'समुपदेशकाकडे वाटप' : 'Under Counselors'}
         />
         <StatCard
-          title="विनावाटप (Unassigned)"
+          title={isMarathi ? 'विनावाटप (Unassigned)' : 'Unassigned'}
           value={analytics.unassignedLeads}
           icon={Clock}
           color="amber"
-          subtitle="नेमणूक बाकी"
+          subtitle={isMarathi ? 'नेमणूक बाकी' : 'Needs Assignment'}
         />
         <StatCard
-          title="संपर्क साधलेल्या (Contacted)"
+          title={isMarathi ? 'संपर्क साधलेल्या (Contacted)' : 'Contacted'}
           value={analytics.contactedLeads}
           icon={Phone}
           color="sky"
-          subtitle="प्राथमिक चर्चा पूर्ण"
+          subtitle={isMarathi ? 'प्राथमिक चर्चा पूर्ण' : 'Initial Contact Done'}
         />
         <StatCard
-          title="इच्छुक पालक (Interested)"
+          title={isMarathi ? 'इच्छुक पालक (Interested)' : 'Interested'}
           value={analytics.interestedLeads}
           icon={Sparkles}
           color="amber"
-          subtitle="सकारात्मक प्रतिसाद"
+          subtitle={isMarathi ? 'सकारात्मक प्रतिसाद' : 'Positive Response'}
         />
         <StatCard
-          title="फॉलो-अप बाकी (Follow-ups)"
+          title={isMarathi ? 'फॉलो-अप बाकी (Follow-ups)' : 'Follow-ups Due'}
           value={analytics.pendingFollowUps}
           icon={Calendar}
           color="orange"
-          subtitle="पुढील तारीख नियोजित"
+          subtitle={isMarathi ? 'पुढील तारीख नियोजित' : 'Scheduled Follow-up'}
         />
         <StatCard
-          title="शाळेस भेट (Visited)"
+          title={isMarathi ? 'शाळेस भेट (Visited)' : 'Campus Visited'}
           value={analytics.visitedLeads}
           icon={GraduationCap}
           color="indigo"
-          subtitle="कॅम्पस भेट झाली"
+          subtitle={isMarathi ? 'कॅम्पस भेट झाली' : 'Visit Completed'}
         />
         <StatCard
-          title="प्रवेश निश्चित (Converted)"
+          title={isMarathi ? 'प्रवेश निश्चित (Converted)' : 'Converted / Admitted'}
           value={analytics.convertedLeads}
           icon={CheckCircle2}
           color="emerald"
-          subtitle="प्रवेश पूर्ण झाला"
+          subtitle={isMarathi ? 'प्रवेश पूर्ण झाला' : 'Admission Confirmed'}
         />
         <StatCard
-          title="प्रवेश गमावला (Lost)"
+          title={isMarathi ? 'प्रवेश गमावला (Lost)' : 'Lost / Dropped'}
           value={analytics.lostLeads}
           icon={XCircle}
           color="rose"
-          subtitle="अनिच्छुक किंवा रद्द"
+          subtitle={isMarathi ? 'अनिच्छुक किंवा रद्द' : 'Declined / Dropped'}
         />
       </div>
 
       {/* 3. Distribution Overview Strip */}
       <div className="p-4 bg-white rounded-2xl border border-slate-200/80 shadow-sm grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs">
         <div className="border-r border-slate-100 pr-3">
-          <span className="text-slate-400 block text-[11px] font-medium">आजची नोंदणी (Today):</span>
-          <span className="text-lg font-black text-slate-800">{analytics.enquiriesToday} अर्ज</span>
+          <span className="text-slate-400 block text-[11px] font-medium">{isMarathi ? 'आजची नोंदणी (Today):' : "Today's Enquiries:"}</span>
+          <span className="text-lg font-black text-slate-800">{analytics.enquiriesToday} {isMarathi ? 'अर्ज' : 'Leads'}</span>
         </div>
         <div className="border-r border-slate-100 pr-3">
-          <span className="text-slate-400 block text-[11px] font-medium">या आठवड्यातील (This Week):</span>
-          <span className="text-lg font-black text-slate-800">{analytics.enquiriesThisWeek} अर्ज</span>
+          <span className="text-slate-400 block text-[11px] font-medium">{isMarathi ? 'या आठवड्यातील (This Week):' : 'This Week:'}</span>
+          <span className="text-lg font-black text-slate-800">{analytics.enquiriesThisWeek} {isMarathi ? 'अर्ज' : 'Leads'}</span>
         </div>
         <div className="border-r border-slate-100 pr-3">
-          <span className="text-slate-400 block text-[11px] font-medium">या महिन्यातील (This Month):</span>
-          <span className="text-lg font-black text-slate-800">{analytics.enquiriesThisMonth} अर्ज</span>
+          <span className="text-slate-400 block text-[11px] font-medium">{isMarathi ? 'या महिन्यातील (This Month):' : 'This Month:'}</span>
+          <span className="text-lg font-black text-slate-800">{analytics.enquiriesThisMonth} {isMarathi ? 'अर्ज' : 'Leads'}</span>
         </div>
         <div>
-          <span className="text-slate-400 block text-[11px] font-medium">प्रवेश रूपांतरण दर (Conversion Rate):</span>
+          <span className="text-slate-400 block text-[11px] font-medium">{isMarathi ? 'प्रवेश रूपांतरण दर (Conversion Rate):' : 'Conversion Rate:'}</span>
           <span className="text-lg font-black text-emerald-600">{analytics.conversionRate}</span>
         </div>
       </div>
@@ -458,7 +462,7 @@ export const LeadsPage = () => {
               type="text"
               value={searchTerm}
               onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
-              placeholder="नाव, मोबाईल, लीड नंबर किंवा गाव शोधा..."
+              placeholder={isMarathi ? "नाव, मोबाईल, लीड नंबर किंवा गाव शोधा..." : "Search name, phone, lead ID, village..."}
               className="w-full text-xs pl-9 pr-3 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-gurukul-saffron-500 focus:outline-none"
             />
           </div>
@@ -470,9 +474,9 @@ export const LeadsPage = () => {
               onChange={(e) => { setStatusFilter(e.target.value); setCurrentPage(1); }}
               className="w-full text-xs px-3 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-gurukul-saffron-500 focus:outline-none bg-white font-medium"
             >
-              <option value="ALL">सर्व स्थिती (All Status)</option>
+              <option value="ALL">{isMarathi ? 'सर्व स्थिती (All Status)' : 'All Statuses'}</option>
               {statusList.map(st => (
-                <option key={st} value={st}>{statusConfig[st]?.labelMr || st}</option>
+                <option key={st} value={st}>{isMarathi ? (statusConfig[st]?.labelMr || st) : (statusConfig[st]?.labelEn || st)}</option>
               ))}
             </select>
           </div>
@@ -484,15 +488,15 @@ export const LeadsPage = () => {
               onChange={(e) => { setClassFilter(e.target.value); setCurrentPage(1); }}
               className="w-full text-xs px-3 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-gurukul-saffron-500 focus:outline-none bg-white font-medium"
             >
-              <option value="ALL">सर्व इयत्ता (All Classes)</option>
-              <option value="5">इ. 5 वी (5th Standard)</option>
-              <option value="6">इ. 6 वी (6th Standard)</option>
-              <option value="7">इ. 7 वी (7th Standard)</option>
-              <option value="8">इ. 8 वी (8th Standard)</option>
-              <option value="9">इ. 9 वी (9th Standard)</option>
-              <option value="10">इ. 10 वी (10th Standard)</option>
-              <option value="11">इ. 11 वी (11th Standard)</option>
-              <option value="12">इ. 12 वी (12th Standard)</option>
+              <option value="ALL">{isMarathi ? 'सर्व इयत्ता (All Classes)' : 'All Classes'}</option>
+              <option value="5">{isMarathi ? 'इ. 5 वी (5th Standard)' : 'Class 5th'}</option>
+              <option value="6">{isMarathi ? 'इ. 6 वी (6th Standard)' : 'Class 6th'}</option>
+              <option value="7">{isMarathi ? 'इ. 7 वी (7th Standard)' : 'Class 7th'}</option>
+              <option value="8">{isMarathi ? 'इ. 8 वी (8th Standard)' : 'Class 8th'}</option>
+              <option value="9">{isMarathi ? 'इ. 9 वी (9th Standard)' : 'Class 9th'}</option>
+              <option value="10">{isMarathi ? 'इ. 10 वी (10th Standard)' : 'Class 10th'}</option>
+              <option value="11">{isMarathi ? 'इ. 11 वी (11th Standard)' : 'Class 11th'}</option>
+              <option value="12">{isMarathi ? 'इ. 12 वी (12th Standard)' : 'Class 12th'}</option>
             </select>
           </div>
 
@@ -503,7 +507,7 @@ export const LeadsPage = () => {
               onChange={(e) => { setSourceFilter(e.target.value); setCurrentPage(1); }}
               className="w-full text-xs px-3 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-gurukul-saffron-500 focus:outline-none bg-white font-medium"
             >
-              <option value="ALL">सर्व मार्ग (All Sources)</option>
+              <option value="ALL">{isMarathi ? 'सर्व मार्ग (All Sources)' : 'All Sources'}</option>
               <option value="Website">Website</option>
               <option value="Manual Entry">Manual Entry</option>
               <option value="Phone Call">Phone Call</option>
@@ -524,8 +528,8 @@ export const LeadsPage = () => {
                 onChange={(e) => { setTelecallerFilter(e.target.value); setCurrentPage(1); }}
                 className="w-full text-xs px-3 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-gurukul-saffron-500 focus:outline-none bg-white font-medium"
               >
-                <option value="ALL">सर्व समुपदेशक (All Counselors)</option>
-                <option value="UNASSIGNED">विनावाटप (Unassigned Only)</option>
+                <option value="ALL">{isMarathi ? 'सर्व समुपदेशक (All Counselors)' : 'All Counselors'}</option>
+                <option value="UNASSIGNED">{isMarathi ? 'विनावाटप (Unassigned Only)' : 'Unassigned Only'}</option>
                 {telecallers.map(t => (
                   <option key={t.uid || t.id} value={t.uid || t.id}>
                     {t.fullName || t.displayName}
@@ -542,7 +546,7 @@ export const LeadsPage = () => {
               onChange={(e) => { setYearFilter(e.target.value); setCurrentPage(1); }}
               className="w-full text-xs px-3 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-gurukul-saffron-500 focus:outline-none bg-white font-medium"
             >
-              <option value="ALL">सर्व शैक्षणिक वर्षे (All Years)</option>
+              <option value="ALL">{isMarathi ? 'सर्व शैक्षणिक वर्षे (All Years)' : 'All Academic Years'}</option>
               <option value="2026-2027">2026-2027</option>
               <option value="2027-2028">2027-2028</option>
             </select>
@@ -550,7 +554,7 @@ export const LeadsPage = () => {
 
           {/* Start Date */}
           <div className="flex items-center gap-1.5">
-            <span className="text-[11px] text-slate-400 whitespace-nowrap">पासून:</span>
+            <span className="text-[11px] text-slate-400 whitespace-nowrap">{isMarathi ? 'पासून:' : 'From:'}</span>
             <input
               type="date"
               value={startDate}
@@ -561,7 +565,7 @@ export const LeadsPage = () => {
 
           {/* End Date */}
           <div className="flex items-center gap-1.5">
-            <span className="text-[11px] text-slate-400 whitespace-nowrap">पर्यंत:</span>
+            <span className="text-[11px] text-slate-400 whitespace-nowrap">{isMarathi ? 'पर्यंत:' : 'To:'}</span>
             <input
               type="date"
               value={endDate}
@@ -577,20 +581,20 @@ export const LeadsPage = () => {
         <div className="p-3.5 bg-gurukul-navy-900 text-white rounded-2xl flex items-center justify-between shadow-md text-xs">
           <div className="flex items-center gap-2">
             <CheckSquare className="w-4 h-4 text-gurukul-saffron-400" />
-            <span><strong>{selectedLeadIds.length}</strong> लीड्स निवडल्या आहेत</span>
+            <span><strong>{selectedLeadIds.length}</strong> {isMarathi ? 'लीड्स निवडल्या आहेत' : 'leads selected'}</span>
           </div>
           <div className="flex items-center gap-2">
             <button
               onClick={() => setSelectedLeadIds([])}
               className="px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white font-bold"
             >
-              निवड रद्द करा
+              {isMarathi ? 'निवड रद्द करा' : 'Cancel Selection'}
             </button>
             <button
               onClick={() => setBulkAssignModalOpen(true)}
               className="px-3 py-1.5 rounded-lg bg-gurukul-saffron-600 hover:bg-gurukul-saffron-700 text-white font-bold"
             >
-              समुपदेशक नियुक्त करा (Bulk Assign)
+              {isMarathi ? 'समुपदेशक नियुक्त करा (Bulk Assign)' : 'Assign Counselor (Bulk)'}
             </button>
           </div>
         </div>
@@ -612,28 +616,28 @@ export const LeadsPage = () => {
                     />
                   </th>
                 )}
-                <th className="py-3.5 px-4">लीड नंबर (Lead No)</th>
-                <th className="py-3.5 px-4">विद्यार्थी व पालक (Student / Parent)</th>
-                <th className="py-3.5 px-4">मोबाईल (Mobile)</th>
-                <th className="py-3.5 px-4">इयत्ता व कोर्स</th>
-                <th className="py-3.5 px-4">मार्ग (Source)</th>
-                <th className="py-3.5 px-4">समुपदेशक (Assigned)</th>
-                <th className="py-3.5 px-4">स्थिती (Status)</th>
-                <th className="py-3.5 px-4">नोंदणी तारीख</th>
-                <th className="py-3.5 px-4 text-right">कृती (Actions)</th>
+                <th className="py-3.5 px-4">{isMarathi ? 'लीड नंबर (Lead No)' : 'Lead ID'}</th>
+                <th className="py-3.5 px-4">{isMarathi ? 'विद्यार्थी व पालक (Student / Parent)' : 'Student & Parent'}</th>
+                <th className="py-3.5 px-4">{isMarathi ? 'मोबाईल (Mobile)' : 'Mobile'}</th>
+                <th className="py-3.5 px-4">{isMarathi ? 'इयत्ता व कोर्स' : 'Class & Course'}</th>
+                <th className="py-3.5 px-4">{isMarathi ? 'मार्ग (Source)' : 'Source'}</th>
+                <th className="py-3.5 px-4">{isMarathi ? 'समुपदेशक (Assigned)' : 'Counselor'}</th>
+                <th className="py-3.5 px-4">{isMarathi ? 'स्थिती (Status)' : 'Status'}</th>
+                <th className="py-3.5 px-4">{isMarathi ? 'नोंदणी तारीख' : 'Created Date'}</th>
+                <th className="py-3.5 px-4 text-right">{isMarathi ? 'कृती (Actions)' : 'Actions'}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
               {paginatedLeads.length === 0 ? (
                 <tr>
                   <td colSpan={isAdmin ? 10 : 9} className="py-16 text-center text-slate-400">
-                    कोणतीही नोंद आढळली नाही. कृपया शोध किंवा फिल्टर्स बदला.
+                    {isMarathi ? 'कोणतीही नोंद आढळली नाही. कृपया शोध किंवा फिल्टर्स बदला.' : 'No records found. Please adjust your search or filters.'}
                   </td>
                 </tr>
               ) : (
                 paginatedLeads.map((lead) => {
                   const st = lead.status || lead.leadStatus || 'New';
-                  const stConf = statusConfig[st] || { labelMr: st, bgColor: 'bg-slate-100 text-slate-700' };
+                  const stConf = statusConfig[st] || { labelMr: st, labelEn: st, bgColor: 'bg-slate-100 text-slate-700' };
                   const isSelected = selectedLeadIds.includes(lead.id);
 
                   return (
@@ -662,7 +666,7 @@ export const LeadsPage = () => {
                         </Link>
                         {lead.isDuplicate && (
                           <span className="inline-block mt-0.5 px-1.5 py-0.2 rounded bg-red-100 text-red-700 text-[9px] font-bold">
-                            नक्कल शक्यता
+                            {isMarathi ? 'नक्कल शक्यता' : 'Possible Duplicate'}
                           </span>
                         )}
                       </td>
@@ -670,7 +674,7 @@ export const LeadsPage = () => {
                       {/* Student & Parent */}
                       <td className="py-3.5 px-4">
                         <div className="font-bold text-slate-900">{lead.studentName}</div>
-                        <div className="text-[11px] text-slate-500">पालक: {lead.parentName}</div>
+                        <div className="text-[11px] text-slate-500">{isMarathi ? 'पालक:' : 'Parent:'} {lead.parentName}</div>
                         {lead.city && (
                           <div className="text-[10px] text-slate-400">{lead.city}</div>
                         )}
@@ -685,12 +689,12 @@ export const LeadsPage = () => {
                           <a
                             href={`tel:${lead.normalizedMobile || lead.mobileNumber || lead.mobile}`}
                             className="p-1 rounded bg-slate-100 hover:bg-slate-200 text-slate-700"
-                            title="कॉल करा"
+                            title={isMarathi ? "कॉल करा" : "Call"}
                           >
                             <Phone className="w-3 h-3 text-gurukul-saffron-600" />
                           </a>
                           <a
-                            href={`https://wa.me/91${lead.whatsapp || lead.whatsappNumber || lead.normalizedMobile || lead.mobileNumber}?text=${encodeURIComponent(`नमस्कार ${lead.parentName}, मी गुरुकुल भोसे निवासी स्कूल व ज्युनिअर कॉलेजमधून संपर्क करत आहे.`)}`}
+                            href={`https://wa.me/91${lead.whatsapp || lead.whatsappNumber || lead.normalizedMobile || lead.mobileNumber}?text=${encodeURIComponent(isMarathi ? `नमस्कार ${lead.parentName}, मी गुरुकुल भोसे निवासी स्कूल व ज्युनिअर कॉलेजमधून संपर्क करत आहे.` : `Hello ${lead.parentName}, contacting you from Gurukul Bhose Residential School & College.`)}`}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="p-1 rounded bg-emerald-50 hover:bg-emerald-100 text-emerald-600"
@@ -727,7 +731,7 @@ export const LeadsPage = () => {
                           </div>
                         ) : (
                           <span className="text-[11px] font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200">
-                            विनावाटप (Unassigned)
+                            {isMarathi ? 'विनावाटप (Unassigned)' : 'Unassigned'}
                           </span>
                         )}
                       </td>
@@ -737,15 +741,15 @@ export const LeadsPage = () => {
                         <button
                           onClick={() => { setStatusModalLead(lead); setQuickNewStatus(st); }}
                           className={`text-xs font-bold px-2.5 py-1 rounded-full border transition-transform hover:scale-105 ${stConf.bgColor}`}
-                          title="स्थिती बदलण्यासाठी क्लिक करा"
+                          title={isMarathi ? "स्थिती बदलण्यासाठी क्लिक करा" : "Click to change status"}
                         >
-                          {stConf.labelMr}
+                          {isMarathi ? (stConf.labelMr || st) : (stConf.labelEn || st)}
                         </button>
                       </td>
 
                       {/* Created Date */}
                       <td className="py-3.5 px-4 text-slate-500 whitespace-nowrap text-[11px]">
-                        {lead.createdAt ? new Date(lead.createdAt?.toDate ? lead.createdAt.toDate() : lead.createdAt).toLocaleDateString('en-IN') : 'N/A'}
+                        {lead.createdAt ? new Date(lead.createdAt?.toDate ? lead.createdAt.toDate() : lead.createdAt).toLocaleDateString(isMarathi ? 'mr-IN' : 'en-IN') : 'N/A'}
                       </td>
 
                       {/* Actions */}
@@ -755,7 +759,7 @@ export const LeadsPage = () => {
                           <Link
                             to={isAdmin ? `/admin/leads/${lead.id}` : `/telecaller/leads/${lead.id}`}
                             className="p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700"
-                            title="तपशील पहा (View Lead)"
+                            title={isMarathi ? "तपशील पहा (View Lead)" : "View Lead Details"}
                           >
                             <Eye className="w-3.5 h-3.5" />
                           </Link>
@@ -764,7 +768,7 @@ export const LeadsPage = () => {
                           <button
                             onClick={() => setCallModalLead(lead)}
                             className="p-1.5 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700"
-                            title="कॉल नोंदवा (Log Call)"
+                            title={isMarathi ? "कॉल नोंदवा (Log Call)" : "Log Call Attempt"}
                           >
                             <PhoneCall className="w-3.5 h-3.5" />
                           </button>
@@ -774,7 +778,7 @@ export const LeadsPage = () => {
                             <button
                               onClick={() => { setAssignModalLead(lead); setSelectedTelecaller(lead.assignedTo || lead.assignedTelecallerId || ''); }}
                               className="p-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700"
-                              title={lead.assignedTo ? 'पुनर्नियुक्ती (Reassign)' : 'नेमणूक (Assign)'}
+                              title={lead.assignedTo ? (isMarathi ? 'पुनर्नियुक्ती (Reassign)' : 'Reassign') : (isMarathi ? 'नेमणूक (Assign)' : 'Assign')}
                             >
                               <UserCheck className="w-3.5 h-3.5" />
                             </button>
@@ -793,11 +797,14 @@ export const LeadsPage = () => {
         {/* Pagination Footer */}
         <div className="p-4 bg-slate-50 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-600">
           <div>
-            एकूण <strong>{filteredLeads.length}</strong> पैकी <strong>{Math.min(filteredLeads.length, (currentPage - 1) * itemsPerPage + 1)}</strong> ते <strong>{Math.min(filteredLeads.length, currentPage * itemsPerPage)}</strong> दाखवत आहे
+            {isMarathi 
+              ? <>एकूण <strong>{filteredLeads.length}</strong> पैकी <strong>{Math.min(filteredLeads.length, (currentPage - 1) * itemsPerPage + 1)}</strong> ते <strong>{Math.min(filteredLeads.length, currentPage * itemsPerPage)}</strong> दाखवत आहे</>
+              : <>Showing <strong>{Math.min(filteredLeads.length, (currentPage - 1) * itemsPerPage + 1)}</strong> to <strong>{Math.min(filteredLeads.length, currentPage * itemsPerPage)}</strong> of <strong>{filteredLeads.length}</strong> entries</>
+            }
           </div>
 
           <div className="flex items-center gap-2">
-            <span className="text-[11px] text-slate-500">पृष्ठावर नोंदी:</span>
+            <span className="text-[11px] text-slate-500">{isMarathi ? 'पृष्ठावर नोंदी:' : 'Rows per page:'}</span>
             <select
               value={itemsPerPage}
               onChange={(e) => { setItemsPerPage(Number(e.target.value)); setCurrentPage(1); }}
@@ -836,7 +843,7 @@ export const LeadsPage = () => {
       <Modal
         isOpen={addModalOpen}
         onClose={() => setAddModalOpen(false)}
-        title="नवीन प्रवेश नोंदणी जोडा (Manual Admission Enquiry)"
+        title={isMarathi ? "नवीन प्रवेश नोंदणी जोडा (Manual Admission Enquiry)" : "Add New Admission Enquiry (Manual Entry)"}
       >
         <form onSubmit={handleCreateLead} className="space-y-4 max-h-[75vh] overflow-y-auto pr-1">
           {addError && (
@@ -848,26 +855,26 @@ export const LeadsPage = () => {
           {/* Parent Info */}
           <div className="space-y-3">
             <h4 className="text-xs font-bold uppercase text-slate-800 border-b border-slate-100 pb-1">
-              १. पालक तपशील
+              {isMarathi ? '१. पालक तपशील' : '1. Parent Details'}
             </h4>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  पालकांचे पूर्ण नाव <span className="text-red-500">*</span>
+                  {isMarathi ? 'पालकांचे पूर्ण नाव' : 'Parent Full Name'} <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
                   required
                   value={newLeadForm.parentName}
                   onChange={(e) => setNewLeadForm({ ...newLeadForm, parentName: e.target.value })}
-                  placeholder="उदा. श्री. विकास कदम"
+                  placeholder={isMarathi ? "उदा. श्री. विकास कदम" : "e.g. Mr. Vikas Kadam"}
                   className="w-full text-xs px-3 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-gurukul-saffron-500 focus:outline-none"
                 />
               </div>
 
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  मोबाईल नंबर <span className="text-red-500">*</span>
+                  {isMarathi ? 'मोबाईल नंबर' : 'Mobile Number'} <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="tel"
@@ -882,7 +889,7 @@ export const LeadsPage = () => {
                       whatsappNumber: newLeadForm.sameAsMobile ? val : newLeadForm.whatsappNumber
                     });
                   }}
-                  placeholder="१० अंकी मोबाईल नंबर"
+                  placeholder={isMarathi ? "१० अंकी मोबाईल नंबर" : "10-digit mobile number"}
                   className="w-full text-xs px-3 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-gurukul-saffron-500 focus:outline-none"
                 />
               </div>
@@ -891,27 +898,27 @@ export const LeadsPage = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  WhatsApp नंबर
+                  {isMarathi ? 'WhatsApp नंबर' : 'WhatsApp Number'}
                 </label>
                 <input
                   type="tel"
                   maxLength={10}
                   value={newLeadForm.whatsappNumber}
                   onChange={(e) => setNewLeadForm({ ...newLeadForm, whatsappNumber: e.target.value.replace(/\D/g, '').slice(0, 10) })}
-                  placeholder="१० अंकी WhatsApp नंबर"
+                  placeholder={isMarathi ? "१० अंकी WhatsApp नंबर" : "10-digit WhatsApp number"}
                   className="w-full text-xs px-3 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-gurukul-saffron-500 focus:outline-none"
                 />
               </div>
 
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  शहर / गाव (City / Village)
+                  {isMarathi ? 'शहर / गाव (City / Village)' : 'City / Village'}
                 </label>
                 <input
                   type="text"
                   value={newLeadForm.city}
                   onChange={(e) => setNewLeadForm({ ...newLeadForm, city: e.target.value })}
-                  placeholder="उदा. तासगाव / सांगली"
+                  placeholder={isMarathi ? "उदा. तासगाव / सांगली" : "e.g. Tasgaon / Sangli"}
                   className="w-full text-xs px-3 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-gurukul-saffron-500 focus:outline-none"
                 />
               </div>
@@ -921,42 +928,42 @@ export const LeadsPage = () => {
           {/* Student Info */}
           <div className="space-y-3 pt-2">
             <h4 className="text-xs font-bold uppercase text-slate-800 border-b border-slate-100 pb-1">
-              २. विद्यार्थी तपशील
+              {isMarathi ? '२. विद्यार्थी तपशील' : '2. Student Details'}
             </h4>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  विद्यार्थ्याचे पूर्ण नाव <span className="text-red-500">*</span>
+                  {isMarathi ? 'विद्यार्थ्याचे पूर्ण नाव' : 'Student Full Name'} <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
                   required
                   value={newLeadForm.studentName}
                   onChange={(e) => setNewLeadForm({ ...newLeadForm, studentName: e.target.value })}
-                  placeholder="उदा. आदित्य विकास कदम"
+                  placeholder={isMarathi ? "उदा. आदित्य विकास कदम" : "e.g. Aditya Vikas Kadam"}
                   className="w-full text-xs px-3 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-gurukul-saffron-500 focus:outline-none"
                 />
               </div>
 
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  प्रवेश इयत्ता (Applying Class) <span className="text-red-500">*</span>
+                  {isMarathi ? 'प्रवेश इयत्ता (Applying Class)' : 'Applying Class'} <span className="text-red-500">*</span>
                 </label>
                 <select
                   value={newLeadForm.admissionClass}
                   onChange={(e) => setNewLeadForm({ ...newLeadForm, admissionClass: e.target.value })}
                   className="w-full text-xs px-3 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-gurukul-saffron-500 focus:outline-none bg-white font-bold"
                 >
-                  <option value="इ. 5 वी (5th Std)">इ. 5 वी (5th Std) - सैनिक पॅटर्न निवासी</option>
-                  <option value="इ. 6 वी (6th Std)">इ. 6 वी (6th Std) - सैनिक पॅटर्न निवासी</option>
-                  <option value="इ. 7 वी (7th Std)">इ. 7 वी (7th Std) - सैनिक पॅटर्न निवासी</option>
-                  <option value="इ. 8 वी (8th Std)">इ. 8 वी (8th Std) - सैनिक पॅटर्न निवासी</option>
-                  <option value="इ. 9 वी (9th Std)">इ. 9 वी (9th Std) - सैनिक पॅटर्न निवासी</option>
-                  <option value="इ. 10 वी (10th Std)">इ. 10 वी (10th Std)</option>
-                  <option value="इ. 11 वी सायन्स (PCMB)">इ. 11 वी सायन्स (PCMB + NEET/JEE/NDA)</option>
-                  <option value="इ. 11 वी आर्टस् (Defence / Arts)">इ. 11 वी आर्टस् (डिफेन्स अकॅडमी)</option>
-                  <option value="इ. 12 वी सायन्स (PCMB)">इ. 12 वी सायन्स (PCMB)</option>
-                  <option value="इ. 12 वी आर्टस् (Defence / Arts)">इ. 12 वी आर्टस्</option>
+                  <option value="इ. 5 वी (5th Std)">{isMarathi ? 'इ. 5 वी (5th Std) - सैनिक पॅटर्न निवासी' : 'Std. 5th - Sainik Pattern Residential'}</option>
+                  <option value="इ. 6 वी (6th Std)">{isMarathi ? 'इ. 6 वी (6th Std) - सैनिक पॅटर्न निवासी' : 'Std. 6th - Sainik Pattern Residential'}</option>
+                  <option value="इ. 7 वी (7th Std)">{isMarathi ? 'इ. 7 वी (7th Std) - सैनिक पॅटर्न निवासी' : 'Std. 7th - Sainik Pattern Residential'}</option>
+                  <option value="इ. 8 वी (8th Std)">{isMarathi ? 'इ. 8 वी (8th Std) - सैनिक पॅटर्न निवासी' : 'Std. 8th - Sainik Pattern Residential'}</option>
+                  <option value="इ. 9 वी (9th Std)">{isMarathi ? 'इ. 9 वी (9th Std) - सैनिक पॅटर्न निवासी' : 'Std. 9th - Sainik Pattern Residential'}</option>
+                  <option value="इ. 10 वी (10th Std)">{isMarathi ? 'इ. 10 वी (10th Std)' : 'Std. 10th (SSC Board)'}</option>
+                  <option value="इ. 11 वी सायन्स (PCMB)">{isMarathi ? 'इ. 11 वी सायन्स (PCMB + NEET/JEE/NDA)' : '11th Science (PCMB + NEET/JEE/NDA)'}</option>
+                  <option value="इ. 11 वी आर्टस् (Defence / Arts)">{isMarathi ? 'इ. 11 वी आर्टस् (डिफेन्स अकॅडमी)' : '11th Arts (Defence Academy)'}</option>
+                  <option value="इ. 12 वी सायन्स (PCMB)">{isMarathi ? 'इ. 12 वी सायन्स (PCMB)' : '12th Science (PCMB)'}</option>
+                  <option value="इ. 12 वी आर्टस् (Defence / Arts)">{isMarathi ? 'इ. 12 वी आर्टस्' : '12th Arts'}</option>
                 </select>
               </div>
             </div>
@@ -965,37 +972,37 @@ export const LeadsPage = () => {
           {/* Admission & Source Info */}
           <div className="space-y-3 pt-2">
             <h4 className="text-xs font-bold uppercase text-slate-800 border-b border-slate-100 pb-1">
-              ३. चौकशी मार्ग व समुपदेशक नेमणूक
+              {isMarathi ? '३. चौकशी मार्ग व समुपदेशक नेमणूक' : '3. Lead Source & Counselor Assignment'}
             </h4>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  चौकशी मार्ग (Lead Source)
+                  {isMarathi ? 'चौकशी मार्ग (Lead Source)' : 'Lead Source'}
                 </label>
                 <select
                   value={newLeadForm.source}
                   onChange={(e) => setNewLeadForm({ ...newLeadForm, source: e.target.value })}
                   className="w-full text-xs px-3 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-gurukul-saffron-500 focus:outline-none bg-white"
                 >
-                  <option value="Manual Entry">Manual Entry (थेट नोंदणी)</option>
-                  <option value="Phone Call">Phone Call (फोन आला)</option>
-                  <option value="WhatsApp">WhatsApp विचारणा</option>
-                  <option value="Website">Website (वेबसाईट)</option>
+                  <option value="Manual Entry">Manual Entry</option>
+                  <option value="Phone Call">Phone Call</option>
+                  <option value="WhatsApp">WhatsApp</option>
+                  <option value="Website">Website</option>
                   <option value="Facebook Ads">Facebook Ads</option>
-                  <option value="Other">Other (इतर)</option>
+                  <option value="Other">Other</option>
                 </select>
               </div>
 
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  समुपदेशक नियुक्त करा (ऐच्छिक)
+                  {isMarathi ? 'समुपदेशक नियुक्त करा (ऐच्छिक)' : 'Assign Counselor (Optional)'}
                 </label>
                 <select
                   value={newLeadForm.assignedTo}
                   onChange={(e) => setNewLeadForm({ ...newLeadForm, assignedTo: e.target.value })}
                   className="w-full text-xs px-3 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-gurukul-saffron-500 focus:outline-none bg-white"
                 >
-                  <option value="">-- नंतर नियुक्त करा --</option>
+                  <option value="">{isMarathi ? '-- नंतर नियुक्त करा --' : '-- Assign Later --'}</option>
                   {telecallers.map(t => (
                     <option key={t.uid || t.id} value={t.uid || t.id}>
                       {t.fullName || t.displayName}
@@ -1007,13 +1014,13 @@ export const LeadsPage = () => {
 
             <div>
               <label className="block text-xs font-semibold text-slate-700 mb-1">
-                प्रशासकीय शेरा / टिपण (Admin Remarks)
+                {isMarathi ? 'प्रशासकीय शेरा / टिपण (Admin Remarks)' : 'Admin Remarks'}
               </label>
               <textarea
                 rows={2}
                 value={newLeadForm.adminRemarks}
                 onChange={(e) => setNewLeadForm({ ...newLeadForm, adminRemarks: e.target.value })}
-                placeholder="उदा. पालकांनी प्रत्यक्ष कार्यालयात येऊन चौकशी केली."
+                placeholder={isMarathi ? "उदा. पालकांनी प्रत्यक्ष कार्यालयात येऊन चौकशी केली." : "e.g. Parent visited campus office directly."}
                 className="w-full text-xs px-3 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-gurukul-saffron-500 focus:outline-none"
               />
             </div>
@@ -1021,10 +1028,10 @@ export const LeadsPage = () => {
 
           <div className="flex justify-end gap-2 pt-3 border-t border-slate-100">
             <Button variant="outline" size="sm" type="button" onClick={() => setAddModalOpen(false)}>
-              रद्द करा
+              {isMarathi ? 'रद्द करा' : 'Cancel'}
             </Button>
             <Button variant="primary" size="sm" type="submit" isLoading={isSubmitting}>
-              नोंदणी पूर्ण करा (Create Lead)
+              {isMarathi ? 'नोंदणी पूर्ण करा (Create Lead)' : 'Create Lead'}
             </Button>
           </div>
         </form>
@@ -1034,16 +1041,16 @@ export const LeadsPage = () => {
       <Modal
         isOpen={Boolean(assignModalLead)}
         onClose={() => setAssignModalLead(null)}
-        title="समुपदेशक नेमणूक / पुनर्नियुक्ती (Assign Counselor)"
+        title={isMarathi ? "समुपदेशक नेमणूक / पुनर्नियुक्ती (Assign Counselor)" : "Assign / Reassign Counselor"}
       >
         <form onSubmit={handleAssignSubmit} className="space-y-4">
           <p className="text-xs text-slate-600">
-            विद्यार्थी: <strong>{assignModalLead?.studentName}</strong> ({assignModalLead?.admissionClass})
+            {isMarathi ? 'विद्यार्थी:' : 'Student:'} <strong>{assignModalLead?.studentName}</strong> ({assignModalLead?.admissionClass})
           </p>
 
           <div>
             <label className="block text-xs font-semibold text-slate-700 mb-1">
-              समुपदेशक निवडा <span className="text-red-500">*</span>
+              {isMarathi ? 'समुपदेशक निवडा' : 'Select Counselor'} <span className="text-red-500">*</span>
             </label>
             <select
               required
@@ -1051,7 +1058,7 @@ export const LeadsPage = () => {
               onChange={(e) => setSelectedTelecaller(e.target.value)}
               className="w-full text-xs px-3 py-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-gurukul-saffron-500 focus:outline-none bg-white font-medium"
             >
-              <option value="">-- समुपदेशक निवडा --</option>
+              <option value="">{isMarathi ? '-- समुपदेशक निवडा --' : '-- Select Counselor --'}</option>
               {telecallers.map(t => (
                 <option key={t.uid || t.id} value={t.uid || t.id}>
                   {t.fullName || t.displayName}
@@ -1062,23 +1069,23 @@ export const LeadsPage = () => {
 
           <div>
             <label className="block text-xs font-semibold text-slate-700 mb-1">
-              नेमणुकीचे कारण (Reason)
+              {isMarathi ? 'नेमणुकीचे कारण (Reason)' : 'Assignment Reason'}
             </label>
             <input
               type="text"
               value={assignmentReason}
               onChange={(e) => setAssignmentReason(e.target.value)}
-              placeholder="उदा. नियमित वाटप / भाषा प्राधान्य"
+              placeholder={isMarathi ? "उदा. नियमित वाटप / भाषा प्राधान्य" : "e.g. Regular allocation / Language match"}
               className="w-full text-xs px-3 py-2 border border-slate-300 rounded-xl"
             />
           </div>
 
           <div className="flex justify-end gap-2 pt-2">
             <Button variant="outline" size="sm" type="button" onClick={() => setAssignModalLead(null)}>
-              रद्द करा
+              {isMarathi ? 'रद्द करा' : 'Cancel'}
             </Button>
             <Button variant="primary" size="sm" type="submit">
-              जतन करा
+              {isMarathi ? 'जतन करा' : 'Save Assignment'}
             </Button>
           </div>
         </form>
@@ -1088,16 +1095,19 @@ export const LeadsPage = () => {
       <Modal
         isOpen={bulkAssignModalOpen}
         onClose={() => setBulkAssignModalOpen(false)}
-        title="एकत्रित समुपदेशक वाटप (Bulk Assign Leads)"
+        title={isMarathi ? "एकत्रित समुपदेशक वाटप (Bulk Assign Leads)" : "Bulk Assign Leads"}
       >
         <form onSubmit={handleBulkAssignSubmit} className="space-y-4">
           <p className="text-xs text-slate-600">
-            निवडलेल्या <strong>{selectedLeadIds.length}</strong> लीड्स एका समुपदेशकाकडे सोपवण्यात येतील.
+            {isMarathi 
+              ? <>निवडलेल्या <strong>{selectedLeadIds.length}</strong> लीड्स एका समुपदेशकाकडे सोपवण्यात येतील.</>
+              : <>Selected <strong>{selectedLeadIds.length}</strong> leads will be assigned to the chosen counselor.</>
+            }
           </p>
 
           <div>
             <label className="block text-xs font-semibold text-slate-700 mb-1">
-              समुपदेशक निवडा <span className="text-red-500">*</span>
+              {isMarathi ? 'समुपदेशक निवडा' : 'Select Counselor'} <span className="text-red-500">*</span>
             </label>
             <select
               required
@@ -1105,7 +1115,7 @@ export const LeadsPage = () => {
               onChange={(e) => setBulkTelecallerId(e.target.value)}
               className="w-full text-xs px-3 py-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-gurukul-saffron-500 focus:outline-none bg-white font-medium"
             >
-              <option value="">-- समुपदेशक निवडा --</option>
+              <option value="">{isMarathi ? '-- समुपदेशक निवडा --' : '-- Select Counselor --'}</option>
               {telecallers.map(t => (
                 <option key={t.uid || t.id} value={t.uid || t.id}>
                   {t.fullName || t.displayName}
@@ -1116,23 +1126,23 @@ export const LeadsPage = () => {
 
           <div>
             <label className="block text-xs font-semibold text-slate-700 mb-1">
-              वाटपाचे कारण (Reason)
+              {isMarathi ? 'वाटपाचे कारण (Reason)' : 'Reason'}
             </label>
             <input
               type="text"
               value={bulkReason}
               onChange={(e) => setBulkReason(e.target.value)}
-              placeholder="उदा. नवीन बॅच वाटप"
+              placeholder={isMarathi ? "उदा. नवीन बॅच वाटप" : "e.g. New lead batch allocation"}
               className="w-full text-xs px-3 py-2 border border-slate-300 rounded-xl"
             />
           </div>
 
           <div className="flex justify-end gap-2 pt-2">
             <Button variant="outline" size="sm" type="button" onClick={() => setBulkAssignModalOpen(false)}>
-              रद्द करा
+              {isMarathi ? 'रद्द करा' : 'Cancel'}
             </Button>
             <Button variant="primary" size="sm" type="submit">
-              वाटप पूर्ण करा (Assign All)
+              {isMarathi ? 'वाटप पूर्ण करा (Assign All)' : 'Assign All'}
             </Button>
           </div>
         </form>
@@ -1142,16 +1152,16 @@ export const LeadsPage = () => {
       <Modal
         isOpen={Boolean(statusModalLead)}
         onClose={() => setStatusModalLead(null)}
-        title="लीड स्थिती अद्ययावत करा"
+        title={isMarathi ? "लीड स्थिती अद्ययावत करा" : "Update Lead Status"}
       >
         <form onSubmit={handleStatusSubmit} className="space-y-4">
           <p className="text-xs text-slate-600">
-            विद्यार्थी: <strong>{statusModalLead?.studentName}</strong> (सध्याची स्थिती: <strong>{statusModalLead?.status || statusModalLead?.leadStatus}</strong>)
+            {isMarathi ? 'विद्यार्थी:' : 'Student:'} <strong>{statusModalLead?.studentName}</strong> ({isMarathi ? 'सध्याची स्थिती:' : 'Current Status:'} <strong>{statusModalLead?.status || statusModalLead?.leadStatus}</strong>)
           </p>
 
           <div>
             <label className="block text-xs font-semibold text-slate-700 mb-1">
-              नवीन स्थिती निवडा <span className="text-red-500">*</span>
+              {isMarathi ? 'नवीन स्थिती निवडा' : 'Select New Status'} <span className="text-red-500">*</span>
             </label>
             <select
               value={quickNewStatus}
@@ -1159,32 +1169,32 @@ export const LeadsPage = () => {
               className="w-full text-xs px-3 py-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-gurukul-saffron-500 focus:outline-none bg-white font-bold"
               required
             >
-              <option value="">-- स्थिती निवडा --</option>
+              <option value="">{isMarathi ? '-- स्थिती निवडा --' : '-- Select Status --'}</option>
               {statusList.map(st => (
-                <option key={st} value={st}>{statusConfig[st]?.labelMr || st}</option>
+                <option key={st} value={st}>{isMarathi ? (statusConfig[st]?.labelMr || st) : (statusConfig[st]?.labelEn || st)}</option>
               ))}
             </select>
           </div>
 
           <div>
             <label className="block text-xs font-semibold text-slate-700 mb-1">
-              बदलाचे कारण / टिपण
+              {isMarathi ? 'बदलाचे कारण / टिपण' : 'Reason / Notes'}
             </label>
             <input
               type="text"
               value={statusChangeReason}
               onChange={(e) => setStatusChangeReason(e.target.value)}
-              placeholder="उदा. पालकांनी सकारात्मकता दर्शवली"
+              placeholder={isMarathi ? "उदा. पालकांनी सकारात्मकता दर्शवली" : "e.g. Parent showed high interest"}
               className="w-full text-xs px-3 py-2 border border-slate-300 rounded-xl"
             />
           </div>
 
           <div className="flex justify-end gap-2 pt-2">
             <Button variant="outline" size="sm" type="button" onClick={() => setStatusModalLead(null)}>
-              रद्द करा
+              {isMarathi ? 'रद्द करा' : 'Cancel'}
             </Button>
             <Button variant="primary" size="sm" type="submit">
-              जतन करा
+              {isMarathi ? 'जतन करा' : 'Save Status'}
             </Button>
           </div>
         </form>
@@ -1194,48 +1204,48 @@ export const LeadsPage = () => {
       <Modal
         isOpen={Boolean(callModalLead)}
         onClose={() => setCallModalLead(null)}
-        title="कॉल नोंदवा (Log Call Attempt)"
+        title={isMarathi ? "कॉल नोंदवा (Log Call Attempt)" : "Log Call Attempt"}
       >
         <form onSubmit={handleCallSubmit} className="space-y-4">
           <p className="text-xs text-slate-600">
-            पालक: <strong>{callModalLead?.parentName}</strong> ({callModalLead?.normalizedMobile || callModalLead?.mobileNumber})
+            {isMarathi ? 'पालक:' : 'Parent:'} <strong>{callModalLead?.parentName}</strong> ({callModalLead?.normalizedMobile || callModalLead?.mobileNumber})
           </p>
 
           <div>
             <label className="block text-xs font-semibold text-slate-700 mb-1">
-              कॉलचा निकाल <span className="text-red-500">*</span>
+              {isMarathi ? 'कॉलचा निकाल' : 'Call Outcome'} <span className="text-red-500">*</span>
             </label>
             <select
               value={callForm.callOutcome}
               onChange={(e) => setCallForm({ ...callForm, callOutcome: e.target.value })}
               className="w-full text-xs px-3 py-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-gurukul-saffron-500 focus:outline-none bg-white font-medium"
             >
-              <option value="Connected / Discussed">कॉल लागला व सविस्तर चर्चा झाली</option>
-              <option value="Busy / Call Waiting">कॉल व्यस्त होता</option>
-              <option value="Not Answered / Ringing">फोन वाजला पण उचलला नाही</option>
-              <option value="Switch Off">स्विच ऑफ किंवा कव्हरेजबाहेर</option>
-              <option value="Callback Requested">पालकांनी नंतर फोन करण्यास सांगितले</option>
-              <option value="School Visit Booked">कॅम्पस भेट ठरली</option>
+              <option value="Connected / Discussed">{isMarathi ? 'कॉल लागला व सविस्तर चर्चा झाली' : 'Connected / Discussed'}</option>
+              <option value="Busy / Call Waiting">{isMarathi ? 'कॉल व्यस्त होता' : 'Busy / Call Waiting'}</option>
+              <option value="Not Answered / Ringing">{isMarathi ? 'फोन वाजला पण उचलला नाही' : 'Not Answered / Ringing'}</option>
+              <option value="Switch Off">{isMarathi ? 'स्विच ऑफ किंवा कव्हरेजबाहेर' : 'Switched Off / Out of Coverage'}</option>
+              <option value="Callback Requested">{isMarathi ? 'पालकांनी नंतर फोन करण्यास सांगितले' : 'Callback Requested'}</option>
+              <option value="School Visit Booked">{isMarathi ? 'कॅम्पस भेट ठरली' : 'Campus Visit Booked'}</option>
             </select>
           </div>
 
           <div>
             <label className="block text-xs font-semibold text-slate-700 mb-1">
-              पालकांचा प्रतिसाद व टिपण <span className="text-red-500">*</span>
+              {isMarathi ? 'पालकांचा प्रतिसाद व टिपण' : 'Parent Response & Notes'} <span className="text-red-500">*</span>
             </label>
             <textarea
               rows={3}
               required
               value={callForm.parentResponse}
               onChange={(e) => setCallForm({ ...callForm, parentResponse: e.target.value })}
-              placeholder="झालेल्या चर्चेचा मुख्य तपशील..."
+              placeholder={isMarathi ? "झालेल्या चर्चेचा मुख्य तपशील..." : "Key highlights of the conversation..."}
               className="w-full text-xs px-3 py-2 border border-slate-300 rounded-xl"
             />
           </div>
 
           <div>
             <label className="block text-xs font-semibold text-slate-700 mb-1">
-              पुढील फॉलो-अप तारीख
+              {isMarathi ? 'पुढील फॉलो-अप तारीख' : 'Next Follow-up Date'}
             </label>
             <input
               type="date"
@@ -1247,10 +1257,10 @@ export const LeadsPage = () => {
 
           <div className="flex justify-end gap-2 pt-2">
             <Button variant="outline" size="sm" type="button" onClick={() => setCallModalLead(null)}>
-              रद्द करा
+              {isMarathi ? 'रद्द करा' : 'Cancel'}
             </Button>
             <Button variant="primary" size="sm" type="submit">
-              नोंद जतन करा
+              {isMarathi ? 'नोंद जतन करा' : 'Save Call Log'}
             </Button>
           </div>
         </form>

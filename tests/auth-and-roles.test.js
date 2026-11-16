@@ -189,3 +189,104 @@ test('8. Password reset validation', () => {
   assert.ok(emailRegex.test('telecaller1@gurukulbhose.com'));
   assert.ok(!emailRegex.test('invalid-email-address'));
 });
+
+test('9. Admin login role preservation: Admin does not degrade to Telecaller', async () => {
+  const { determineUserRole } = await import('../shared/services/auth/authService.js');
+
+  // Case A: Admin portal login with null custom claim and missing profile
+  const roleA = determineUserRole({
+    customRole: undefined,
+    profileData: null,
+    email: 'admin@gurukulbhose.com',
+    portalHint: 'admin'
+  });
+  assert.equal(roleA, 'admin', 'admin@gurukulbhose.com must be identified as admin');
+
+  // Case B: Superadmin portal login
+  const roleB = determineUserRole({
+    customRole: undefined,
+    profileData: null,
+    email: 'superadmin@gurukulbhose.com',
+    portalHint: 'super_admin'
+  });
+  assert.equal(roleB, 'super_admin', 'superadmin@gurukulbhose.com must be identified as super_admin');
+
+  // Case C: Admin email logging in without custom claims
+  const roleC = determineUserRole({
+    customRole: undefined,
+    profileData: null,
+    email: 'principal@gurukulbhose.com',
+    portalHint: 'admin'
+  });
+  assert.equal(roleC, 'admin', 'principal email must be recognized as admin');
+
+  // Case D: Pure telecaller email logging in
+  const roleD = determineUserRole({
+    customRole: undefined,
+    profileData: null,
+    email: 'telecaller1@gurukulbhose.com',
+    portalHint: 'telecaller'
+  });
+  assert.equal(roleD, 'telecaller', 'telecaller must be identified as telecaller');
+
+  // Case E: Generic user logging in on admin portal defaults to admin NOT telecaller
+  const roleE = determineUserRole({
+    customRole: undefined,
+    profileData: null,
+    email: 'user@gurukulbhose.com',
+    portalHint: 'admin'
+  });
+  assert.equal(roleE, 'admin', 'Logging in on Admin portal must default to admin');
+});
+
+test('10. Firestore Rules: Self-registration & Notification permissions verification', async () => {
+  const fs = await import('node:fs');
+  const path = await import('node:path');
+  const rulesPath = path.resolve('firestore.rules');
+  const content = fs.readFileSync(rulesPath, 'utf8');
+
+  // 1. users/{userId} self-registration
+  assert.ok(
+    content.includes('match /users/{userId}'),
+    'firestore.rules must match users/{userId}'
+  );
+  assert.match(
+    content,
+    /match \/users\/\{userId\}[\s\S]*?allow create:\s*if isValidUser\(request\.resource\.data\)[\s\S]*?(?:isOwner\(userId\)|request\.auth\.uid == userId)[\s\S]*?role in \['telecaller',\s*'admin'\]/,
+    'Rules must allow self-registration in users/{userId} for telecaller and admin roles'
+  );
+
+  // 2. telecaller_profiles/{userId} self-registration
+  assert.ok(
+    content.includes('match /telecaller_profiles/{userId}'),
+    'firestore.rules must match telecaller_profiles/{userId}'
+  );
+  assert.match(
+    content,
+    /match \/telecaller_profiles\/\{userId\}[\s\S]*?allow create:\s*if isValidTelecallerProfile\(request\.resource\.data\)[\s\S]*?isOwner\(userId\)[\s\S]*?status in \['pending',\s*'active'\]/,
+    'Rules must allow self-registration in telecaller_profiles/{userId} with status pending or active'
+  );
+
+  // 3. notifications/{notificationId} authenticated create
+  assert.ok(
+    content.includes('match /notifications/{notificationId}'),
+    'firestore.rules must match notifications/{notificationId}'
+  );
+  assert.match(
+    content,
+    /match \/notifications\/\{notificationId\}[\s\S]*?allow create:\s*if isAuthenticated\(\) && isValidNotification\(request\.resource\.data\);/,
+    'Rules must allow authenticated users to create notifications'
+  );
+
+  // 4. Status pending support in validators
+  assert.match(
+    content,
+    /function isValidUser\(data\)[\s\S]*?status in \['active',\s*'inactive',\s*'pending'\]/,
+    'isValidUser must support status pending'
+  );
+  assert.match(
+    content,
+    /function isValidTelecallerProfile\(data\)[\s\S]*?status in \['active',\s*'inactive',\s*'pending'\]/,
+    'isValidTelecallerProfile must support status pending'
+  );
+});

@@ -15,7 +15,7 @@
     "preview:public": "vite preview --config apps/public-website/vite.config.js apps/public-website",
     "preview:admin": "vite preview --config apps/admin-panel/vite.config.js apps/admin-panel",
     "preview:telecaller": "vite preview --config apps/telecaller-panel/vite.config.js apps/telecaller-panel",
-    "test": "node --test tests/auth-and-roles.test.js tests/app-separation.test.js tests/cms-phase4.test.js tests/lead-crm-phase5.test.js tests/call-followup-phase6.test.js"
+    "test": "node --test tests/auth-and-roles.test.js tests/app-separation.test.js tests/cms-phase4.test.js tests/lead-crm-phase5.test.js tests/call-followup-phase6.test.js tests/admin-crm-phase9.test.js"
   },
   "dependencies": {
     "clsx": "^2.1.1",

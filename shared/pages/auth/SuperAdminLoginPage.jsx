@@ -24,7 +24,7 @@ export const SuperAdminLoginPage = () => {
     setLoading(true);
     setError(null);
 
-    const res = await login(email, password);
+    const res = await login(email, password, 'super_admin');
     if (res.success) {
       if (res.user.role === 'super_admin' || res.user.role === 'superadmin') {
         navigate('/super-admin/dashboard', { replace: true });

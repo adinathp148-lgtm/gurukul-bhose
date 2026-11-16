@@ -1,18 +1,20 @@
 import React from 'react';
 import { Phone, Mail, MapPin, Clock, ExternalLink } from 'lucide-react';
 import { institutionInfo } from '../../data/initialData';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 export const ContactInfoSection = ({ institution = institutionInfo }) => {
+  const { isMarathi } = useLanguage();
   const primaryPhone = institution?.phones?.[0] || '9850449800';
   const allPhones = Array.isArray(institution?.phones) && institution.phones.length > 0
     ? institution.phones.join(' / ')
     : '9850449800 / 9850449808 / 7020260968';
 
   const formattedAddress = typeof institution?.address === 'object'
-    ? `${institution.address.line1 || ''}, ${institution.address.landmark ? institution.address.landmark + ', ' : ''}${institution.address.taluka ? 'ता. ' + institution.address.taluka + ', ' : ''}${institution.address.district ? 'जि. ' + institution.address.district : ''} ${institution.address.pincode ? '- ' + institution.address.pincode : ''}`
-    : (institution?.address || 'दंडोबा डोंगर पायथ्याला, यल्लामा मंदिर जवळ, मिरज-पंढरपूर हायवे लगत, भोसे, ता. मिरज, जि. सांगली.');
+    ? `${institution.address.line1 || ''}, ${institution.address.landmark ? institution.address.landmark + ', ' : ''}${institution.address.taluka ? (isMarathi ? 'ता. ' : 'Tal. ') + institution.address.taluka + ', ' : ''}${institution.address.district ? (isMarathi ? 'जि. ' : 'Dist. ') + institution.address.district : ''} ${institution.address.pincode ? '- ' + institution.address.pincode : ''}`
+    : (institution?.address || (isMarathi ? 'दंडोबा डोंगर पायथ्याला, यल्लामा मंदिर जवळ, मिरज-पंढरपूर हायवे लगत, भोसे, ता. मिरज, जि. सांगली.' : 'Foothills of Dandoba, Near Yallamma Temple, Miraj-Pandharpur Highway, Bhose, Tal. Miraj, Dist. Sangli.'));
 
-  const workingHours = institution?.workingHours || institution?.officeHours || 'सोमवार - रविवार: ९ AM - ५ PM (७ दिवस सुरू)';
+  const workingHours = institution?.workingHours || institution?.officeHours || (isMarathi ? 'सोमवार - रविवार: ९ AM - ५ PM (७ दिवस सुरू)' : 'Monday - Sunday: 9:00 AM - 5:00 PM (All 7 Days Open)');
   const mapUrl = institution?.googleMapsUrl || 'https://maps.google.com/?q=Gurukul+Bhose+Miraj+Sangli';
   const mapEmbed = institution?.mapEmbedUrl || 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d15277.937222415177!2d74.75549!3d16.80287!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3bc1230000000001%3A0x1!2sBhose%2C%20Maharashtra!5e0!3m2!1sen!2sin!4v1700000000000!5m2!1sen!2sin';
 
@@ -21,13 +23,15 @@ export const ContactInfoSection = ({ institution = institutionInfo }) => {
       <div className="lg:col-span-6 p-8 sm:p-10 space-y-6 flex flex-col justify-between">
         <div>
           <span className="text-xs font-bold uppercase tracking-wider text-gurukul-saffron-600 block">
-            कॅम्पस संपर्क व पत्ता
+            {isMarathi ? 'कॅम्पस संपर्क व पत्ता' : 'Campus Contact & Address'}
           </span>
           <h2 className="text-2xl font-black text-gurukul-navy-900 mt-1">
-            प्रत्यक्ष संस्थेला भेट द्या
+            {isMarathi ? 'प्रत्यक्ष संस्थेला भेट द्या' : 'Visit Our Campus In Person'}
           </h2>
           <p className="text-xs sm:text-sm text-slate-600 mt-2">
-            पालकांनी पाल्यासह प्रत्यक्ष संस्थेला भेट देऊन निसर्गरम्य परिसर, वसतिगृह, वर्ग आणि क्रीडांगणाची पाहणी करावी.
+            {isMarathi 
+              ? 'पालकांनी पाल्यासह प्रत्यक्ष संस्थेला भेट देऊन निसर्गरम्य परिसर, वसतिगृह, वर्ग आणि क्रीडांगणाची पाहणी करावी.'
+              : 'Parents are cordially invited to visit our scenic campus, hostels, modern classrooms, and athletic sports grounds.'}
           </p>
 
           <div className="mt-6 space-y-4 text-xs text-slate-700">
@@ -36,7 +40,7 @@ export const ContactInfoSection = ({ institution = institutionInfo }) => {
                 <MapPin className="w-4 h-4" />
               </div>
               <div className="leading-relaxed">
-                <strong className="block text-slate-900">पत्ता (Address):</strong>
+                <strong className="block text-slate-900">{isMarathi ? 'पत्ता (Address):' : 'Campus Address:'}</strong>
                 {formattedAddress}
               </div>
             </div>
@@ -46,7 +50,7 @@ export const ContactInfoSection = ({ institution = institutionInfo }) => {
                 <Phone className="w-4 h-4" />
               </div>
               <div>
-                <strong className="block text-slate-900">संपर्क क्रमांक (Phones):</strong>
+                <strong className="block text-slate-900">{isMarathi ? 'संपर्क क्रमांक (Phones):' : 'Admission Helpline:'}</strong>
                 <span>{allPhones}</span>
               </div>
             </div>
@@ -56,7 +60,7 @@ export const ContactInfoSection = ({ institution = institutionInfo }) => {
                 <Mail className="w-4 h-4" />
               </div>
               <div>
-                <strong className="block text-slate-900">ईमेल (Email):</strong>
+                <strong className="block text-slate-900">{isMarathi ? 'ईमेल (Email):' : 'Official Email:'}</strong>
                 <a href={`mailto:${institution?.email || 'contact@gurukulbhose.com'}`} className="text-gurukul-saffron-600 hover:underline">
                   {institution?.email || 'contact@gurukulbhose.com'}
                 </a>
@@ -68,7 +72,7 @@ export const ContactInfoSection = ({ institution = institutionInfo }) => {
                 <Clock className="w-4 h-4" />
               </div>
               <div>
-                <strong className="block text-slate-900">कार्यालयीन वेळ (Working Hours):</strong>
+                <strong className="block text-slate-900">{isMarathi ? 'कार्यालयीन वेळ (Working Hours):' : 'Office Hours:'}</strong>
                 <span>{workingHours}</span>
               </div>
             </div>
@@ -80,7 +84,7 @@ export const ContactInfoSection = ({ institution = institutionInfo }) => {
             href={`tel:${primaryPhone}`}
             className="text-xs font-bold text-white bg-gurukul-navy-900 hover:bg-black px-4 py-2.5 rounded-lg transition-colors"
           >
-            आत्ताच कॉल करा (Call Now)
+            {isMarathi ? 'आत्ताच कॉल करा (Call Now)' : 'Call Campus Now'}
           </a>
           <a
             href={mapUrl}
@@ -88,7 +92,7 @@ export const ContactInfoSection = ({ institution = institutionInfo }) => {
             rel="noopener noreferrer"
             className="text-xs font-bold text-slate-700 hover:text-gurukul-saffron-600 flex items-center gap-1"
           >
-            <span>Google Maps उघडा</span>
+            <span>{isMarathi ? 'Google Maps उघडा' : 'Open in Google Maps'}</span>
             <ExternalLink className="w-3.5 h-3.5" />
           </a>
         </div>

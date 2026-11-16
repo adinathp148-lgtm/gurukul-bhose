@@ -462,3 +462,30 @@ test('TEST 21: Firestore rules declare Phase 6 Calling, Follow-ups, and Scheduli
   assert.match(rulesContent, /notification_logs[\s\S]*?allow write: if false;/, 'Notification logs must deny client write');
 });
 
+test('TEST 22: Firestore rules declare Phase 7 Campus Visits and Admission Workflow collections with strict RBAC', () => {
+  const rulesPath = path.join(projectRoot, 'firestore.rules');
+  const rulesContent = fs.readFileSync(rulesPath, 'utf8');
+
+  // Verify Phase 7 match rules
+  assert.match(rulesContent, /match \/campus_visits\/\{visitId\}/, 'Rules must declare campus_visits collection');
+  assert.match(rulesContent, /match \/visit_slot_reservations\/\{reservationId\}/, 'Rules must declare visit_slot_reservations collection');
+  assert.match(rulesContent, /match \/visit_schedule_settings\/\{settingsId\}/, 'Rules must declare visit_schedule_settings collection');
+  assert.match(rulesContent, /match \/visit_feedback\/\{feedbackId\}/, 'Rules must declare visit_feedback collection');
+  assert.match(rulesContent, /match \/admission_applications\/\{applicationId\}/, 'Rules must declare admission_applications collection');
+  assert.match(rulesContent, /match \/admission_stage_history\/\{historyId\}/, 'Rules must declare admission_stage_history collection');
+  assert.match(rulesContent, /match \/admission_documents\/\{documentId\}/, 'Rules must declare admission_documents collection');
+
+  // Verify Phase 7 domain validators
+  assert.match(rulesContent, /function isValidCampusVisit\(data\)/, 'Rules must define isValidCampusVisit validator');
+  assert.match(rulesContent, /function isValidVisitFeedback\(data\)/, 'Rules must define isValidVisitFeedback validator');
+  assert.match(rulesContent, /function isValidAdmissionApplication\(data\)/, 'Rules must define isValidAdmissionApplication validator');
+  assert.match(rulesContent, /function isValidAdmissionStageHistory\(data\)/, 'Rules must define isValidAdmissionStageHistory validator');
+  assert.match(rulesContent, /function isValidAdmissionDocument\(data\)/, 'Rules must define isValidAdmissionDocument validator');
+
+  // Verify immutability & security invariants
+  assert.match(rulesContent, /visit_feedback[\s\S]*?allow update, delete: if false;/, 'Visit feedback must be strictly immutable');
+  assert.match(rulesContent, /admission_stage_history[\s\S]*?allow update, delete: if false;/, 'Admission stage history must be strictly immutable');
+  assert.match(rulesContent, /admission_applications[\s\S]*?allow delete: if isSuperAdmin\(\);/, 'Admission applications can only be deleted by Super Admin');
+});
+
+

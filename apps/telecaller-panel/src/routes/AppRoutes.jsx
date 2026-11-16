@@ -5,12 +5,14 @@ import { ProtectedRoute } from '@shared/routes/ProtectedRoute';
 
 // Telecaller Dedicated Pages
 import { TelecallerLoginPage } from '@shared/pages/auth/TelecallerLoginPage';
+import { TelecallerRegisterPage } from '@shared/pages/auth/TelecallerRegisterPage';
 import { TelecallerDashboardPage } from '@shared/pages/telecaller/TelecallerDashboardPage';
 import { TelecallerLeadsPage } from '@shared/pages/telecaller/TelecallerLeadsPage';
 import { TelecallerLeadDetailsPage } from '@shared/pages/telecaller/TelecallerLeadDetailsPage';
 import { TelecallerFollowUpsPage } from '@shared/pages/telecaller/TelecallerFollowUpsPage';
 import { TelecallerCallsPage } from '@shared/pages/telecaller/TelecallerCallsPage';
 import { TelecallerCalendarPage } from '@shared/pages/telecaller/TelecallerCalendarPage';
+import { TelecallerVisitsPage } from '@shared/pages/telecaller/TelecallerVisitsPage';
 import { TelecallerProfilePage } from '@shared/pages/telecaller/TelecallerProfilePage';
 import { TelecallerChangePasswordPage } from '@shared/pages/telecaller/TelecallerChangePasswordPage';
 
@@ -45,8 +47,9 @@ const TelecallerNotificationsPage = () => {
 export const AppRoutes = () => {
   return (
     <Routes>
-      {/* 1. Telecaller Dedicated Login */}
+      {/* 1. Telecaller Dedicated Login & Registration */}
       <Route path="/login" element={<TelecallerLoginPage />} />
+      <Route path="/register" element={<TelecallerRegisterPage />} />
 
       {/* 2. Protected Telecaller Workspace */}
       <Route
@@ -62,6 +65,8 @@ export const AppRoutes = () => {
         <Route path="/leads/:leadId" element={<TelecallerLeadDetailsPage />} />
         <Route path="/calls" element={<TelecallerCallsPage />} />
         <Route path="/calendar" element={<TelecallerCalendarPage />} />
+        <Route path="/visits" element={<TelecallerVisitsPage />} />
+        <Route path="/campus-visits" element={<Navigate to="/visits" replace />} />
         <Route path="/follow-ups" element={<TelecallerFollowUpsPage />} />
         <Route path="/history" element={<TelecallerFollowUpsPage />} />
         <Route path="/notifications" element={<TelecallerNotificationsPage />} />

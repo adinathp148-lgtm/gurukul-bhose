@@ -529,6 +529,14 @@ export const demoUsers = [
     isActive: true
   },
   {
+    uid: "admin-adinath",
+    email: "adinathp148@gmail.com",
+    displayName: "Adinath Patil (School Admin)",
+    role: "admin",
+    phone: "9850449800",
+    isActive: true
+  },
+  {
     uid: "telecaller-001",
     email: "telecaller1@gurukulbhose.com",
     displayName: "Sachin Patil (Counselor)",
@@ -677,5 +685,140 @@ export const demoAdmissions = [
     feesPending: 20000,
     status: "Active",
     hostelAllocated: "Hostel Block A - Room 104"
+  }
+];
+
+export const demoCampusVisits = [
+  {
+    visitId: "visit-2026-001",
+    visitNumber: "VR-2026-000001",
+    leadId: "lead-103",
+    leadNumber: "GB-2026-000003",
+    parentName: "राजेंद्र महादेव कुलकर्णी",
+    studentName: "पार्थ राजेंद्र कुलकर्णी",
+    mobileNumber: "9881122334",
+    whatsappNumber: "9881122334",
+    email: "rajendra.k@example.com",
+    applyingClass: "इ. 5 वी (5th Standard)",
+    academicYear: "2026-2027",
+    requestedDate: "2026-11-20",
+    timeSlot: "11:00 AM - 11:30 AM",
+    timezone: "Asia/Kolkata",
+    durationMinutes: 30,
+    numberOfVisitors: 3,
+    purpose: "School Admission Enquiry",
+    status: "Confirmed",
+    assignedStaffId: "staff-001",
+    assignedStaffName: "Col. R. S. Jadhav (Campus Director)",
+    createdBy: "telecaller-002",
+    creatorRole: "telecaller",
+    approvedBy: "Principal / School Admin",
+    approvalReason: "Approved for Friday campus tour",
+    internalNotes: "विद्यार्थी ५ वी साठी नवोदय व स्कॉलरशिप निवासी तयारी पाहणार आहेत.",
+    checkedInAt: null,
+    checkedOutAt: null,
+    createdAt: "2026-11-14T10:00:00.000Z",
+    updatedAt: "2026-11-14T11:00:00.000Z"
+  },
+  {
+    visitId: "visit-2026-002",
+    visitNumber: "VR-2026-000002",
+    leadId: "lead-101",
+    leadNumber: "GB-2026-000001",
+    parentName: "सुरेश विठ्ठल जाधव",
+    studentName: "रोहन सुरेश जाधव",
+    mobileNumber: "9822012345",
+    whatsappNumber: "9822012345",
+    email: "suresh.jadhav@example.com",
+    applyingClass: "इ. 8 वी (8th Standard)",
+    academicYear: "2026-2027",
+    requestedDate: new Date().toISOString().split('T')[0],
+    timeSlot: "10:30 AM - 11:00 AM",
+    timezone: "Asia/Kolkata",
+    durationMinutes: 30,
+    numberOfVisitors: 2,
+    purpose: "Campus Tour",
+    status: "Checked In",
+    assignedStaffId: "staff-002",
+    assignedStaffName: "Prof. Aniket Kadam (Academic Coordinator)",
+    createdBy: "PUBLIC_WEBSITE",
+    creatorRole: "public",
+    approvedBy: "Principal / School Admin",
+    approvalReason: "Online parent booking verified",
+    internalNotes: "पालक प्रत्यक्ष गेटवर आले आहेत.",
+    checkedInAt: "10:35 AM",
+    checkedInBy: "Prof. Aniket Kadam",
+    checkedOutAt: null,
+    createdAt: "2026-11-15T09:30:00.000Z",
+    updatedAt: "2026-11-16T10:35:00.000Z"
+  }
+];
+
+export const demoAdmissionApplications = [
+  {
+    applicationId: "app-2026-001",
+    applicationNumber: "APP-2026-000001",
+    leadId: "lead-104",
+    leadNumber: "GB-2026-000004",
+    studentName: "ओंकार संतोष माने",
+    parentName: "संतोष बाळू माने",
+    parentMobile: "9765432100",
+    parentEmail: "santosh.mane@example.com",
+    applyingClass: "इ. 12 वी आर्टस्",
+    academicYear: "2026-2027",
+    currentStage: "Admission Confirmed",
+    assignedStaffId: "admin-001",
+    assignedStaffName: "Principal / School Admin",
+    approvalStatus: "Approved",
+    requiredDocuments: [
+      { documentType: "Birth Certificate", labelMr: "जन्म दाखला", required: true, status: "Verified", reviewedAt: "2026-11-08T10:00:00Z" },
+      { documentType: "Previous School Transfer Certificate", labelMr: "शाळा सोडल्याचा दाखला (TC/LC)", required: true, status: "Verified", reviewedAt: "2026-11-08T10:00:00Z" },
+      { documentType: "Previous Academic Report", labelMr: "मागील इयत्तेचे गुणपत्रक", required: true, status: "Verified", reviewedAt: "2026-11-08T10:00:00Z" },
+      { documentType: "Student Photograph", labelMr: "विद्यार्थ्याचे पासपोर्ट फोटो", required: true, status: "Verified", reviewedAt: "2026-11-08T10:00:00Z" },
+      { documentType: "Parent Identity Proof", labelMr: "पालकांचे आधार कार्ड", required: true, status: "Verified", reviewedAt: "2026-11-08T10:00:00Z" },
+      { documentType: "Address Proof", labelMr: "रहिवासी दाखला", required: true, status: "Verified", reviewedAt: "2026-11-08T10:00:00Z" }
+    ],
+    feeDetails: {
+      totalFee: 55000,
+      feePaid: 35000,
+      feePending: 20000,
+      paymentStatus: "Partial Paid"
+    },
+    internalNotes: ["प्रवेश मंजूर, वसतिगृह रूम 104 वाटप."],
+    createdAt: "2026-11-05T11:20:00.000Z",
+    updatedAt: "2026-11-08T16:00:00.000Z"
+  },
+  {
+    applicationId: "app-2026-002",
+    applicationNumber: "APP-2026-000002",
+    leadId: "lead-101",
+    leadNumber: "GB-2026-000001",
+    studentName: "रोहन सुरेश जाधव",
+    parentName: "सुरेश विठ्ठल जाधव",
+    parentMobile: "9822012345",
+    parentEmail: "suresh.jadhav@example.com",
+    applyingClass: "इ. 8 वी (8th Standard)",
+    academicYear: "2026-2027",
+    currentStage: "Application Started",
+    assignedStaffId: "admin-001",
+    assignedStaffName: "Principal / School Admin",
+    approvalStatus: "Pending",
+    requiredDocuments: [
+      { documentType: "Birth Certificate", labelMr: "जन्म दाखला", required: true, status: "Under Review" },
+      { documentType: "Previous School Transfer Certificate", labelMr: "शाळा सोडल्याचा दाखला (TC/LC)", required: true, status: "Not Submitted" },
+      { documentType: "Previous Academic Report", labelMr: "मागील इयत्तेचे गुणपत्रक", required: true, status: "Verified" },
+      { documentType: "Student Photograph", labelMr: "विद्यार्थ्याचे पासपोर्ट फोटो", required: true, status: "Not Submitted" },
+      { documentType: "Parent Identity Proof", labelMr: "पालकांचे आधार कार्ड", required: true, status: "Not Submitted" },
+      { documentType: "Address Proof", labelMr: "रहिवासी दाखला", required: true, status: "Not Submitted" }
+    ],
+    feeDetails: {
+      totalFee: 65000,
+      feePaid: 0,
+      feePending: 65000,
+      paymentStatus: "Pending"
+    },
+    internalNotes: ["पालकांनी फॉर्म भरला, कागदपत्रे गोळा करणे सुरू."],
+    createdAt: "2026-11-15T12:00:00.000Z",
+    updatedAt: "2026-11-15T12:00:00.000Z"
   }
 ];

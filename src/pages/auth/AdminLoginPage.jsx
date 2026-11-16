@@ -1,18 +1,21 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
-import { Shield, Lock, Mail, ArrowRight, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { Shield, Lock, Mail, ArrowRight, AlertCircle, CheckCircle2, UserPlus } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
+import { useLanguage } from '../../contexts/LanguageContext';
 import { Button } from '../../components/common/Button';
 import { Modal } from '../../components/common/Modal';
 
 export const AdminLoginPage = () => {
   const { login, requestPasswordReset } = useAuth();
+  const { isMarathi } = useLanguage();
   const navigate = useNavigate();
   const location = useLocation();
 
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState(location.state?.registeredEmail || '');
   const [password, setPassword] = useState('');
   const [error, setError] = useState(null);
+  const [successMessage, setSuccessMessage] = useState(location.state?.successMessage || null);
   const [loading, setLoading] = useState(false);
 
   // Password reset modal state
@@ -27,15 +30,15 @@ export const AdminLoginPage = () => {
     setLoading(true);
     setError(null);
 
-    const res = await login(email, password);
+    const res = await login(email, password, 'admin');
     if (res.success) {
       if (res.user.role === 'telecaller') {
         navigate('/telecaller/dashboard', { replace: true });
       } else {
-        navigate(from, { replace: true });
+        navigate(from || '/admin/dashboard', { replace: true });
       }
     } else {
-      setError(res.error || 'लॉगिन अयशस्वी झाले. कृपया ईमेल आणि पासवर्ड तपासा.');
+      setError(res.error || (isMarathi ? 'लॉगिन अयशस्वी झाले. कृपया ईमेल आणि पासवर्ड तपासा.' : 'Sign in failed. Check credentials.'));
     }
     setLoading(false);
   };
@@ -75,17 +78,39 @@ export const AdminLoginPage = () => {
           </p>
         </div>
 
+        {/* Success Alert */}
+        {successMessage && (
+          <div className="mb-5 p-3.5 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs flex items-center gap-2.5">
+            <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
+            <span>{successMessage}</span>
+          </div>
+        )}
+
+        {/* Error Alert */}
         {error && (
-          <div className="mb-5 p-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs flex items-center gap-2">
-            <AlertCircle className="w-4 h-4 shrink-0" />
-            <span>{error}</span>
+          <div className="mb-5 p-3.5 rounded-2xl bg-red-50 border border-red-200 text-red-700 text-xs space-y-2">
+            <div className="flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 shrink-0 text-red-600" />
+              <span className="font-medium">{error}</span>
+            </div>
+            {(error.includes('अस्तित्वात नाही') || error.includes('नोंदणी') || error.includes('चुकीचा')) && (
+              <div className="pt-1 border-t border-red-200/60">
+                <Link
+                  to="/admin/register"
+                  className="inline-flex items-center gap-1.5 font-bold text-blue-700 hover:text-blue-900 underline text-[11px]"
+                >
+                  <UserPlus className="w-3.5 h-3.5" />
+                  <span>{isMarathi ? 'खाते नाही का? येथे नवीन ॲडमिन नोंदणी करा →' : 'No account? Register Admin here →'}</span>
+                </Link>
+              </div>
+            )}
           </div>
         )}
 
         <form onSubmit={handleLogin} className="space-y-4">
           <div>
             <label className="block text-xs font-semibold text-slate-700 mb-1">
-              अधिकृत ईमेल (Admin Email) *
+              {isMarathi ? 'अधिकृत ईमेल (Admin Email) *' : 'Official Admin Email *'}
             </label>
             <div className="relative">
               <Mail className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
@@ -94,7 +119,7 @@ export const AdminLoginPage = () => {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="admin@gurukulbhose.com"
+                placeholder="adinathp148@gmail.com"
                 className="w-full text-xs pl-9 pr-3 py-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-gurukul-saffron-500 focus:outline-none"
               />
             </div>
@@ -103,14 +128,14 @@ export const AdminLoginPage = () => {
           <div>
             <div className="flex items-center justify-between mb-1">
               <label className="block text-xs font-semibold text-slate-700">
-                पासवर्ड (Password) *
+                {isMarathi ? 'पासवर्ड (Password) *' : 'Password *'}
               </label>
               <button
                 type="button"
                 onClick={() => setResetModalOpen(true)}
                 className="text-[11px] text-gurukul-saffron-600 hover:underline font-semibold"
               >
-                पासवर्ड विसरलात?
+                {isMarathi ? 'पासवर्ड विसरलात?' : 'Forgot Password?'}
               </button>
             </div>
             <div className="relative">
@@ -131,19 +156,36 @@ export const AdminLoginPage = () => {
             variant="primary"
             size="lg"
             isLoading={loading}
-            className="w-full font-bold uppercase tracking-wider shadow-lg mt-2"
+            className="w-full font-bold uppercase tracking-wider shadow-lg mt-2 py-3"
           >
-            <span>लॉगिन करा / Sign In</span>
+            <span>{isMarathi ? 'लॉगिन करा / Sign In' : 'Sign In'}</span>
             <ArrowRight className="w-4 h-4 ml-1.5" />
           </Button>
+
+          {/* Dedicated Admin Registration CTA */}
+          <div className="pt-2 text-center">
+            <p className="text-[11px] text-slate-500 mb-1.5">
+              {isMarathi ? 'नवीन प्रशासकीय अधिकारी आहात का?' : 'New School Administrator?'}
+            </p>
+            <Link
+              to="/admin/register"
+              className="w-full inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-700 text-xs font-bold transition-colors"
+            >
+              <UserPlus className="w-3.5 h-3.5 text-blue-600" />
+              <span>{isMarathi ? 'नवीन ॲडमिन नोंदणी करा (Admin Registration)' : 'Register Admin Account'}</span>
+            </Link>
+          </div>
         </form>
 
-        <div className="mt-8 pt-6 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
-          <Link to="/telecaller/login" className="hover:text-gurukul-saffron-600 font-semibold">
-            समुपदेशक (Telecaller) लॉगिन →
+        <div className="mt-6 pt-5 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+          <Link to="/admin/register" className="hover:text-blue-700 font-bold text-blue-600">
+            + {isMarathi ? 'ॲडमिन नोंदणी' : 'Admin Register'}
+          </Link>
+          <Link to="/telecaller/login" className="hover:text-emerald-700 font-semibold text-emerald-600">
+            {isMarathi ? 'समुपदेशक लॉगिन →' : 'Telecaller Login →'}
           </Link>
           <Link to="/" className="hover:text-gurukul-saffron-600 font-semibold">
-            मुख्य वेबसाईट
+            {isMarathi ? 'शाळा वेबसाईट' : 'Website'}
           </Link>
         </div>
       </div>

@@ -2208,4 +2208,665 @@ exports.getTelecallerPerformance = onCall(async (request) => {
   };
 });
 
+// ===============================================================
+// PHASE 7: CAMPUS VISIT SCHEDULING, VISIT DESK & ADMISSION WORKFLOW
+// ===============================================================
+
+/**
+ * 1. Submit Campus Visit Request (Public Website Form)
+ */
+exports.submitCampusVisitRequest = onCall(async (request) => {
+  const data = request.data || {};
+  const {
+    parentName,
+    mobileNumber,
+    whatsappNumber,
+    email,
+    studentName,
+    currentClass,
+    applyingClass,
+    academicYear = '2026-2027',
+    requestedDate,
+    timeSlot,
+    numberOfVisitors = 2,
+    purpose = 'School Admission Enquiry',
+    additionalMessage = ''
+  } = data;
+
+  if (!parentName || !parentName.trim()) {
+    throw new HttpsError('invalid-argument', 'Parent full name is required.');
+  }
+  if (!mobileNumber || !mobileNumber.trim()) {
+    throw new HttpsError('invalid-argument', 'Mobile number is required.');
+  }
+  if (!studentName || !studentName.trim()) {
+    throw new HttpsError('invalid-argument', 'Student full name is required.');
+  }
+  if (!applyingClass || !applyingClass.trim()) {
+    throw new HttpsError('invalid-argument', 'Applying class is required.');
+  }
+  if (!requestedDate || !timeSlot) {
+    throw new HttpsError('invalid-argument', 'Preferred visit date and time slot are required.');
+  }
+
+  // Normalize mobile
+  const cleanMobile = mobileNumber.replace(/\D/g, '').slice(-10);
+  if (cleanMobile.length !== 10) {
+    throw new HttpsError('invalid-argument', 'Valid 10-digit mobile number required.');
+  }
+
+  // Prevent past dates
+  const todayStr = new Date().toISOString().split('T')[0];
+  if (requestedDate < todayStr) {
+    throw new HttpsError('invalid-argument', 'Cannot book a visit for past dates.');
+  }
+
+  // Concurrency-safe Visit Number & Slot Reservation via Transaction
+  const visitRef = db.collection('campus_visits').doc();
+  const slotResId = `${requestedDate}_${timeSlot.replace(/\s+/g, '')}`;
+  const slotRef = db.collection('visit_slot_reservations').doc(slotResId);
+
+  let visitNumber = '';
+  await db.runTransaction(async (transaction) => {
+    // 1. Check slot reservation capacity
+    const slotDoc = await transaction.get(slotRef);
+    const maxCapacity = 5;
+    const requestedVisitors = parseInt(numberOfVisitors, 10) || 1;
+    let currentReserved = 0;
+
+    if (slotDoc.exists) {
+      currentReserved = slotDoc.data().reservedCount || 0;
+    }
+
+    if (currentReserved + requestedVisitors > maxCapacity) {
+      throw new HttpsError('resource-exhausted', `Slot ${timeSlot} on ${requestedDate} is fully booked.`);
+    }
+
+    // 2. Generate Visit Number
+    const currentYear = new Date().getFullYear();
+    const prefix = `VR-${currentYear}-`;
+    const counterDocRef = db.collection('counters').doc(`visits_${currentYear}`);
+    const counterDoc = await transaction.get(counterDocRef);
+
+    let nextSeq = 1;
+    if (counterDoc.exists) {
+      nextSeq = (counterDoc.data().currentSequence || 0) + 1;
+    }
+    transaction.set(counterDocRef, { currentSequence: nextSeq }, { merge: true });
+    visitNumber = `${prefix}${String(nextSeq).padStart(6, '0')}`;
+
+    // 3. Reserve slot
+    transaction.set(slotRef, {
+      slotId: slotResId,
+      scheduledDate: requestedDate,
+      timeSlot,
+      capacity: maxCapacity,
+      reservedCount: currentReserved + requestedVisitors,
+      updatedAt: admin.firestore.FieldValue.serverTimestamp()
+    }, { merge: true });
+
+    // 4. Create Campus Visit Record
+    transaction.set(visitRef, {
+      visitId: visitRef.id,
+      visitNumber,
+      parentName: parentName.trim(),
+      mobileNumber: cleanMobile,
+      whatsappNumber: whatsappNumber ? whatsappNumber.replace(/\D/g, '').slice(-10) : cleanMobile,
+      email: (email || '').trim().toLowerCase(),
+      studentName: studentName.trim(),
+      currentClass: (currentClass || '').trim(),
+      applyingClass: applyingClass.trim(),
+      academicYear: academicYear.trim(),
+      requestedDate,
+      timeSlot,
+      timezone: 'Asia/Kolkata',
+      durationMinutes: 30,
+      numberOfVisitors: requestedVisitors,
+      purpose,
+      status: 'Pending Approval',
+      assignedStaffId: null,
+      assignedStaffName: null,
+      createdBy: 'PUBLIC_WEBSITE',
+      creatorRole: 'public',
+      internalNotes: additionalMessage || '',
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      updatedAt: admin.firestore.FieldValue.serverTimestamp()
+    });
+
+    // 5. Notify Administration
+    const notifRef = db.collection('notifications').doc();
+    transaction.set(notifRef, {
+      recipientId: 'ADMIN',
+      title: 'नवीन शाळा भेट नोंदणी (Campus Visit Request)',
+      message: `${parentName} (${studentName} - ${applyingClass}) यांनी ${requestedDate} (${timeSlot}) साठी भेट मागितली आहे.`,
+      category: 'campus_visit',
+      visitId: visitRef.id,
+      visitNumber,
+      read: false,
+      createdAt: admin.firestore.FieldValue.serverTimestamp()
+    });
+  });
+
+  return {
+    success: true,
+    visitId: visitRef.id,
+    visitNumber,
+    message: 'Thank you! Your campus visit request has been scheduled successfully.'
+  };
+});
+
+/**
+ * 2. Schedule Campus Visit by Telecaller (for Assigned Lead)
+ */
+exports.scheduleTelecallerVisit = onCall(async (request) => {
+  if (!request.auth) {
+    throw new HttpsError('unauthenticated', 'Authentication required.');
+  }
+  const callerUid = request.auth.uid;
+  const callerRole = request.auth.token.role;
+
+  const {
+    leadId,
+    requestedDate,
+    timeSlot,
+    numberOfVisitors = 2,
+    purpose = 'School Admission Enquiry',
+    internalNotes = ''
+  } = request.data || {};
+
+  if (!leadId) {
+    throw new HttpsError('invalid-argument', 'Lead ID is required.');
+  }
+
+  // Verify lead and telecaller authorization
+  const leadDoc = await db.collection('enquiries').doc(leadId).get();
+  if (!leadDoc.exists) {
+    throw new HttpsError('not-found', 'Lead record not found.');
+  }
+  const leadData = leadDoc.data();
+
+  // If telecaller, verify assignment
+  if (callerRole === 'telecaller' && leadData.assignedTo !== callerUid && leadData.assignedTelecallerId !== callerUid) {
+    throw new HttpsError('permission-denied', 'You can only schedule visits for leads currently assigned to you.');
+  }
+
+  const visitRef = db.collection('campus_visits').doc();
+  const currentYear = new Date().getFullYear();
+  const prefix = `VR-${currentYear}-`;
+
+  let visitNumber = '';
+  await db.runTransaction(async (transaction) => {
+    const counterDocRef = db.collection('counters').doc(`visits_${currentYear}`);
+    const counterDoc = await transaction.get(counterDocRef);
+    let nextSeq = 1;
+    if (counterDoc.exists) {
+      nextSeq = (counterDoc.data().currentSequence || 0) + 1;
+    }
+    transaction.set(counterDocRef, { currentSequence: nextSeq }, { merge: true });
+    visitNumber = `${prefix}${String(nextSeq).padStart(6, '0')}`;
+
+    transaction.set(visitRef, {
+      visitId: visitRef.id,
+      visitNumber,
+      leadId,
+      leadNumber: leadData.leadNumber || null,
+      parentName: leadData.parentName || '',
+      mobileNumber: leadData.normalizedMobile || leadData.mobile || '',
+      whatsappNumber: leadData.whatsappNumber || '',
+      email: leadData.email || '',
+      studentName: leadData.studentName || '',
+      currentClass: leadData.currentClass || '',
+      applyingClass: leadData.admissionClass || '',
+      academicYear: leadData.academicYear || '2026-2027',
+      requestedDate,
+      timeSlot,
+      timezone: 'Asia/Kolkata',
+      durationMinutes: 30,
+      numberOfVisitors: parseInt(numberOfVisitors, 10) || 1,
+      purpose,
+      status: 'Pending Approval',
+      createdBy: callerUid,
+      creatorRole: callerRole,
+      internalNotes: internalNotes || '',
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      updatedAt: admin.firestore.FieldValue.serverTimestamp()
+    });
+
+    // Update lead status to School Visit Planned
+    transaction.update(db.collection('enquiries').doc(leadId), {
+      status: 'School Visit Planned',
+      leadStatus: 'School Visit Planned',
+      updatedAt: admin.firestore.FieldValue.serverTimestamp()
+    });
+
+    // Record timeline entry
+    const actRef = db.collection('lead_activities').doc();
+    transaction.set(actRef, {
+      leadId,
+      leadNumber: leadData.leadNumber || null,
+      activityType: 'Campus Visit Scheduled',
+      description: `Campus visit ${visitNumber} scheduled for ${requestedDate} (${timeSlot})`,
+      performedBy: callerUid,
+      performedByRole: callerRole,
+      createdAt: admin.firestore.FieldValue.serverTimestamp()
+    });
+  });
+
+  return {
+    success: true,
+    visitId: visitRef.id,
+    visitNumber
+  };
+});
+
+/**
+ * 3. Update Campus Visit Status (Admin Approve, Reject, Reschedule, Cancel, Staff Assign)
+ */
+exports.updateCampusVisit = onCall(async (request) => {
+  verifyAdmin(request.auth);
+  const { visitId, action, reason, assignedStaffId, assignedStaffName, newDate, newSlot } = request.data || {};
+
+  if (!visitId || !action) {
+    throw new HttpsError('invalid-argument', 'Visit ID and action are required.');
+  }
+
+  const visitRef = db.collection('campus_visits').doc(visitId);
+  const visitDoc = await visitRef.get();
+  if (!visitDoc.exists) {
+    throw new HttpsError('not-found', 'Visit not found.');
+  }
+
+  const updateFields = {
+    updatedAt: admin.firestore.FieldValue.serverTimestamp()
+  };
+
+  if (action === 'approve') {
+    updateFields.status = 'Confirmed';
+    updateFields.approvedBy = request.auth.token.email || 'Admin';
+    if (assignedStaffId) {
+      updateFields.assignedStaffId = assignedStaffId;
+      updateFields.assignedStaffName = assignedStaffName || '';
+    }
+  } else if (action === 'reject') {
+    updateFields.status = 'Rejected';
+    updateFields.approvalReason = reason || 'Rejected by Admin';
+  } else if (action === 'reschedule') {
+    if (!newDate || !newSlot) {
+      throw new HttpsError('invalid-argument', 'New date and time slot required.');
+    }
+    updateFields.status = 'Rescheduled';
+    updateFields.requestedDate = newDate;
+    updateFields.timeSlot = newSlot;
+    updateFields.approvalReason = reason || 'Rescheduled by Admin';
+  } else if (action === 'cancel') {
+    updateFields.status = 'Cancelled';
+    updateFields.approvalReason = reason || 'Cancelled by Admin';
+  } else if (action === 'assign_staff') {
+    updateFields.assignedStaffId = assignedStaffId;
+    updateFields.assignedStaffName = assignedStaffName || '';
+  }
+
+  await visitRef.update(updateFields);
+  await recordAuditLog(request.auth.uid, request.auth.token.role, `CAMPUS_VISIT_${action.toUpperCase()}`, null, { visitId, ...updateFields });
+
+  return { success: true, updated: updateFields };
+});
+
+/**
+ * 4. Visit Desk Check-In & Check-Out Operations
+ */
+exports.checkInCampusVisit = onCall(async (request) => {
+  if (!request.auth) throw new HttpsError('unauthenticated', 'Authentication required.');
+  const { visitId, notes } = request.data || {};
+  if (!visitId) throw new HttpsError('invalid-argument', 'Visit ID required.');
+
+  const visitRef = db.collection('campus_visits').doc(visitId);
+  await visitRef.update({
+    status: 'Checked In',
+    checkedInAt: admin.firestore.FieldValue.serverTimestamp(),
+    checkedInBy: request.auth.uid,
+    internalNotes: notes ? admin.firestore.FieldValue.arrayUnion(`[Check-in Note]: ${notes}`) : undefined,
+    updatedAt: admin.firestore.FieldValue.serverTimestamp()
+  });
+
+  return { success: true };
+});
+
+exports.checkOutCampusVisit = onCall(async (request) => {
+  if (!request.auth) throw new HttpsError('unauthenticated', 'Authentication required.');
+  const { visitId, completionNotes } = request.data || {};
+  if (!visitId) throw new HttpsError('invalid-argument', 'Visit ID required.');
+
+  const visitRef = db.collection('campus_visits').doc(visitId);
+  await visitRef.update({
+    status: 'Completed',
+    checkedOutAt: admin.firestore.FieldValue.serverTimestamp(),
+    checkedOutBy: request.auth.uid,
+    internalNotes: completionNotes ? admin.firestore.FieldValue.arrayUnion(`[Completion Note]: ${completionNotes}`) : undefined,
+    updatedAt: admin.firestore.FieldValue.serverTimestamp()
+  });
+
+  return { success: true };
+});
+
+/**
+ * 5. Submit Campus Visit Feedback
+ */
+exports.submitCampusVisitFeedback = onCall(async (request) => {
+  if (!request.auth) throw new HttpsError('unauthenticated', 'Authentication required.');
+  const {
+    visitId,
+    leadId,
+    interestLevel,
+    experienceRating = 5,
+    facilitiesFeedback = '',
+    feeEnquiry = false,
+    academicEnquiry = false,
+    parentQuestions = '',
+    concerns = '',
+    nextAction = 'Call Parent',
+    recommendedFollowUpAt = null,
+    staffRemarks = ''
+  } = request.data || {};
+
+  if (!visitId || !interestLevel) {
+    throw new HttpsError('invalid-argument', 'Visit ID and Interest Level are required.');
+  }
+
+  const feedbackRef = db.collection('visit_feedback').doc();
+  const feedbackData = {
+    feedbackId: feedbackRef.id,
+    visitId,
+    leadId: leadId || null,
+    interestLevel,
+    experienceRating: Number(experienceRating) || 5,
+    facilitiesFeedback,
+    feeEnquiry: Boolean(feeEnquiry),
+    academicEnquiry: Boolean(academicEnquiry),
+    parentQuestions,
+    concerns,
+    nextAction,
+    recommendedFollowUpAt: recommendedFollowUpAt || null,
+    staffRemarks: staffRemarks.trim(),
+    createdBy: request.auth.uid,
+    createdAt: admin.firestore.FieldValue.serverTimestamp()
+  };
+
+  await feedbackRef.set(feedbackData);
+
+  if (leadId) {
+    await db.collection('lead_activities').add({
+      leadId,
+      activityType: 'Visit Feedback Submitted',
+      description: `Visit feedback: Parent Interest - ${interestLevel}, Next Action - ${nextAction}`,
+      performedBy: request.auth.uid,
+      createdAt: admin.firestore.FieldValue.serverTimestamp()
+    });
+  }
+
+  return { success: true, feedbackId: feedbackRef.id };
+});
+
+/**
+ * 6. Update Admission Stage (14-Stage Workflow)
+ */
+exports.updateAdmissionStage = onCall(async (request) => {
+  verifyAdmin(request.auth);
+  const { applicationId, newStage, reason } = request.data || {};
+
+  if (!applicationId || !newStage) {
+    throw new HttpsError('invalid-argument', 'Application ID and new stage are required.');
+  }
+
+  const appRef = db.collection('admission_applications').doc(applicationId);
+  const appDoc = await appRef.get();
+  if (!appDoc.exists) {
+    throw new HttpsError('not-found', 'Admission application not found.');
+  }
+  const appData = appDoc.data();
+  const previousStage = appData.currentStage;
+
+  // Record Stage History
+  const historyRef = db.collection('admission_stage_history').doc();
+  await historyRef.set({
+    historyId: historyRef.id,
+    applicationId,
+    leadId: appData.leadId || null,
+    previousStage,
+    newStage,
+    changedBy: request.auth.uid,
+    changedByRole: request.auth.token.role || 'admin',
+    reason: reason || `Stage changed from ${previousStage} to ${newStage}`,
+    createdAt: admin.firestore.FieldValue.serverTimestamp()
+  });
+
+  const updatedApprovalStatus = newStage === 'Admission Approved' 
+    ? 'Approved' 
+    : newStage === 'Admission Rejected' 
+    ? 'Rejected' 
+    : newStage === 'Admission Withdrawn' 
+    ? 'Withdrawn' 
+    : (appData.approvalStatus || 'Pending');
+
+  await appRef.update({
+    currentStage: newStage,
+    approvalStatus: updatedApprovalStatus,
+    updatedAt: admin.firestore.FieldValue.serverTimestamp()
+  });
+
+  return { success: true, previousStage, newStage };
+});
+
+/**
+ * 7. Review Admission Document
+ */
+exports.reviewAdmissionDocument = onCall(async (request) => {
+  verifyAdmin(request.auth);
+  const { applicationId, documentType, status, reviewNotes } = request.data || {};
+
+  if (!applicationId || !documentType || !status) {
+    throw new HttpsError('invalid-argument', 'Application ID, Document Type, and Status are required.');
+  }
+
+  const appRef = db.collection('admission_applications').doc(applicationId);
+  const appDoc = await appRef.get();
+  if (!appDoc.exists) {
+    throw new HttpsError('not-found', 'Application not found.');
+  }
+  const appData = appDoc.data();
+
+  const updatedDocs = (appData.requiredDocuments || []).map(d => {
+    if (d.documentType === documentType) {
+      return {
+        ...d,
+        status,
+        reviewNotes: reviewNotes || '',
+        reviewedBy: request.auth.uid,
+        reviewedAt: new Date().toISOString()
+      };
+    }
+    return d;
+  });
+
+  await appRef.update({
+    requiredDocuments: updatedDocs,
+    updatedAt: admin.firestore.FieldValue.serverTimestamp()
+  });
+
+  return { success: true, updatedDocuments: updatedDocs };
+});
+
+// ===============================================================
+// PHASE 9: ADMIN CONTROL, ANNOUNCEMENTS, SETTINGS & AUDIT LOGS
+// ===============================================================
+
+/**
+ * Broadcast Announcement to staff or telecallers
+ */
+exports.broadcastAnnouncement = onCall(async (request) => {
+  const actorRole = verifyAdmin(request.auth);
+  const { title, message, targetAudience = "ALL", priority = "NORMAL" } = request.data || {};
+
+  if (!title || !message) {
+    throw new HttpsError("invalid-argument", "Title and message are required.");
+  }
+
+  const notifData = {
+    title,
+    message,
+    targetAudience,
+    priority,
+    category: "announcement",
+    senderId: request.auth.uid,
+    recipientId: targetAudience === "TELECALLERS" ? "ROLE_TELECALLER" : "ALL",
+    read: false,
+    createdAt: new Date().toISOString(),
+    timestamp: admin.firestore.FieldValue.serverTimestamp()
+  };
+
+  const docRef = await db.collection("notifications").add(notifData);
+
+  await recordAuditLog(
+    request.auth.uid,
+    actorRole,
+    "ANNOUNCEMENT_BROADCAST",
+    docRef.id,
+    { title, targetAudience, priority }
+  );
+
+  return { success: true, announcementId: docRef.id };
+});
+
+/**
+ * Update System Settings
+ */
+exports.updateSystemSettings = onCall(async (request) => {
+  const actorRole = verifyAdmin(request.auth);
+  const { settings } = request.data || {};
+
+  if (!settings || typeof settings !== "object") {
+    throw new HttpsError("invalid-argument", "Valid settings object is required.");
+  }
+
+  const payload = {
+    ...settings,
+    updatedBy: request.auth.uid,
+    updatedAt: admin.firestore.FieldValue.serverTimestamp()
+  };
+
+  await db.collection("system_settings").doc("global_config").set(payload, { merge: true });
+  await db.collection("website_settings").doc("general").set(payload, { merge: true });
+
+  await recordAuditLog(
+    request.auth.uid,
+    actorRole,
+    "SYSTEM_SETTINGS_UPDATED",
+    "global_config",
+    { updatedFields: Object.keys(settings) }
+  );
+
+  return { success: true, settings: payload };
+});
+
+/**
+ * Create New Administrator Account (Super Admin only)
+ */
+exports.createAdminAccount = onCall(async (request) => {
+  if (!request.auth) {
+    throw new HttpsError("unauthenticated", "Authentication required.");
+  }
+  const callerRole = request.auth.token.role;
+  if (callerRole !== "super_admin" && callerRole !== "superadmin") {
+    throw new HttpsError("permission-denied", "Only Super Admin can create Admin accounts.");
+  }
+
+  const { fullName, email, phone, designation, password, role = "admin" } = request.data || {};
+  if (!fullName || !email || !password) {
+    throw new HttpsError("invalid-argument", "Full name, email, and password are required.");
+  }
+
+  try {
+    const userRecord = await admin.auth().createUser({
+      email,
+      password,
+      displayName: fullName,
+      emailVerified: true
+    });
+
+    await admin.auth().setCustomUserClaims(userRecord.uid, { role: "admin" });
+
+    const now = new Date().toISOString();
+    await db.collection("users").doc(userRecord.uid).set({
+      uid: userRecord.uid,
+      fullName,
+      displayName: fullName,
+      email,
+      phone: phone || "",
+      designation: designation || "Administrator",
+      role: "admin",
+      status: "active",
+      createdAt: now,
+      updatedAt: now
+    });
+
+    await recordAuditLog(
+      request.auth.uid,
+      callerRole,
+      "ADMIN_CREATED",
+      userRecord.uid,
+      { email, fullName, designation }
+    );
+
+    return { success: true, uid: userRecord.uid, message: "Admin account created successfully." };
+  } catch (err) {
+    console.error("createAdminAccount error:", err);
+    throw new HttpsError("internal", err.message);
+  }
+});
+
+/**
+ * Update Admin Profile
+ */
+exports.updateAdminProfile = onCall(async (request) => {
+  if (!request.auth) {
+    throw new HttpsError("unauthenticated", "Authentication required.");
+  }
+
+  const { fullName, phone, designation, profileImage } = request.data || {};
+  const updates = {
+    updatedAt: admin.firestore.FieldValue.serverTimestamp()
+  };
+  if (fullName) updates.fullName = fullName;
+  if (phone) updates.phone = phone;
+  if (designation) updates.designation = designation;
+  if (profileImage !== undefined) updates.profileImage = profileImage;
+
+  await db.collection("users").doc(request.auth.uid).set(updates, { merge: true });
+
+  return { success: true };
+});
+
+/**
+ * Record System Audit Log from Client
+ */
+exports.recordSystemAuditLog = onCall(async (request) => {
+  if (!request.auth) {
+    throw new HttpsError("unauthenticated", "Authentication required.");
+  }
+  const { action, recordId, details, metadata } = request.data || {};
+  const callerRole = request.auth.token.role || "staff";
+
+  await recordAuditLog(
+    request.auth.uid,
+    callerRole,
+    action || "CLIENT_ACTION",
+    recordId || null,
+    { details, ...metadata }
+  );
+
+  return { success: true };
+});
+
+
+
 

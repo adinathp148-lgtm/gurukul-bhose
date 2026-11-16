@@ -25,7 +25,9 @@ import { AdmissionEnquiryPage } from '../pages/AdmissionEnquiryPage';
 // Dedicated Auth Login Pages
 import { SuperAdminLoginPage } from '../pages/auth/SuperAdminLoginPage';
 import { AdminLoginPage } from '../pages/auth/AdminLoginPage';
+import { AdminRegisterPage } from '../pages/auth/AdminRegisterPage';
 import { TelecallerLoginPage } from '../pages/auth/TelecallerLoginPage';
+import { TelecallerRegisterPage } from '../../shared/pages/auth/TelecallerRegisterPage';
 
 // Admin / Super Admin Pages
 import { DashboardPage } from '../pages/admin/DashboardPage';
@@ -40,6 +42,7 @@ import { ParentCommunicationPage } from '../pages/admin/ParentCommunicationPage'
 import { MetaIntegrationPage } from '../pages/admin/MetaIntegrationPage';
 import { CallMonitoringPage } from '../pages/admin/CallMonitoringPage';
 import { TelecallerPerformancePage } from '../pages/admin/TelecallerPerformancePage';
+import { AdminProfilePage } from '../../shared/pages/admin/AdminProfilePage';
 
 // Website CMS Modules (Phase 4)
 import { CMSDashboardPage } from '../pages/admin/cms/CMSDashboardPage';
@@ -94,7 +97,9 @@ export const AppRoutes = () => {
       {/* 2. Public Authentication Portals */}
       <Route path="/super-admin/login" element={<SuperAdminLoginPage />} />
       <Route path="/admin/login" element={<AdminLoginPage />} />
+      <Route path="/admin/register" element={<AdminRegisterPage />} />
       <Route path="/telecaller/login" element={<TelecallerLoginPage />} />
+      <Route path="/telecaller/register" element={<TelecallerRegisterPage />} />
 
       {/* 3. Protected Admin & Super Admin Workspace */}
       <Route
@@ -137,6 +142,7 @@ export const AppRoutes = () => {
         <Route path="cms/activity-logs" element={<CMSActivityLogsPage />} />
         
         <Route path="meta-integration" element={<MetaIntegrationPage />} />
+        <Route path="profile" element={<AdminProfilePage />} />
       </Route>
 
       {/* 4. Protected Super Admin Master Workspace */}

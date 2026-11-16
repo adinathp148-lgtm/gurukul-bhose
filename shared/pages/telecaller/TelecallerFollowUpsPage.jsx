@@ -32,6 +32,12 @@ export const TelecallerFollowUpsPage = () => {
   const todayStr = new Date().toISOString().split('T')[0];
 
   const [activeTab, setActiveTab] = useState(filterParam);
+
+  useEffect(() => {
+    if (filterParam) {
+      setActiveTab(filterParam);
+    }
+  }, [filterParam]);
   const [callModalOpen, setCallModalOpen] = useState(false);
   const [selectedLead, setSelectedLead] = useState(null);
 

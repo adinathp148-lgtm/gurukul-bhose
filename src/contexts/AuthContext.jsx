@@ -5,12 +5,20 @@ import {
   onAuthStateChanged,
   doc, 
   getDoc,
+  setDoc,
+  collection,
+  query,
+  where,
+  getDocs,
   isConfigured 
 } from '../firebase/config';
 import { 
   loginWithEmail, 
   logoutUser, 
-  sendPasswordReset 
+  sendPasswordReset,
+  registerTelecaller,
+  registerAdminAccount,
+  determineUserRole
 } from '../services/auth/authService';
 import { demoUsers } from '../data/initialData';
 
@@ -69,21 +77,73 @@ export const AuthProvider = ({ children }) => {
 
             // Read Firestore Profile
             let profileData = null;
-            const userSnap = await getDoc(doc(db, 'users', firebaseUser.uid));
-            if (userSnap.exists()) {
-              profileData = userSnap.data();
-            } else {
-              const teleSnap = await getDoc(doc(db, 'telecaller_profiles', firebaseUser.uid));
-              if (teleSnap.exists()) {
-                profileData = teleSnap.data();
+            try {
+              const userSnap = await getDoc(doc(db, 'users', firebaseUser.uid));
+              if (userSnap.exists()) {
+                profileData = userSnap.data();
+              } else {
+                const adminSnap = await getDoc(doc(db, 'admins', firebaseUser.uid));
+                if (adminSnap.exists()) {
+                  profileData = adminSnap.data();
+                } else {
+                  const uq = query(collection(db, 'users'), where('email', '==', firebaseUser.email));
+                  const uSnap = await getDocs(uq);
+                  if (!uSnap.empty) {
+                    profileData = uSnap.docs[0].data();
+                  } else {
+                    const aq = query(collection(db, 'admins'), where('email', '==', firebaseUser.email));
+                    const aSnap = await getDocs(aq);
+                    if (!aSnap.empty) {
+                      profileData = aSnap.docs[0].data();
+                    } else {
+                      const teleSnap = await getDoc(doc(db, 'telecaller_profiles', firebaseUser.uid));
+                      if (teleSnap.exists()) {
+                        profileData = teleSnap.data();
+                      }
+                    }
+                  }
+                }
+              }
+            } catch (readErr) {
+              console.warn('Could not read user profile from Firestore:', readErr);
+            }
+
+            // Check if active session in localStorage was an admin
+            let existingStoredRole = null;
+            try {
+              const saved = JSON.parse(localStorage.getItem('gurukul_active_user') || 'null');
+              if (saved?.email?.toLowerCase() === firebaseUser.email?.toLowerCase()) {
+                existingStoredRole = saved.role;
+              }
+            } catch (e) {}
+
+            const normalizedRole = determineUserRole({
+              customRole,
+              profileData: profileData || (existingStoredRole ? { role: existingStoredRole } : null),
+              email: firebaseUser.email,
+              portalHint: existingStoredRole || null
+            });
+
+            // Self-heal: ensure admin record exists in 'users' collection
+            if (normalizedRole === 'admin' || normalizedRole === 'super_admin' || normalizedRole === 'superadmin') {
+              try {
+                await setDoc(doc(db, 'users', firebaseUser.uid), {
+                  uid: firebaseUser.uid,
+                  email: firebaseUser.email,
+                  displayName: profileData?.fullName || profileData?.displayName || firebaseUser.displayName || firebaseUser.email.split('@')[0],
+                  role: normalizedRole === 'superadmin' ? 'super_admin' : normalizedRole,
+                  status: 'active',
+                  updatedAt: new Date().toISOString()
+                }, { merge: true });
+              } catch (syncErr) {
+                console.warn('Auto-heal users doc error:', syncErr);
               }
             }
 
-            const normalizedRole = customRole || profileData?.role || 'telecaller';
             const profile = {
               uid: firebaseUser.uid,
               email: firebaseUser.email,
-              displayName: profileData?.fullName || firebaseUser.displayName || firebaseUser.email.split('@')[0],
+              displayName: profileData?.fullName || profileData?.displayName || firebaseUser.displayName || firebaseUser.email.split('@')[0],
               role: normalizedRole,
               employeeId: profileData?.employeeId || '',
               phone: profileData?.phone || '',
@@ -112,9 +172,9 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   // Standard Login function
-  const login = async (email, password) => {
+  const login = async (email, password, portalHint = null) => {
     setLoading(true);
-    const result = await loginWithEmail(email, password);
+    const result = await loginWithEmail(email, password, portalHint);
     if (result.success) {
       setCurrentUser(result.user);
       setUserProfile(result.user);
@@ -189,6 +249,8 @@ export const AuthProvider = ({ children }) => {
     canAccessAllLeads,
     login,
     logout,
+    registerTelecaller,
+    registerAdminAccount,
     requestPasswordReset,
     refreshUserProfile,
     switchDemoAccount,

@@ -1,24 +1,29 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
-import { PhoneCall, Lock, Mail, ArrowRight, AlertCircle, CheckCircle2, UserCheck } from 'lucide-react';
+import { PhoneCall, Lock, Mail, ArrowRight, AlertCircle, CheckCircle2, UserCheck, UserPlus } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
+import { useLanguage } from '../../contexts/LanguageContext';
 import { Button } from '../../components/common/Button';
 import { Modal } from '../../components/common/Modal';
 
 export const TelecallerLoginPage = () => {
   const { login, requestPasswordReset } = useAuth();
+  const { isMarathi } = useLanguage();
   const navigate = useNavigate();
   const location = useLocation();
 
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState(location.state?.registeredEmail || '');
   const [password, setPassword] = useState('');
   const [error, setError] = useState(null);
+  const [successBanner, setSuccessBanner] = useState(location.state?.successMessage || null);
   const [loading, setLoading] = useState(false);
 
   // Password reset modal
   const [resetModalOpen, setResetModalOpen] = useState(false);
   const [resetEmail, setResetEmail] = useState('');
   const [resetStatus, setResetStatus] = useState({ loading: false, message: null, error: null });
+
+  const registerPath = location.pathname.startsWith('/telecaller') ? '/telecaller/register' : '/register';
 
   const from = location.state?.from?.pathname || '/telecaller/dashboard';
 
@@ -27,9 +32,13 @@ export const TelecallerLoginPage = () => {
     setLoading(true);
     setError(null);
 
-    const res = await login(email, password);
+    const res = await login(email, password, 'telecaller');
     if (res.success) {
-      navigate('/telecaller/dashboard', { replace: true });
+      if (res.user.role === 'admin' || res.user.role === 'super_admin' || res.user.role === 'superadmin') {
+        navigate('/admin/dashboard', { replace: true });
+      } else {
+        navigate('/telecaller/dashboard', { replace: true });
+      }
     } else {
       setError(res.error || 'लॉगिन अयशस्वी झाले. कृपया ईमेल आणि पासवर्ड तपासा.');
     }
@@ -55,19 +64,36 @@ export const TelecallerLoginPage = () => {
 
         {/* Header */}
         <div className="text-center mb-8">
-          <div className="w-14 h-14 rounded-2xl bg-emerald-600 text-white flex items-center justify-center font-black text-2xl mx-auto shadow-lg mb-3">
-            <PhoneCall className="w-7 h-7" />
+          <div className="relative inline-block mb-3">
+            <img 
+              src="/gurukul-logo.png" 
+              alt="गुरुकुल भोसे" 
+              className="w-16 h-16 object-contain mx-auto drop-shadow-md"
+            />
+            <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-emerald-600 text-white flex items-center justify-center shadow-md">
+              <PhoneCall className="w-3 h-3" />
+            </div>
           </div>
-          <span className="text-[10px] font-black uppercase tracking-widest text-emerald-700 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200">
-            Admission Counselor Portal
-          </span>
+          <div>
+            <span className="text-[10px] font-black uppercase tracking-widest text-emerald-800 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200">
+              Admission Counselor Portal
+            </span>
+          </div>
           <h2 className="text-2xl font-black text-gurukul-navy-900 mt-2">
-            समुपदेशक (Telecaller) लॉगिन
+            {isMarathi ? 'समुपदेशक (Telecaller) लॉगिन' : 'Counselor (Telecaller) Sign In'}
           </h2>
           <p className="text-xs text-slate-500 mt-1">
-            गुरुकुल भोसे कॉलिंग व फॉलो-अप मॅनेजमेंट
+            {isMarathi ? 'गुरुकुल भोसे कॉलिंग व फॉलो-अप मॅनेजमेंट' : 'Gurukul Bhose Calling & Follow-up Management'}
           </p>
         </div>
+
+        {/* Success Banner (e.g. redirected after registration) */}
+        {successBanner && (
+          <div className="mb-5 p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs flex items-center gap-2.5 animate-in fade-in">
+            <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
+            <span className="font-semibold">{successBanner}</span>
+          </div>
+        )}
 
         {error && (
           <div className="mb-5 p-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs flex items-center gap-2">
@@ -79,7 +105,7 @@ export const TelecallerLoginPage = () => {
         <form onSubmit={handleLogin} className="space-y-4">
           <div>
             <label className="block text-xs font-semibold text-slate-700 mb-1">
-              समुपदेशक ईमेल (Telecaller Email) *
+              {isMarathi ? 'समुपदेशक ईमेल (Telecaller Email) *' : 'Counselor Email *'}
             </label>
             <div className="relative">
               <Mail className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
@@ -97,14 +123,14 @@ export const TelecallerLoginPage = () => {
           <div>
             <div className="flex items-center justify-between mb-1">
               <label className="block text-xs font-semibold text-slate-700">
-                पासवर्ड (Password) *
+                {isMarathi ? 'पासवर्ड (Password) *' : 'Password *'}
               </label>
               <button
                 type="button"
                 onClick={() => setResetModalOpen(true)}
                 className="text-[11px] text-emerald-600 hover:underline font-semibold"
               >
-                पासवर्ड विसरलात?
+                {isMarathi ? 'पासवर्ड विसरलात?' : 'Forgot Password?'}
               </button>
             </div>
             <div className="relative">
@@ -127,17 +153,36 @@ export const TelecallerLoginPage = () => {
             isLoading={loading}
             className="w-full font-bold uppercase tracking-wider shadow-lg bg-emerald-600 hover:bg-emerald-700 text-white mt-2"
           >
-            <span>लॉगिन करा / Sign In</span>
+            <span>{isMarathi ? 'लॉगिन करा / SIGN IN' : 'SIGN IN'}</span>
             <ArrowRight className="w-4 h-4 ml-1.5" />
           </Button>
         </form>
 
-        <div className="mt-8 pt-6 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+        {/* New Telecaller Registration Callout */}
+        <div className="mt-5 p-3.5 rounded-2xl bg-emerald-50/70 border border-emerald-200/80 flex items-center justify-between gap-3 text-xs">
+          <div>
+            <p className="font-bold text-emerald-950">
+              {isMarathi ? 'नवीन समुपदेशक आहात का?' : 'New Counselor?'}
+            </p>
+            <p className="text-[11px] text-emerald-700 mt-0.5">
+              {isMarathi ? 'पोर्टल वापरण्यासाठी प्रथम नोंदणी करा' : 'Register first to access portal'}
+            </p>
+          </div>
+          <Link
+            to={registerPath}
+            className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs whitespace-nowrap shadow-xs flex items-center gap-1.5 transition-colors shrink-0"
+          >
+            <UserPlus className="w-3.5 h-3.5" />
+            <span>{isMarathi ? 'नोंदणी करा' : 'Register'}</span>
+          </Link>
+        </div>
+
+        <div className="mt-6 pt-5 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
           <Link to="/admin/login" className="hover:text-emerald-600 font-semibold">
-            ← ॲडमिन पोर्टल
+            {isMarathi ? '← ॲडमिन पोर्टल' : '← Admin Portal'}
           </Link>
           <Link to="/" className="hover:text-emerald-600 font-semibold">
-            मुख्य वेबसाईट
+            {isMarathi ? 'मुख्य वेबसाईट' : 'Main Website'}
           </Link>
         </div>
       </div>

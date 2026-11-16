@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { 
-  Download, 
   Menu, 
   X, 
   ChevronDown, 
@@ -21,6 +20,7 @@ import { useCMS } from '../../contexts/CMSContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { LanguageSwitcher } from '../common/LanguageSwitcher';
+import { getAdminPanelUrl, getTelecallerPanelUrl } from '../../services/navigation/navigationUrls';
 
 export const Navbar = ({ showAdminLink = true }) => {
   const { institution, websiteSettings } = useCMS();
@@ -33,9 +33,8 @@ export const Navbar = ({ showAdminLink = true }) => {
   const [galleryOpen, setGalleryOpen] = useState(false);
   const [crmOpen, setCrmOpen] = useState(false);
 
-  const isLocal = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
-  const adminBaseUrl = import.meta.env?.VITE_ADMIN_PANEL_URL || (isLocal ? 'http://localhost:3001' : 'https://admin.gurukulbhose.com');
-  const telecallerBaseUrl = import.meta.env?.VITE_TELECALLER_PANEL_URL || `${adminBaseUrl}/telecaller`;
+  const adminBaseUrl = getAdminPanelUrl();
+  const telecallerBaseUrl = getTelecallerPanelUrl();
 
   const crmUrls = {
     admin: `${adminBaseUrl}/admin/leads`,
@@ -81,32 +80,34 @@ export const Navbar = ({ showAdminLink = true }) => {
       )}
 
       {/* Main Navigation Bar */}
-      <div className="w-full px-4 sm:px-6 lg:px-8 2xl:px-10">
-        <div className="flex items-center justify-between h-20 gap-3 2xl:gap-6">
+      <div className="w-full px-3 sm:px-5 lg:px-6 2xl:px-8">
+        <div className="flex items-center justify-between h-16 sm:h-17 lg:h-18 gap-2 xl:gap-3 2xl:gap-6">
           
           {/* Logo & Identity */}
-          <Link to="/" className="flex items-center gap-2.5 sm:gap-3 group shrink-0 py-1 text-left">
+          <Link to="/" className="flex items-center gap-2 sm:gap-2.5 group shrink-0 py-1 text-left">
             <img 
               src={websiteSettings?.logoUrl && websiteSettings.logoUrl !== '/favicon.svg' ? websiteSettings.logoUrl : '/gurukul-logo.png'} 
               alt="गुरुकुल भोसे Logo" 
-              className="w-11 h-11 sm:w-12 sm:h-12 md:w-13 md:h-13 object-contain group-hover:scale-105 transition-transform shrink-0 drop-shadow-sm" 
+              className="w-9 h-9 sm:w-10 sm:h-10 lg:w-11 lg:h-11 object-contain group-hover:scale-105 transition-transform shrink-0 drop-shadow-xs" 
             />
             <div className="shrink-0 flex flex-col justify-center text-left">
-              <span className="block font-black text-base sm:text-lg md:text-xl 2xl:text-2xl text-gurukul-navy-900 leading-tight tracking-tight whitespace-nowrap text-left">
+              <span className="block font-black text-base sm:text-[17px] lg:text-lg text-gurukul-navy-950 leading-tight tracking-tight whitespace-nowrap text-left">
                 {isMarathi ? 'गुरुकुल भोसे' : 'Gurukul Bhose'}
               </span>
-              <span className="hidden sm:block text-[11px] sm:text-xs md:text-[13px] 2xl:text-sm font-bold text-gurukul-saffron-600 whitespace-nowrap leading-tight mt-0.5 text-left">
-                {isMarathi ? 'विद्यामंदिर व ज्युनिअर कॉलेज (सैनिक पॅटर्न निवासी)' : 'Vidyamandir & Junior College (Sainik Pattern Residential)'}
+              <span className="hidden sm:block text-[10px] xl:text-[11px] font-semibold text-gurukul-saffron-600 whitespace-nowrap leading-tight mt-0.5 text-left">
+                {isMarathi ? 'विद्यामंदिर व ज्युनिअर कॉलेज (सैनिक पॅटर्न निवासी)' : 'Sainik Pattern Residential School & College'}
               </span>
             </div>
           </Link>
 
           {/* Desktop Nav Links */}
-          <nav className="hidden xl:flex items-center gap-1 2xl:gap-2 font-semibold text-[13px] 2xl:text-sm text-slate-800">
+          <nav className="hidden xl:flex items-center gap-1 2xl:gap-1.5 text-[13px] 2xl:text-sm font-semibold text-slate-700">
             <Link 
               to="/" 
-              className={`h-10 inline-flex items-center justify-center px-3 2xl:px-3.5 rounded-lg whitespace-nowrap transition-colors ${
-                isActive('/') ? 'text-gurukul-saffron-600 font-bold bg-orange-50' : 'hover:text-gurukul-saffron-600 hover:bg-slate-50'
+              className={`h-8 sm:h-8.5 inline-flex items-center justify-center px-2.5 rounded-lg whitespace-nowrap transition-all ${
+                isActive('/') 
+                  ? 'text-gurukul-saffron-600 font-bold bg-orange-50/90 border border-orange-200/60 shadow-2xs' 
+                  : 'text-slate-700 hover:text-gurukul-saffron-600 hover:bg-slate-100/70'
               }`}
             >
               <span>{isMarathi ? 'मुख्यपृष्ठ' : 'Home'}</span>
@@ -114,8 +115,10 @@ export const Navbar = ({ showAdminLink = true }) => {
 
             <Link 
               to="/about" 
-              className={`h-10 inline-flex items-center justify-center px-3 2xl:px-3.5 rounded-lg whitespace-nowrap transition-colors ${
-                isActive('/about') ? 'text-gurukul-saffron-600 font-bold bg-orange-50' : 'hover:text-gurukul-saffron-600 hover:bg-slate-50'
+              className={`h-8 sm:h-8.5 inline-flex items-center justify-center px-2.5 rounded-lg whitespace-nowrap transition-all ${
+                isActive('/about') 
+                  ? 'text-gurukul-saffron-600 font-bold bg-orange-50/90 border border-orange-200/60 shadow-2xs' 
+                  : 'text-slate-700 hover:text-gurukul-saffron-600 hover:bg-slate-100/70'
               }`}
             >
               <span>{isMarathi ? 'आमच्याबद्दल' : 'About Us'}</span>
@@ -128,17 +131,21 @@ export const Navbar = ({ showAdminLink = true }) => {
                 onClick={() => {
                   setAcademicsOpen(!academicsOpen);
                   setGalleryOpen(false);
+                  setCrmOpen(false);
                 }}
                 onMouseEnter={() => {
                   setAcademicsOpen(true);
                   setGalleryOpen(false);
+                  setCrmOpen(false);
                 }}
-                className={`h-10 inline-flex items-center justify-center gap-1.5 px-3 2xl:px-3.5 rounded-lg whitespace-nowrap transition-colors ${
-                  isAcademicsActive ? 'text-gurukul-saffron-600 font-bold bg-orange-50' : 'hover:text-gurukul-saffron-600 hover:bg-slate-50'
+                className={`h-8 sm:h-8.5 inline-flex items-center justify-center gap-1 px-2.5 rounded-lg whitespace-nowrap transition-all ${
+                  isAcademicsActive 
+                    ? 'text-gurukul-saffron-600 font-bold bg-orange-50/90 border border-orange-200/60 shadow-2xs' 
+                    : 'text-slate-700 hover:text-gurukul-saffron-600 hover:bg-slate-100/70'
                 }`}
               >
                 <span>{isMarathi ? 'शैक्षणिक' : 'Academics'}</span>
-                <ChevronDown className={`w-4 h-4 shrink-0 transition-transform duration-200 ${academicsOpen ? 'rotate-180' : ''}`} />
+                <ChevronDown className={`w-3.5 h-3.5 text-slate-400 shrink-0 transition-transform duration-200 ${academicsOpen ? 'rotate-180 text-gurukul-saffron-600' : ''}`} />
               </button>
 
               {academicsOpen && (
@@ -247,8 +254,10 @@ export const Navbar = ({ showAdminLink = true }) => {
 
             <Link 
               to="/courses" 
-              className={`h-10 inline-flex items-center justify-center px-3 2xl:px-3.5 rounded-lg whitespace-nowrap transition-colors ${
-                isActive('/courses') ? 'text-gurukul-saffron-600 font-bold bg-orange-50' : 'hover:text-gurukul-saffron-600 hover:bg-slate-50'
+              className={`h-8 sm:h-8.5 inline-flex items-center justify-center px-2.5 rounded-lg whitespace-nowrap transition-all ${
+                isActive('/courses') 
+                  ? 'text-gurukul-saffron-600 font-bold bg-orange-50/90 border border-orange-200/60 shadow-2xs' 
+                  : 'text-slate-700 hover:text-gurukul-saffron-600 hover:bg-slate-100/70'
               }`}
             >
               <span>{isMarathi ? 'अभ्यासक्रम' : 'Courses'}</span>
@@ -261,17 +270,21 @@ export const Navbar = ({ showAdminLink = true }) => {
                 onClick={() => {
                   setGalleryOpen(!galleryOpen);
                   setAcademicsOpen(false);
+                  setCrmOpen(false);
                 }}
                 onMouseEnter={() => {
                   setGalleryOpen(true);
                   setAcademicsOpen(false);
+                  setCrmOpen(false);
                 }}
-                className={`h-10 inline-flex items-center justify-center gap-1.5 px-3 2xl:px-3.5 rounded-lg whitespace-nowrap transition-colors ${
-                  isGalleryActive ? 'text-gurukul-saffron-600 font-bold bg-orange-50' : 'hover:text-gurukul-saffron-600 hover:bg-slate-50'
+                className={`h-8 sm:h-8.5 inline-flex items-center justify-center gap-1 px-2.5 rounded-lg whitespace-nowrap transition-all ${
+                  isGalleryActive 
+                    ? 'text-gurukul-saffron-600 font-bold bg-orange-50/90 border border-orange-200/60 shadow-2xs' 
+                    : 'text-slate-700 hover:text-gurukul-saffron-600 hover:bg-slate-100/70'
                 }`}
               >
                 <span>{isMarathi ? 'गॅलरी' : 'Gallery'}</span>
-                <ChevronDown className={`w-4 h-4 shrink-0 transition-transform duration-200 ${galleryOpen ? 'rotate-180' : ''}`} />
+                <ChevronDown className={`w-3.5 h-3.5 text-slate-400 shrink-0 transition-transform duration-200 ${galleryOpen ? 'rotate-180 text-gurukul-saffron-600' : ''}`} />
               </button>
 
               {galleryOpen && (
@@ -315,8 +328,10 @@ export const Navbar = ({ showAdminLink = true }) => {
 
             <Link 
               to="/notices" 
-              className={`h-10 inline-flex items-center justify-center px-3 2xl:px-3.5 rounded-lg whitespace-nowrap transition-colors ${
-                isActive('/notices') ? 'text-gurukul-saffron-600 font-bold bg-orange-50' : 'hover:text-gurukul-saffron-600 hover:bg-slate-50'
+              className={`h-8 sm:h-8.5 inline-flex items-center justify-center px-2.5 rounded-lg whitespace-nowrap transition-all ${
+                isActive('/notices') 
+                  ? 'text-gurukul-saffron-600 font-bold bg-orange-50/90 border border-orange-200/60 shadow-2xs' 
+                  : 'text-slate-700 hover:text-gurukul-saffron-600 hover:bg-slate-100/70'
               }`}
             >
               <span>{isMarathi ? 'सूचना पत्रक' : 'Notices'}</span>
@@ -324,8 +339,10 @@ export const Navbar = ({ showAdminLink = true }) => {
 
             <Link 
               to="/contact" 
-              className={`h-10 inline-flex items-center justify-center px-3 2xl:px-3.5 rounded-lg whitespace-nowrap transition-colors ${
-                isActive('/contact') ? 'text-gurukul-saffron-600 font-bold bg-orange-50' : 'hover:text-gurukul-saffron-600 hover:bg-slate-50'
+              className={`h-8 sm:h-8.5 inline-flex items-center justify-center px-2.5 rounded-lg whitespace-nowrap transition-all ${
+                isActive('/contact') 
+                  ? 'text-gurukul-saffron-600 font-bold bg-orange-50/90 border border-orange-200/60 shadow-2xs' 
+                  : 'text-slate-700 hover:text-gurukul-saffron-600 hover:bg-slate-100/70'
               }`}
             >
               <span>{isMarathi ? 'संपर्क' : 'Contact'}</span>
@@ -333,7 +350,7 @@ export const Navbar = ({ showAdminLink = true }) => {
           </nav>
 
           {/* Action CTAs (Right-aligned, cleanly centered buttons) */}
-          <div className="hidden xl:flex items-center gap-2 2xl:gap-3 shrink-0">
+          <div className="hidden xl:flex items-center gap-2 2xl:gap-2.5 shrink-0">
             {/* CRM Portal Access Button with Dropdown */}
             <div className="relative">
               <button
@@ -348,14 +365,14 @@ export const Navbar = ({ showAdminLink = true }) => {
                   setAcademicsOpen(false);
                   setGalleryOpen(false);
                 }}
-                className={`h-10 inline-flex items-center justify-center gap-1.5 px-3 2xl:px-3.5 text-xs 2xl:text-sm font-bold rounded-lg transition-all border shadow-xs whitespace-nowrap shrink-0 group ${
+                className={`h-8 sm:h-8.5 inline-flex items-center justify-center gap-1.5 px-2.5 2xl:px-3 text-xs font-semibold rounded-lg transition-all border shadow-2xs whitespace-nowrap shrink-0 group ${
                   crmOpen 
                     ? 'text-gurukul-saffron-600 bg-orange-50 border-orange-200' 
-                    : 'text-slate-700 hover:text-gurukul-navy-900 bg-slate-100 hover:bg-orange-50 hover:text-gurukul-saffron-600 border-slate-200/80'
+                    : 'text-slate-700 hover:text-gurukul-saffron-600 bg-white hover:bg-orange-50/60 border-slate-200/90'
                 }`}
                 title={isMarathi ? 'CRM व स्टाफ पोर्टल' : 'CRM & Staff Portal'}
               >
-                <ShieldCheck className="w-4 h-4 text-gurukul-saffron-600 group-hover:scale-110 transition-transform shrink-0" />
+                <ShieldCheck className="w-3.5 h-3.5 text-gurukul-saffron-600 group-hover:scale-105 transition-transform shrink-0" />
                 <span>{isMarathi ? 'CRM लॉगिन' : 'CRM Login'}</span>
                 <ChevronDown className={`w-3.5 h-3.5 text-slate-400 group-hover:text-gurukul-saffron-600 transition-transform duration-200 ${crmOpen ? 'rotate-180' : ''}`} />
               </button>
@@ -413,8 +430,8 @@ export const Navbar = ({ showAdminLink = true }) => {
                     </div>
                   </a>
 
-                  {/* Direct Login Link */}
-                  <div className="mt-1 pt-2 border-t border-slate-100 px-4 py-1.5 flex items-center justify-between text-xs bg-slate-50/60 rounded-b-xl">
+                  {/* Direct Login & Register Links */}
+                  <div className="mt-1 pt-2 border-t border-slate-100 px-4 py-2 flex items-center justify-between text-xs bg-slate-50/60 rounded-b-xl">
                     <a
                       href={crmUrls.login}
                       target="_blank"
@@ -423,22 +440,21 @@ export const Navbar = ({ showAdminLink = true }) => {
                       className="font-bold text-gurukul-navy-900 hover:text-gurukul-saffron-600 flex items-center gap-1.5 transition-colors"
                     >
                       <LogIn className="w-3.5 h-3.5 text-gurukul-saffron-500 shrink-0" />
-                      <span>{isMarathi ? 'थेट स्टाफ लॉगिन (Direct Login)' : 'Direct Staff Login'}</span>
+                      <span>{isMarathi ? 'थेट स्टाफ लॉगिन' : 'Direct Staff Login'}</span>
+                    </a>
+                    <a
+                      href={`${telecallerBaseUrl}/register`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={() => setCrmOpen(false)}
+                      className="font-bold text-emerald-700 hover:text-emerald-800 flex items-center gap-1 transition-colors text-[11px]"
+                    >
+                      <span>{isMarathi ? '+ समुपदेशक नोंदणी' : '+ Register'}</span>
                     </a>
                   </div>
                 </div>
               )}
             </div>
-
-            <a 
-              href={institution.brochureUrl || '/gurukul-brochure.pdf'} 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="h-10 inline-flex items-center justify-center gap-1.5 px-3.5 text-xs 2xl:text-sm font-bold text-gurukul-navy-900 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors whitespace-nowrap shrink-0"
-            >
-              <Download className="w-4 h-4 text-gurukul-saffron-600 shrink-0" />
-              <span>{isMarathi ? 'माहिती पत्रक' : 'Brochure'}</span>
-            </a>
 
             {/* Language Switcher */}
             <LanguageSwitcher />
@@ -446,7 +462,7 @@ export const Navbar = ({ showAdminLink = true }) => {
             {/* Apply Action Button */}
             <Link 
               to="/admission-enquiry" 
-              className="h-10 inline-flex items-center justify-center gap-1.5 px-4 text-xs 2xl:text-sm font-bold text-white bg-gurukul-saffron-500 hover:bg-gurukul-saffron-600 rounded-lg shadow-sm hover:shadow transition-all transform hover:-translate-y-0.5 whitespace-nowrap shrink-0"
+              className="h-8 sm:h-8.5 inline-flex items-center justify-center px-3.5 2xl:px-4 text-xs font-bold text-white bg-gradient-to-r from-gurukul-saffron-600 to-gurukul-saffron-500 hover:from-gurukul-saffron-700 hover:to-gurukul-saffron-600 rounded-lg shadow-xs hover:shadow transition-all whitespace-nowrap shrink-0"
             >
               <span>
                 {isMarathi ? 'प्रवेश अर्ज' : 'Apply Now'}
@@ -653,7 +669,7 @@ export const Navbar = ({ showAdminLink = true }) => {
             <span className="text-center">{isMarathi ? 'ऑनलाईन प्रवेश अर्ज करा (Apply Now)' : 'Apply Online for Admission'}</span>
           </Link>
 
-          <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+          <div className="pt-3 border-t border-slate-100 flex items-center justify-center text-xs text-slate-500">
             <a 
               href={crmUrls.admin} 
               target="_blank" 
@@ -663,10 +679,6 @@ export const Navbar = ({ showAdminLink = true }) => {
             >
               <ShieldCheck className="w-4 h-4 text-gurukul-saffron-500 shrink-0" />
               <span>Staff / CRM Portal</span>
-            </a>
-            <a href={institution.brochureUrl || '/gurukul-brochure.pdf'} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-gurukul-saffron-600 font-semibold">
-              <Download className="w-3.5 h-3.5 shrink-0" />
-              <span>Brochure</span>
             </a>
           </div>
         </div>

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { 
   CheckCircle2, 
   AlertCircle, 
@@ -16,7 +17,9 @@ import {
   MapPin,
   Lock,
   Copy,
-  Check
+  Check,
+  Building2,
+  ChevronRight
 } from 'lucide-react';
 import { SEO } from '../components/common/SEO';
 import { PageHeader } from '../components/common/PageHeader';
@@ -298,6 +301,24 @@ export const AdmissionEnquiryPage = () => {
                   <span><strong>मर्यादित जागा:</strong> प्रत्येक वर्गात केवळ ३० ते ३५ विद्यार्थी, प्रत्येक विद्यार्थ्यावर वैयक्तिक लक्ष.</span>
                 </div>
               </div>
+            </div>
+
+            {/* Campus Visit Banner */}
+            <div className="bg-gradient-to-br from-emerald-900 to-emerald-950 text-white p-6 rounded-3xl shadow-xl space-y-3 border border-emerald-700/50">
+              <div className="flex items-center gap-2">
+                <Building2 className="w-5 h-5 text-emerald-400" />
+                <h4 className="font-bold text-sm text-emerald-300">प्रत्यक्ष शाळा व कॅम्पस भेट</h4>
+              </div>
+              <p className="text-xs text-slate-200 leading-relaxed">
+                ४ एकर सैनिक पॅटर्न निवासी संकुल, वसतिगृह व क्रीडांगण स्वतः पाहण्यासाठी आपली सोयीची तारीख व वेळ लगेच आरक्षित करा.
+              </p>
+              <Link
+                to="/campus-visit"
+                className="w-full inline-flex items-center justify-center gap-2 p-3 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white font-bold text-xs transition-all shadow-md"
+              >
+                <span>शाळा भेट स्लॉट बुक करा (Schedule Visit)</span>
+                <ChevronRight className="w-4 h-4" />
+              </Link>
             </div>
 
             {/* Helpline Box */}

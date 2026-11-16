@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useCRM } from '../../contexts/CRMContext';
 import { useAuth } from '../../contexts/AuthContext';
+import { useLanguage } from '../../contexts/LanguageContext';
 import { 
   PhoneCall, 
   Clock, 
@@ -20,6 +21,7 @@ import { Button } from '../../components/common/Button';
 import { Modal } from '../../components/common/Modal';
 
 export const FollowUpsPage = () => {
+  const { isMarathi } = useLanguage();
   const { leads, followUps, logFollowUp, suggestNextFollowUpDate } = useCRM();
   const { userProfile, isTelecaller } = useAuth();
 
@@ -84,10 +86,12 @@ export const FollowUpsPage = () => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h2 className="text-xl font-black text-slate-900">
-            फॉलो-अप व कॉल व्यवस्थापन (Follow-up Management)
+            {isMarathi ? 'फॉलो-अप व कॉल व्यवस्थापन (Follow-up Management)' : 'Follow-up & Call Management'}
           </h2>
           <p className="text-xs text-slate-500 mt-0.5">
-            पालकांशी झालेले संवाद नोंदवा, पुढील तारखांचे नियोजन करा आणि वेळेवर स्मरणपत्रे मिळवा
+            {isMarathi 
+              ? 'पालकांशी झालेले संवाद नोंदवा, पुढील तारखांचे नियोजन करा आणि वेळेवर स्मरणपत्रे मिळवा' 
+              : 'Log parent interactions, plan next follow-up dates, and receive automated reminders'}
           </p>
         </div>
 
@@ -101,7 +105,7 @@ export const FollowUpsPage = () => {
           }}
         >
           <PhoneCall className="w-4 h-4 mr-1.5" />
-          <span>कॉल प्रतिसाद नोंदवा (Log Call)</span>
+          <span>{isMarathi ? 'कॉल प्रतिसाद नोंदवा (Log Call)' : 'Log Call Interaction'}</span>
         </Button>
       </div>
 
@@ -112,15 +116,17 @@ export const FollowUpsPage = () => {
             <AlertTriangle className="w-5 h-5 text-red-600 shrink-0" />
             <div>
               <h4 className="font-bold text-xs">
-                {overdueQueue.length} थकबाकी फॉलो-अप्स (Overdue Follow-ups) तातडीने पूर्ण करा!
+                {isMarathi 
+                  ? `${overdueQueue.length} थकबाकी फॉलो-अप्स (Overdue Follow-ups) तातडीने पूर्ण करा!` 
+                  : `${overdueQueue.length} Overdue Follow-ups need immediate attention!`}
               </h4>
               <p className="text-[11px] text-red-700 mt-0.5">
-                या पालकांना आधी नियोजित केलेल्या तारखेला कॉल करणे बाकी आहे.
+                {isMarathi ? 'या पालकांना आधी नियोजित केलेल्या तारखेला कॉल करणे बाकी आहे.' : 'These parents have scheduled follow-up dates that have passed.'}
               </p>
             </div>
           </div>
           <span className="text-xs font-bold px-3 py-1 rounded-full bg-red-600 text-white">
-            High Priority
+            {isMarathi ? 'उच्च प्राधान्य' : 'High Priority'}
           </span>
         </div>
       )}
@@ -133,17 +139,17 @@ export const FollowUpsPage = () => {
           <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
             <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
               <h3 className="font-bold text-sm text-slate-900">
-                कॉल्स रांग (Follow-up Calling Queue)
+                {isMarathi ? 'कॉल्स रांग (Follow-up Calling Queue)' : 'Follow-up Calling Queue'}
               </h3>
               <span className="text-xs text-slate-500">
-                एकूण: {todayQueue.length + overdueQueue.length} प्रलंबित
+                {isMarathi ? `एकूण: ${todayQueue.length + overdueQueue.length} प्रलंबित` : `Total: ${todayQueue.length + overdueQueue.length} pending`}
               </span>
             </div>
 
             <div className="divide-y divide-slate-100 max-h-[600px] overflow-y-auto">
               {[...overdueQueue, ...todayQueue, ...upcomingQueue].length === 0 ? (
                 <div className="p-8 text-center text-slate-400 text-xs">
-                  सध्या कोणताही प्रलंबित कॉल नाही.
+                  {isMarathi ? 'सध्या कोणताही प्रलंबित कॉल नाही.' : 'No pending calls currently.'}
                 </div>
               ) : (
                 [...overdueQueue, ...todayQueue, ...upcomingQueue].map((lead) => {
@@ -176,17 +182,17 @@ export const FollowUpsPage = () => {
                         </div>
 
                         <p className="text-[11px] text-slate-500">
-                          पालक: {lead.parentName} • {lead.mobileNumber} • {lead.admissionClass}
+                          {isMarathi ? 'पालक:' : 'Parent:'} {lead.parentName} • {lead.mobileNumber} • {lead.admissionClass}
                         </p>
 
                         <p className="text-[11px] text-slate-600 font-medium">
-                          शेवटची नोंद: {lead.notes || 'नवीन नोंद'}
+                          {isMarathi ? 'शेवटची नोंद:' : 'Last Note:'} {lead.notes || (isMarathi ? 'नवीन नोंद' : 'New Entry')}
                         </p>
 
                         <div className="flex items-center gap-2 text-[10px] text-slate-400 pt-0.5">
-                          <span>नियोजित: <strong>{lead.nextFollowUp || 'नाही'}</strong></span>
+                          <span>{isMarathi ? 'नियोजित:' : 'Scheduled:'} <strong>{lead.nextFollowUp || (isMarathi ? 'नाही' : 'None')}</strong></span>
                           <span>•</span>
-                          <span>समुपदेशक: {lead.assignedTelecallerName || 'Unassigned'}</span>
+                          <span>{isMarathi ? 'समुपदेशक:' : 'Counselor:'} {lead.assignedTelecallerName || 'Unassigned'}</span>
                         </div>
                       </div>
 
@@ -194,12 +200,12 @@ export const FollowUpsPage = () => {
                         <a
                           href={`tel:${lead.mobileNumber}`}
                           className="p-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700"
-                          title="कॉल करा"
+                          title={isMarathi ? "कॉल करा" : "Call"}
                         >
                           <Phone className="w-3.5 h-3.5" />
                         </a>
                         <a
-                          href={`https://wa.me/91${lead.whatsappNumber || lead.mobileNumber}?text=${encodeURIComponent(`नमस्कार ${lead.parentName}, गुरुकुल भोसे निवासी स्कूल व कॉलेजमधून संपर्क करत आहोत.`)}`}
+                          href={`https://wa.me/91${lead.whatsappNumber || lead.mobileNumber}?text=${encodeURIComponent(isMarathi ? `नमस्कार ${lead.parentName}, गुरुकुल भोसे निवासी स्कूल व कॉलेजमधून संपर्क करत आहोत.` : `Hello ${lead.parentName}, contacting you from Gurukul Bhose Residential School & College.`)}`}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="p-2 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-600"
@@ -213,7 +219,7 @@ export const FollowUpsPage = () => {
                           onClick={() => openLogForLead(lead)}
                           className="text-[11px] py-1 px-2.5 font-bold"
                         >
-                          नोंदवा (Log)
+                          {isMarathi ? 'नोंदवा (Log)' : 'Log'}
                         </Button>
                       </div>
                     </div>
@@ -230,13 +236,13 @@ export const FollowUpsPage = () => {
             <div className="flex items-center gap-2 mb-4 pb-3 border-b border-slate-100">
               <History className="w-4 h-4 text-gurukul-saffron-600" />
               <h3 className="font-bold text-sm text-slate-900">
-                संपूर्ण कॉलिंग इतिहास (Activity Timeline)
+                {isMarathi ? 'संपूर्ण कॉलिंग इतिहास (Activity Timeline)' : 'Calling Activity Timeline'}
               </h3>
             </div>
 
             <div className="relative pl-6 space-y-6 before:absolute before:left-2 before:top-2 before:bottom-2 before:w-0.5 before:bg-slate-200">
               {followUps.length === 0 ? (
-                <p className="text-xs text-slate-400">अद्याप कोणताही कॉल नोंदवलेला नाही.</p>
+                <p className="text-xs text-slate-400">{isMarathi ? 'अद्याप कोणताही कॉल नोंदवलेला नाही.' : 'No calls recorded yet.'}</p>
               ) : (
                 followUps.map((fol) => {
                   const lead = leads.find(l => l.id === fol.leadId);
@@ -250,7 +256,7 @@ export const FollowUpsPage = () => {
                             {lead ? lead.studentName : 'Lead'}
                           </span>
                           <span className="text-slate-400 text-[10px]">
-                            {new Date(fol.contactedAt).toLocaleDateString('mr-IN')}
+                            {new Date(fol.contactedAt).toLocaleDateString(isMarathi ? 'mr-IN' : 'en-IN')}
                           </span>
                         </div>
 
@@ -259,7 +265,7 @@ export const FollowUpsPage = () => {
                         </p>
 
                         <div className="pt-1 flex items-center justify-between text-[10px] text-slate-500">
-                          <span>समुपदेशक: <strong>{fol.telecallerName}</strong></span>
+                          <span>{isMarathi ? 'समुपदेशक:' : 'Counselor:'} <strong>{fol.telecallerName}</strong></span>
                           <Badge size="xs" variant={fol.statusOutcome}>
                             {fol.statusOutcome}
                           </Badge>
@@ -268,7 +274,7 @@ export const FollowUpsPage = () => {
                         {fol.scheduledNextDate && (
                           <div className="text-[10px] text-gurukul-saffron-700 font-semibold pt-1 flex items-center gap-1">
                             <Clock className="w-3 h-3" />
-                            <span>पुढील फॉलो-अप: {fol.scheduledNextDate}</span>
+                            <span>{isMarathi ? `पुढील फॉलो-अप: ${fol.scheduledNextDate}` : `Next Follow-up: ${fol.scheduledNextDate}`}</span>
                           </div>
                         )}
                       </div>
@@ -286,14 +292,14 @@ export const FollowUpsPage = () => {
       <Modal
         isOpen={logModalOpen}
         onClose={() => setLogModalOpen(false)}
-        title="कॉल संभाषण नोंदवा (Log Call Interaction)"
-        subtitle="पालकांचा प्रतिसाद, स्थिती व पुढील तारीख नोंदवा"
+        title={isMarathi ? "कॉल संभाषण नोंदवा (Log Call Interaction)" : "Log Call Interaction"}
+        subtitle={isMarathi ? "पालकांचा प्रतिसाद, स्थिती व पुढील तारीख नोंदवा" : "Record parent response, status outcome and scheduled date"}
         maxWidth="max-w-lg"
       >
         <form onSubmit={handleLogSubmit} className="space-y-4">
           <div>
             <label className="block text-xs font-semibold text-slate-700 mb-1">
-              विद्यार्थी / पालक निवडा *
+              {isMarathi ? 'विद्यार्थी / पालक निवडा *' : 'Select Student / Parent *'}
             </label>
             <select
               value={selectedLeadId}
@@ -311,50 +317,50 @@ export const FollowUpsPage = () => {
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-xs font-semibold text-slate-700 mb-1">
-                कॉल प्रकार (Call Type)
+                {isMarathi ? 'कॉल प्रकार (Call Type)' : 'Call Type'}
               </label>
               <select
                 value={callForm.callType}
                 onChange={(e) => setCallForm({ ...callForm, callType: e.target.value })}
                 className="w-full text-xs px-3 py-2 border rounded-lg bg-white"
               >
-                <option value="Outgoing Call">Outgoing Call (संस्थेने केलेला कॉल)</option>
-                <option value="Incoming Call">Incoming Call (पालकांचा कॉल)</option>
+                <option value="Outgoing Call">{isMarathi ? 'Outgoing Call (संस्थेने केलेला कॉल)' : 'Outgoing Call'}</option>
+                <option value="Incoming Call">{isMarathi ? 'Incoming Call (पालकांचा कॉल)' : 'Incoming Call'}</option>
                 <option value="WhatsApp Chat">WhatsApp Chat</option>
-                <option value="School Visit">School Visit (कॅम्पस भेट)</option>
+                <option value="School Visit">{isMarathi ? 'School Visit (कॅम्पस भेट)' : 'Campus Visit'}</option>
               </select>
             </div>
 
             <div>
               <label className="block text-xs font-semibold text-slate-700 mb-1">
-                संभाषणाचा निष्कर्ष (Status) *
+                {isMarathi ? 'संभाषणाचा निष्कर्ष (Status) *' : 'Outcome Status *'}
               </label>
               <select
                 value={callForm.statusOutcome}
                 onChange={handleOutcomeChange}
                 className="w-full text-xs px-3 py-2 border rounded-lg bg-white font-semibold"
               >
-                <option value="Interested">Interested (इच्छुक - 3 Days)</option>
-                <option value="High Interest">High Interest (अतिइच्छुक - 1 Day)</option>
-                <option value="Follow-up Scheduled">Follow-up Scheduled (2 Days)</option>
-                <option value="School Visit Planned">School Visit Planned (कॅम्पस भेट)</option>
-                <option value="Call Not Picked / Busy">Call Not Picked / Busy (1 Day)</option>
-                <option value="Thinking / Considering">Thinking / Considering (4 Days)</option>
-                <option value="Lost / Not Interested">Lost / Not Interested</option>
+                <option value="Interested">{isMarathi ? 'Interested (इच्छुक - 3 Days)' : 'Interested (3 Days)'}</option>
+                <option value="High Interest">{isMarathi ? 'High Interest (अतिइच्छुक - 1 Day)' : 'High Interest (1 Day)'}</option>
+                <option value="Follow-up Scheduled">{isMarathi ? 'Follow-up Scheduled (2 Days)' : 'Follow-up Scheduled (2 Days)'}</option>
+                <option value="School Visit Planned">{isMarathi ? 'School Visit Planned (कॅम्पस भेट)' : 'Campus Visit Planned'}</option>
+                <option value="Call Not Picked / Busy">{isMarathi ? 'Call Not Picked / Busy (1 Day)' : 'Call Not Picked / Busy (1 Day)'}</option>
+                <option value="Thinking / Considering">{isMarathi ? 'Thinking / Considering (4 Days)' : 'Thinking / Considering (4 Days)'}</option>
+                <option value="Lost / Not Interested">{isMarathi ? 'Lost / Not Interested' : 'Lost / Not Interested'}</option>
               </select>
             </div>
           </div>
 
           <div>
             <label className="block text-xs font-semibold text-slate-700 mb-1">
-              पालकांचा प्रतिसाद / संवाद तपशील (Parent Response) *
+              {isMarathi ? 'पालकांचा प्रतिसाद / संवाद तपशील (Parent Response) *' : 'Parent Response & Remarks *'}
             </label>
             <textarea
               rows={3}
               required
               value={callForm.parentResponse}
               onChange={(e) => setCallForm({ ...callForm, parentResponse: e.target.value })}
-              placeholder="उदा. पालकांशी चर्चा झाली. त्यांनी फी व हॉस्टेल सोयीबद्दल विचारले. रविवारी भेट देण्याचे ठरवले आहे."
+              placeholder={isMarathi ? "उदा. पालकांशी चर्चा झाली. त्यांनी फी व हॉस्टेल सोयीबद्दल विचारले. रविवारी भेट देण्याचे ठरवले आहे." : "e.g. Discussed curriculum and boarding facilities. Parent agreed to visit campus on Sunday."}
               className="w-full text-xs px-3 py-2 border rounded-lg"
             />
           </div>
@@ -363,7 +369,7 @@ export const FollowUpsPage = () => {
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold text-gurukul-saffron-800 flex items-center gap-1.5">
                 <Sparkles className="w-3.5 h-3.5" />
-                <span>पुढील फॉलो-अप तारीख नियोजन (Next Follow-up Date)</span>
+                <span>{isMarathi ? 'पुढील फॉलो-अप तारीख नियोजन (Next Follow-up Date)' : 'Next Follow-up Date'}</span>
               </span>
               <button
                 type="button"
@@ -373,7 +379,7 @@ export const FollowUpsPage = () => {
                 }}
                 className="text-[10px] font-bold text-gurukul-saffron-700 hover:underline"
               >
-                Auto-Suggest Date
+                {isMarathi ? 'तारीख सुचवा (Auto-Suggest)' : 'Auto-Suggest Date'}
               </button>
             </div>
 
@@ -388,10 +394,10 @@ export const FollowUpsPage = () => {
 
           <div className="flex justify-end gap-2 pt-2">
             <Button variant="outline" size="md" onClick={() => setLogModalOpen(false)}>
-              रद्द करा
+              {isMarathi ? 'रद्द करा' : 'Cancel'}
             </Button>
             <Button type="submit" variant="primary" size="md">
-              कॉल नोंद सेव्ह करा
+              {isMarathi ? 'कॉल नोंद सेव्ह करा' : 'Save Call Interaction'}
             </Button>
           </div>
         </form>

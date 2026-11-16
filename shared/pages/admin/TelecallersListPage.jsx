@@ -18,13 +18,15 @@ import {
   ChevronLeft,
   ChevronRight,
   Shield,
-  Clock
+  Clock,
+  Check
 } from 'lucide-react';
 import { Button } from '../../components/common/Button';
 import { Badge } from '../../components/common/Badge';
 import { Modal } from '../../components/common/Modal';
 import { useAuth } from '../../contexts/AuthContext';
 import { useCRM } from '../../contexts/CRMContext';
+import { useLanguage } from '../../contexts/LanguageContext';
 import { 
   fetchTelecallersList, 
   updateTelecallerStatus, 
@@ -34,6 +36,7 @@ import {
 export const TelecallersListPage = () => {
   const { isSuperAdmin, isAdmin } = useAuth();
   const { leads } = useCRM();
+  const { isMarathi } = useLanguage();
   const navigate = useNavigate();
 
   const [telecallers, setTelecallers] = useState([]);
@@ -79,17 +82,24 @@ export const TelecallersListPage = () => {
     setActionLoading(true);
 
     const target = confirmModal.telecaller;
-    const newStatus = target.status === 'active' ? 'inactive' : 'active';
+    const isApproval = confirmModal.action === 'approve';
+    const newStatus = isApproval ? 'active' : (target.status === 'active' ? 'inactive' : 'active');
     const id = target.uid || target.userId || target.id;
 
     const res = await updateTelecallerStatus(id, newStatus);
     if (res.success) {
       showNotification(
-        `समुपदेशक ${target.fullName} यांचे खाते यशस्वीपणे ${newStatus === 'active' ? 'सक्रिय (Activated)' : 'निष्क्रिय (Deactivated)'} केले.`
+        isMarathi
+          ? (isApproval
+              ? `समुपदेशक ${target.fullName} यांचे खाते यशस्वीपणे मंजूर (Approved) व सक्रिय केले.`
+              : `समुपदेशक ${target.fullName} यांचे खाते यशस्वीपणे ${newStatus === 'active' ? 'सक्रिय (Activated)' : 'निष्क्रिय (Deactivated)'} केले.`)
+          : (isApproval
+              ? `Counselor ${target.fullName}'s account was successfully approved and activated.`
+              : `Counselor ${target.fullName}'s account was successfully ${newStatus === 'active' ? 'activated' : 'deactivated'}.`)
       );
       setTelecallers(prev => prev.map(t => (t.uid === id || t.userId === id || t.id === id) ? { ...t, status: newStatus } : t));
     } else {
-      showNotification('स्थिती बदलताना त्रुटी आढळली.', true);
+      showNotification(isMarathi ? 'स्थिती बदलताना त्रुटी आढळली.' : 'Error changing status.', true);
     }
 
     setActionLoading(false);
@@ -105,9 +115,13 @@ export const TelecallersListPage = () => {
         telecaller,
         link: res.resetLink || null
       });
-      showNotification(`पासवर्ड रीसेट सूचना ${telecaller.email} या पत्त्यावर पाठवली गेली.`);
+      showNotification(
+        isMarathi 
+          ? `पासवर्ड रीसेट सूचना ${telecaller.email} या पत्त्यावर पाठवली गेली.` 
+          : `Password reset notification sent to ${telecaller.email}.`
+      );
     } else {
-      showNotification(res.error || 'त्रुटी आढळली.', true);
+      showNotification(res.error || (isMarathi ? 'त्रुटी आढळली.' : 'An error occurred.'), true);
     }
   };
 
@@ -119,9 +133,11 @@ export const TelecallersListPage = () => {
       (t.employeeId || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
       (t.phone || '').includes(searchQuery);
 
+    const isPending = t.status === 'pending' || t.status === 'pending_approval';
     const matchesStatus = 
       statusFilter === 'ALL' ? true : 
-      statusFilter === 'ACTIVE' ? (t.status === 'active' || !t.status) :
+      statusFilter === 'PENDING' ? isPending :
+      statusFilter === 'ACTIVE' ? (t.status === 'active' || (!t.status && !isPending)) :
       statusFilter === 'INACTIVE' ? t.status === 'inactive' : true;
 
     return matchesSearch && matchesStatus;
@@ -139,10 +155,12 @@ export const TelecallersListPage = () => {
         <div>
           <h2 className="text-xl sm:text-2xl font-black text-slate-900 flex items-center gap-2.5">
             <Users className="w-6 h-6 text-gurukul-navy-900" />
-            <span>टेलिकॉलर व्यवस्थापन (Telecaller Management)</span>
+            <span>{isMarathi ? 'टेलिकॉलर व्यवस्थापन (Telecaller Management)' : 'Telecaller Management'}</span>
           </h2>
           <p className="text-xs text-slate-500 mt-1">
-            शाळेचे सर्व समुपदेशक, त्यांची खाती, लॉगिन परवानग्या आणि कामगिरीचे थेट नियंत्रण
+            {isMarathi 
+              ? 'शाळेचे सर्व समुपदेशक, त्यांची खाती, लॉगिन परवानग्या आणि कामगिरीचे थेट नियंत्रण' 
+              : 'Direct control of all school counselors, their accounts, login permissions, and performance'}
           </p>
         </div>
 
@@ -150,13 +168,13 @@ export const TelecallersListPage = () => {
           <div className="flex items-center gap-2.5">
             <Button variant="outline" size="md" onClick={loadTelecallers} disabled={loading}>
               <RefreshCw className={`w-4 h-4 mr-1.5 ${loading ? 'animate-spin' : ''}`} />
-              <span>रिफ्रेश</span>
+              <span>{isMarathi ? 'रिफ्रेश' : 'Refresh'}</span>
             </Button>
 
             <Link to="/admin/telecallers/create">
               <Button variant="primary" size="md" className="shadow-md">
                 <UserPlus className="w-4 h-4 mr-1.5" />
-                <span>नवीन टेलिकॉलर जोडा (Add Telecaller)</span>
+                <span>{isMarathi ? 'नवीन टेलिकॉलर जोडा (Add Telecaller)' : 'Add Telecaller'}</span>
               </Button>
             </Link>
           </div>
@@ -182,7 +200,7 @@ export const TelecallersListPage = () => {
           <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
           <input
             type="text"
-            placeholder="नाव, ईमेल किंवा Employee ID शोधा..."
+            placeholder={isMarathi ? 'नाव, ईमेल किंवा Employee ID शोधा...' : 'Search by name, email or Employee ID...'}
             value={searchQuery}
             onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
             className="w-full text-xs pl-9 pr-3 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-gurukul-saffron-500 focus:outline-none"
@@ -190,14 +208,22 @@ export const TelecallersListPage = () => {
         </div>
 
         {/* Status Filter Tabs */}
-        <div className="flex items-center gap-1.5 bg-slate-100 p-1 rounded-xl self-stretch md:self-auto">
+        <div className="flex flex-wrap items-center gap-1.5 bg-slate-100 p-1 rounded-xl self-stretch md:self-auto">
           <button
             onClick={() => { setStatusFilter('ALL'); setCurrentPage(1); }}
             className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${
               statusFilter === 'ALL' ? 'bg-white text-gurukul-navy-900 shadow-sm' : 'text-slate-600 hover:text-slate-900'
             }`}
           >
-            सर्व ({telecallers.length})
+            {isMarathi ? 'सर्व' : 'All'} ({telecallers.length})
+          </button>
+          <button
+            onClick={() => { setStatusFilter('PENDING'); setCurrentPage(1); }}
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${
+              statusFilter === 'PENDING' ? 'bg-amber-500 text-white shadow-sm' : 'text-amber-800 hover:text-amber-950 hover:bg-amber-100/50'
+            }`}
+          >
+            {isMarathi ? 'मंजुरी प्रलंबित' : 'Pending'} ({telecallers.filter(t => t.status === 'pending' || t.status === 'pending_approval').length})
           </button>
           <button
             onClick={() => { setStatusFilter('ACTIVE'); setCurrentPage(1); }}
@@ -205,7 +231,7 @@ export const TelecallersListPage = () => {
               statusFilter === 'ACTIVE' ? 'bg-emerald-600 text-white shadow-sm' : 'text-slate-600 hover:text-slate-900'
             }`}
           >
-            सक्रिय ({telecallers.filter(t => t.status !== 'inactive').length})
+            {isMarathi ? 'सक्रिय' : 'Active'} ({telecallers.filter(t => t.status === 'active' || (!t.status && t.status !== 'inactive' && t.status !== 'pending' && t.status !== 'pending_approval')).length})
           </button>
           <button
             onClick={() => { setStatusFilter('INACTIVE'); setCurrentPage(1); }}
@@ -213,7 +239,7 @@ export const TelecallersListPage = () => {
               statusFilter === 'INACTIVE' ? 'bg-rose-600 text-white shadow-sm' : 'text-slate-600 hover:text-slate-900'
             }`}
           >
-            निष्क्रिय ({telecallers.filter(t => t.status === 'inactive').length})
+            {isMarathi ? 'निष्क्रिय' : 'Inactive'} ({telecallers.filter(t => t.status === 'inactive').length})
           </button>
         </div>
       </div>
@@ -224,14 +250,14 @@ export const TelecallersListPage = () => {
           <table className="w-full text-left text-xs">
             <thead className="bg-slate-50 text-slate-600 uppercase text-[10px] tracking-wider border-b border-slate-200 font-bold">
               <tr>
-                <th className="py-3.5 px-4">कर्मचारी ID</th>
-                <th className="py-3.5 px-4">समुपदेशक तपशील</th>
-                <th className="py-3.5 px-4">ईमेल व संपर्क</th>
-                <th className="py-3.5 px-4">विभाग / शाखा</th>
-                <th className="py-3.5 px-4">रुजू तारीख</th>
-                <th className="py-3.5 px-4 text-center">नेमून दिलेल्या लीड्स</th>
-                <th className="py-3.5 px-4 text-center">खाते स्थिती</th>
-                <th className="py-3.5 px-4 text-right">कृती (Actions)</th>
+                <th className="py-3.5 px-4">{isMarathi ? 'कर्मचारी ID' : 'Employee ID'}</th>
+                <th className="py-3.5 px-4">{isMarathi ? 'समुपदेशक तपशील' : 'Counselor Details'}</th>
+                <th className="py-3.5 px-4">{isMarathi ? 'ईमेल व संपर्क' : 'Email & Phone'}</th>
+                <th className="py-3.5 px-4">{isMarathi ? 'विभाग / शाखा' : 'Department'}</th>
+                <th className="py-3.5 px-4">{isMarathi ? 'रुजू तारीख' : 'Joining Date'}</th>
+                <th className="py-3.5 px-4 text-center">{isMarathi ? 'नेमून दिलेल्या लीड्स' : 'Assigned Leads'}</th>
+                <th className="py-3.5 px-4 text-center">{isMarathi ? 'खाते स्थिती' : 'Account Status'}</th>
+                <th className="py-3.5 px-4 text-right">{isMarathi ? 'कृती (Actions)' : 'Actions'}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
@@ -239,21 +265,22 @@ export const TelecallersListPage = () => {
                 <tr>
                   <td colSpan="8" className="py-12 text-center text-slate-400">
                     <RefreshCw className="w-6 h-6 animate-spin mx-auto mb-2 text-gurukul-saffron-500" />
-                    टेलिकॉलर यादी लोड होत आहे...
+                    {isMarathi ? 'टेलिकॉलर यादी लोड होत आहे...' : 'Loading telecallers list...'}
                   </td>
                 </tr>
               ) : paginatedList.length === 0 ? (
                 <tr>
                   <td colSpan="8" className="py-12 text-center text-slate-400">
                     <Users className="w-8 h-8 text-slate-300 mx-auto mb-2" />
-                    कोणतेही टेलिकॉलर खाते सापडले नाही.
+                    {isMarathi ? 'कोणतेही टेलिकॉलर खाते सापडले नाही.' : 'No telecaller accounts found.'}
                   </td>
                 </tr>
               ) : (
                 paginatedList.map((telecaller) => {
                   const id = telecaller.uid || telecaller.userId || telecaller.id;
                   const assignedCount = leads.filter(l => l.assignedTelecallerId === id).length;
-                  const isActive = telecaller.status !== 'inactive';
+                  const isPending = telecaller.status === 'pending' || telecaller.status === 'pending_approval';
+                  const isActive = !isPending && telecaller.status !== 'inactive';
 
                   return (
                     <tr key={id} className="hover:bg-slate-50/80 transition-colors">
@@ -271,7 +298,7 @@ export const TelecallersListPage = () => {
                           <div>
                             <p className="font-bold text-slate-900">{telecaller.fullName}</p>
                             <span className="text-[10px] text-slate-500 font-medium">
-                              {telecaller.gender || 'Counselor'}
+                              {telecaller.gender || (isMarathi ? 'समुपदेशक' : 'Counselor')}
                             </span>
                           </div>
                         </div>
@@ -293,7 +320,7 @@ export const TelecallersListPage = () => {
 
                       {/* Department */}
                       <td className="py-3.5 px-4 text-slate-600">
-                        {telecaller.assignedDepartment || 'General Admissions'}
+                        {telecaller.assignedDepartment || (isMarathi ? 'सामान्य प्रवेश' : 'General Admissions')}
                       </td>
 
                       {/* Joining Date */}
@@ -304,55 +331,78 @@ export const TelecallersListPage = () => {
                       {/* Assigned Leads Count */}
                       <td className="py-3.5 px-4 text-center">
                         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-50 text-gurukul-navy-900 border border-blue-200">
-                          {assignedCount} Leads
+                          {assignedCount} {isMarathi ? 'लीड्स' : 'Leads'}
                         </span>
                       </td>
 
                       {/* Account Status */}
                       <td className="py-3.5 px-4 text-center">
-                        <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                          isActive 
-                            ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' 
-                            : 'bg-rose-100 text-rose-800 border border-rose-200'
-                        }`}>
-                          <span className={`w-1.5 h-1.5 rounded-full ${isActive ? 'bg-emerald-600' : 'bg-rose-600'}`}></span>
-                          <span>{isActive ? 'Active' : 'Inactive'}</span>
-                        </span>
+                        {isPending ? (
+                          <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-200">
+                            <Clock className="w-3 h-3 text-amber-600" />
+                            <span>{isMarathi ? 'मंजुरी प्रलंबित' : 'Pending Approval'}</span>
+                          </span>
+                        ) : (
+                          <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                            isActive 
+                              ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' 
+                              : 'bg-rose-100 text-rose-800 border border-rose-200'
+                          }`}>
+                            <span className={`w-1.5 h-1.5 rounded-full ${isActive ? 'bg-emerald-600' : 'bg-rose-600'}`}></span>
+                            <span>{isActive ? (isMarathi ? 'सक्रिय' : 'Active') : (isMarathi ? 'निष्क्रिय' : 'Inactive')}</span>
+                          </span>
+                        )}
                       </td>
 
                       {/* Actions */}
                       <td className="py-3.5 px-4 text-right">
                         <div className="flex items-center justify-end gap-1">
+                          {/* Approve Button if Pending */}
+                          {isPending && (
+                            <button
+                              onClick={() => setConfirmModal({ open: true, telecaller, action: 'approve' })}
+                              className="px-2 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg flex items-center gap-1 text-[11px] font-bold shadow-sm transition-colors mr-1"
+                              title={isMarathi ? 'नोंदणी मंजूर करा (Approve Account)' : 'Approve Account'}
+                            >
+                              <Check className="w-3.5 h-3.5" />
+                              <span>{isMarathi ? 'मंजूर करा' : 'Approve'}</span>
+                            </button>
+                          )}
+
                           {/* View / Edit */}
                           <Link
                             to={`/admin/telecallers/${id}`}
                             className="p-1.5 rounded-lg text-slate-600 hover:text-gurukul-navy-900 hover:bg-slate-100"
-                            title="प्रोफाईल पहा / संपादन"
+                            title={isMarathi ? 'प्रोफाईल पहा / संपादन' : 'View / Edit Profile'}
                           >
                             <Eye className="w-4 h-4" />
                           </Link>
 
                           {/* Send Password Reset Link */}
-                          <button
-                            onClick={() => handleSendResetEmail(telecaller)}
-                            className="p-1.5 rounded-lg text-slate-600 hover:text-amber-600 hover:bg-amber-50"
-                            title="पासवर्ड रीसेट लिंक पाठवा"
-                          >
-                            <KeyRound className="w-4 h-4" />
-                          </button>
+                          {!isPending && (
+                            <button
+                              onClick={() => handleSendResetEmail(telecaller)}
+                              className="p-1.5 rounded-lg text-slate-600 hover:text-amber-600 hover:bg-amber-50"
+                              title={isMarathi ? 'पासवर्ड रीसेट लिंक पाठवा' : 'Send Password Reset Link'}
+                            >
+                              <KeyRound className="w-4 h-4" />
+                            </button>
+                          )}
 
                           {/* Toggle Status (Activate / Deactivate) */}
-                          <button
-                            onClick={() => setConfirmModal({ open: true, telecaller, action: isActive ? 'deactivate' : 'activate' })}
-                            className={`p-1.5 rounded-lg ${
-                              isActive 
-                                ? 'text-slate-600 hover:text-rose-600 hover:bg-rose-50' 
-                                : 'text-slate-600 hover:text-emerald-600 hover:bg-emerald-50'
-                            }`}
-                            title={isActive ? 'खाते निष्क्रिय करा' : 'खाते सक्रिय करा'}
-                          >
-                            {isActive ? <UserX className="w-4 h-4 text-rose-500" /> : <UserCheck className="w-4 h-4 text-emerald-600" />}
-                          </button>
+                          {!isPending && (
+                            <button
+                              onClick={() => setConfirmModal({ open: true, telecaller, action: isActive ? 'deactivate' : 'activate' })}
+                              className={`p-1.5 rounded-lg ${
+                                isActive 
+                                  ? 'text-slate-600 hover:text-rose-600 hover:bg-rose-50' 
+                                  : 'text-slate-600 hover:text-emerald-600 hover:bg-emerald-50'
+                              }`}
+                              title={isActive ? (isMarathi ? 'खाते निष्क्रिय करा' : 'Deactivate Account') : (isMarathi ? 'खाते सक्रिय करा' : 'Activate Account')}
+                            >
+                              {isActive ? <UserX className="w-4 h-4 text-rose-500" /> : <UserCheck className="w-4 h-4 text-emerald-600" />}
+                            </button>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -367,7 +417,11 @@ export const TelecallersListPage = () => {
         {totalPages > 1 && (
           <div className="px-6 py-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
             <span>
-              पृष्ठ <strong>{currentPage}</strong> / <strong>{totalPages}</strong> (एकूण {filteredList.length} समुपदेशक)
+              {isMarathi ? (
+                <>पृष्ठ <strong>{currentPage}</strong> / <strong>{totalPages}</strong> (एकूण {filteredList.length} समुपदेशक)</>
+              ) : (
+                <>Page <strong>{currentPage}</strong> of <strong>{totalPages}</strong> (Total {filteredList.length} counselors)</>
+              )}
             </span>
             <div className="flex items-center gap-1.5">
               <Button
@@ -391,17 +445,31 @@ export const TelecallersListPage = () => {
         )}
       </div>
 
-      {/* Confirmation Modal for Activate / Deactivate */}
+      {/* Confirmation Modal for Activate / Deactivate / Approve */}
       <Modal
         isOpen={confirmModal.open}
         onClose={() => setConfirmModal({ open: false, telecaller: null, action: null })}
-        title={confirmModal.action === 'deactivate' ? 'खाते निष्क्रिय (Deactivate) करण्याची पुष्टी' : 'खाते पुन्हा सक्रिय (Activate) करण्याची पुष्टी'}
+        title={
+          confirmModal.action === 'approve'
+            ? (isMarathi ? 'समुपदेशक खाते मंजुरी (Approve Account)' : 'Approve Counselor Account')
+            : confirmModal.action === 'deactivate' 
+            ? (isMarathi ? 'खाते निष्क्रिय (Deactivate) करण्याची पुष्टी' : 'Confirm Account Deactivation') 
+            : (isMarathi ? 'खाते पुन्हा सक्रिय (Activate) करण्याची पुष्टी' : 'Confirm Account Activation')
+        }
       >
         <div className="space-y-4">
           <p className="text-xs text-slate-600 leading-relaxed">
-            {confirmModal.action === 'deactivate'
-              ? `आपण खरोखर समुपदेशक "${confirmModal.telecaller?.fullName}" यांचे खाते निष्क्रिय करू इच्छिता? निष्क्रिय केल्यावर हा युझर पोर्टलवर लॉगिन करू शकणार नाही. (या युझरच्या ऐतिहासिक कॉल्सचा डेटा सुरक्षित राहील).`
-              : `आपण समुपदेशक "${confirmModal.telecaller?.fullName}" यांचे खाते पुन्हा सक्रिय करू इच्छिता? युझर त्वरित पुन्हा लॉगिन करू शकेल.`}
+            {confirmModal.action === 'approve'
+              ? (isMarathi 
+                  ? `आपण समुपदेशक "${confirmModal.telecaller?.fullName}" (${confirmModal.telecaller?.email}) यांच्या नोंदणीची पडताळणी करून खाते मंजूर (Approve) करू इच्छिता? मंजुरीनंतर ते CRM पोर्टलवर लगेच लॉगिन करू शकतील.`
+                  : `Are you sure you want to approve counselor "${confirmModal.telecaller?.fullName}" (${confirmModal.telecaller?.email})'s account? Once approved, they will be able to log in immediately.`)
+              : confirmModal.action === 'deactivate'
+              ? (isMarathi 
+                  ? `आपण खरोखर समुपदेशक "${confirmModal.telecaller?.fullName}" यांचे खाते निष्क्रिय करू इच्छिता? निष्क्रिय केल्यावर हा युझर पोर्टलवर लॉगिन करू शकणार नाही. (या युझरच्या ऐतिहासिक कॉल्सचा डेटा सुरक्षित राहील).`
+                  : `Are you sure you want to deactivate the account for counselor "${confirmModal.telecaller?.fullName}"? They will not be able to log in to the portal. (Their historical call records will be preserved).`)
+              : (isMarathi 
+                  ? `आपण समुपदेशक "${confirmModal.telecaller?.fullName}" यांचे खाते पुन्हा सक्रिय करू इच्छिता? युझर त्वरित पुन्हा लॉगिन करू शकेल.`
+                  : `Are you sure you want to reactivate counselor "${confirmModal.telecaller?.fullName}"'s account? The user will be able to log in immediately.`)}
           </p>
 
           <div className="flex justify-end gap-2 pt-2">
@@ -410,7 +478,7 @@ export const TelecallersListPage = () => {
               size="md"
               onClick={() => setConfirmModal({ open: false, telecaller: null, action: null })}
             >
-              रद्द करा
+              {isMarathi ? 'रद्द करा' : 'Cancel'}
             </Button>
             <Button
               variant={confirmModal.action === 'deactivate' ? 'danger' : 'primary'}
@@ -418,7 +486,11 @@ export const TelecallersListPage = () => {
               isLoading={actionLoading}
               onClick={handleConfirmStatusToggle}
             >
-              {confirmModal.action === 'deactivate' ? 'होय, निष्क्रिय करा' : 'होय, सक्रिय करा'}
+              {confirmModal.action === 'approve'
+                ? (isMarathi ? 'होय, मंजूर करा' : 'Yes, Approve')
+                : confirmModal.action === 'deactivate' 
+                ? (isMarathi ? 'होय, निष्क्रिय करा' : 'Yes, Deactivate') 
+                : (isMarathi ? 'होय, सक्रिय करा' : 'Yes, Activate')}
             </Button>
           </div>
         </div>
@@ -428,11 +500,15 @@ export const TelecallersListPage = () => {
       <Modal
         isOpen={resetModal.open}
         onClose={() => setResetModal({ open: false, telecaller: null, link: null })}
-        title="पासवर्ड रीसेट लिंक तयार झाली"
+        title={isMarathi ? 'पासवर्ड रीसेट लिंक तयार झाली' : 'Password Reset Link Generated'}
       >
         <div className="space-y-3 text-xs">
           <p className="text-slate-600">
-            समुपदेशक <strong>{resetModal.telecaller?.fullName}</strong> ({resetModal.telecaller?.email}) यांच्यासाठी अधिकृत पासवर्ड रीसेट लिंक तयार करण्यात आली आहे:
+            {isMarathi ? (
+              <>समुपदेशक <strong>{resetModal.telecaller?.fullName}</strong> ({resetModal.telecaller?.email}) यांच्यासाठी अधिकृत पासवर्ड रीसेट लिंक तयार करण्यात आली आहे:</>
+            ) : (
+              <>Official password reset link generated for counselor <strong>{resetModal.telecaller?.fullName}</strong> ({resetModal.telecaller?.email}):</>
+            )}
           </p>
           {resetModal.link && (
             <div className="p-3 bg-slate-50 border rounded-lg font-mono text-[11px] break-all select-all text-slate-800">
@@ -441,7 +517,7 @@ export const TelecallersListPage = () => {
           )}
           <div className="flex justify-end pt-2">
             <Button variant="primary" size="sm" onClick={() => setResetModal({ open: false, telecaller: null, link: null })}>
-              पूर्ण झाले
+              {isMarathi ? 'पूर्ण झाले' : 'Done'}
             </Button>
           </div>
         </div>

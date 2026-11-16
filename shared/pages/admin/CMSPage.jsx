@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useCMS } from '../../contexts/CMSContext';
+import { useLanguage } from '../../contexts/LanguageContext';
 import { 
   FileEdit, 
   Phone, 
@@ -19,6 +20,7 @@ import { Button } from '../../components/common/Button';
 import { Modal } from '../../components/common/Modal';
 
 export const CMSPage = () => {
+  const { isMarathi } = useLanguage();
   const { 
     institution, 
     updateInstitution, 
@@ -129,10 +131,12 @@ export const CMSPage = () => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h2 className="text-xl font-black text-slate-900">
-            वेबसाईट CMS व्यवस्थापन (Website CMS Portal)
+            {isMarathi ? 'वेबसाईट CMS व्यवस्थापन (Website CMS Portal)' : 'Website CMS Portal'}
           </h2>
           <p className="text-xs text-slate-500 mt-0.5">
-            संस्थेचा पत्ता, संपर्क क्रमांक, सूचना, फोटो गॅलरी आणि व्हिडिओ त्वरित अपडेट करा
+            {isMarathi 
+              ? 'संस्थेचा पत्ता, संपर्क क्रमांक, सूचना, फोटो गॅलरी आणि व्हिडिओ त्वरित अपडेट करा' 
+              : 'Quickly update institution address, contact numbers, notices, photo gallery, and videos'}
           </p>
         </div>
 
@@ -141,7 +145,7 @@ export const CMSPage = () => {
           className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-300 text-xs font-semibold text-slate-600 hover:bg-slate-50"
         >
           <RotateCcw className="w-3.5 h-3.5" />
-          <span>मूळ माहितीवर रीसेट करा</span>
+          <span>{isMarathi ? 'मूळ माहितीवर रीसेट करा' : 'Reset to Defaults'}</span>
         </button>
       </div>
 
@@ -155,7 +159,7 @@ export const CMSPage = () => {
               : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200'
           }`}
         >
-          १. संपर्क व संस्था माहिती
+          {isMarathi ? '१. संपर्क व संस्था माहिती' : '1. Contact & Info'}
         </button>
 
         <button
@@ -166,7 +170,7 @@ export const CMSPage = () => {
               : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200'
           }`}
         >
-          २. सूचना पत्रक (Notices) ({notices.length})
+          {isMarathi ? `२. सूचना पत्रक (Notices) (${notices.length})` : `2. Notices (${notices.length})`}
         </button>
 
         <button
@@ -177,7 +181,7 @@ export const CMSPage = () => {
               : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200'
           }`}
         >
-          ३. फोटो गॅलरी (Gallery) ({gallery.length})
+          {isMarathi ? `३. फोटो गॅलरी (Gallery) (${gallery.length})` : `3. Gallery (${gallery.length})`}
         </button>
 
         <button
@@ -188,7 +192,7 @@ export const CMSPage = () => {
               : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200'
           }`}
         >
-          ४. व्हिडिओ व्यवस्थापन ({videos.length})
+          {isMarathi ? `४. व्हिडिओ व्यवस्थापन (${videos.length})` : `4. Videos (${videos.length})`}
         </button>
       </div>
 
@@ -198,7 +202,7 @@ export const CMSPage = () => {
           {saveSuccess && (
             <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs flex items-center gap-2">
               <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-              <span>संस्थेची माहिती आणि संपर्क तपशील यशस्वीपणे सेव्ह झाले!</span>
+              <span>{isMarathi ? 'संस्थेची माहिती आणि संपर्क तपशील यशस्वीपणे सेव्ह झाले!' : 'Institute information and contact details saved successfully!'}</span>
             </div>
           )}
 
@@ -206,7 +210,7 @@ export const CMSPage = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  संस्थेचे अधिकृत नाव *
+                  {isMarathi ? 'संस्थेचे अधिकृत नाव *' : 'Official Institute Name *'}
                 </label>
                 <input
                   type="text"
@@ -219,7 +223,7 @@ export const CMSPage = () => {
 
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  टॅगलाईन (Tagline)
+                  {isMarathi ? 'टॅगलाईन (Tagline)' : 'Tagline'}
                 </label>
                 <input
                   type="text"
@@ -232,7 +236,7 @@ export const CMSPage = () => {
 
             <div>
               <label className="block text-xs font-semibold text-slate-700 mb-1">
-                संपूर्ण पत्ता (Address) *
+                {isMarathi ? 'संपूर्ण पत्ता (Address) *' : 'Full Address *'}
               </label>
               <textarea
                 rows={2}
@@ -246,7 +250,7 @@ export const CMSPage = () => {
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  मोबाईल नंबर १ *
+                  {isMarathi ? 'मोबाईल नंबर १ *' : 'Mobile Number 1 *'}
                 </label>
                 <input
                   type="text"
@@ -258,7 +262,7 @@ export const CMSPage = () => {
               </div>
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  मोबाईल नंबर २
+                  {isMarathi ? 'मोबाईल नंबर २' : 'Mobile Number 2'}
                 </label>
                 <input
                   type="text"
@@ -269,7 +273,7 @@ export const CMSPage = () => {
               </div>
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  मोबाईल नंबर ३
+                  {isMarathi ? 'मोबाईल नंबर ३' : 'Mobile Number 3'}
                 </label>
                 <input
                   type="text"
@@ -283,7 +287,7 @@ export const CMSPage = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  ईमेल पत्ता (Email) *
+                  {isMarathi ? 'ईमेल पत्ता (Email) *' : 'Email Address *'}
                 </label>
                 <input
                   type="email"
@@ -296,7 +300,7 @@ export const CMSPage = () => {
 
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  कार्यालयीन वेळ (Working Hours)
+                  {isMarathi ? 'कार्यालयीन वेळ (Working Hours)' : 'Working Hours'}
                 </label>
                 <input
                   type="text"
@@ -310,7 +314,7 @@ export const CMSPage = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  माहिती पत्रक लिंक (Brochure URL)
+                  {isMarathi ? 'माहिती पत्रक लिंक (Brochure URL)' : 'Brochure URL'}
                 </label>
                 <input
                   type="url"
@@ -322,7 +326,7 @@ export const CMSPage = () => {
 
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  YouTube चॅनल लिंक
+                  {isMarathi ? 'YouTube चॅनल लिंक' : 'YouTube Channel URL'}
                 </label>
                 <input
                   type="url"
@@ -335,7 +339,7 @@ export const CMSPage = () => {
 
             <Button type="submit" variant="primary" size="md">
               <Save className="w-4 h-4 mr-1.5" />
-              <span>बदल जतन करा (Save Changes)</span>
+              <span>{isMarathi ? 'बदल जतन करा (Save Changes)' : 'Save Changes'}</span>
             </Button>
           </form>
         </div>
@@ -345,10 +349,10 @@ export const CMSPage = () => {
       {activeTab === 'notices' && (
         <div className="space-y-4">
           <div className="flex justify-between items-center">
-            <h3 className="text-sm font-bold text-slate-900">सर्व प्रकाशित सूचना (Published Notices)</h3>
+            <h3 className="text-sm font-bold text-slate-900">{isMarathi ? 'सर्व प्रकाशित सूचना (Published Notices)' : 'Published Notices'}</h3>
             <Button variant="primary" size="sm" onClick={() => setNoticeModalOpen(true)}>
               <Plus className="w-4 h-4 mr-1" />
-              <span>नवीन सूचना जोडा</span>
+              <span>{isMarathi ? 'नवीन सूचना जोडा' : 'Add New Notice'}</span>
             </Button>
           </div>
 
@@ -359,19 +363,19 @@ export const CMSPage = () => {
                   <div className="flex items-center gap-2">
                     {n.isImportant && (
                       <span className="text-[10px] font-bold uppercase bg-red-100 text-red-700 px-1.5 py-0.5 rounded">
-                        Important
+                        {isMarathi ? 'महत्त्वाचे' : 'Important'}
                       </span>
                     )}
                     <span className="text-[11px] font-bold text-slate-500">[{n.category}]</span>
                     <h4 className="text-xs font-bold text-slate-900">{n.title}</h4>
                   </div>
                   <p className="text-xs text-slate-600">{n.description}</p>
-                  <p className="text-[10px] text-slate-400">तारीख: {n.date}</p>
+                  <p className="text-[10px] text-slate-400">{isMarathi ? 'तारीख:' : 'Date:'} {n.date}</p>
                 </div>
                 <button
                   onClick={() => deleteNotice(n.id)}
                   className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg"
-                  title="हटवा"
+                  title={isMarathi ? 'हटवा' : 'Delete'}
                 >
                   <Trash2 className="w-4 h-4" />
                 </button>
@@ -385,10 +389,10 @@ export const CMSPage = () => {
       {activeTab === 'gallery' && (
         <div className="space-y-4">
           <div className="flex justify-between items-center">
-            <h3 className="text-sm font-bold text-slate-900">फोटो गॅलरी व्यवस्थापन</h3>
+            <h3 className="text-sm font-bold text-slate-900">{isMarathi ? 'फोटो गॅलरी व्यवस्थापन' : 'Photo Gallery Management'}</h3>
             <Button variant="primary" size="sm" onClick={() => setGalleryModalOpen(true)}>
               <Plus className="w-4 h-4 mr-1" />
-              <span>नवीन फोटो जोडा</span>
+              <span>{isMarathi ? 'नवीन फोटो जोडा' : 'Add New Photo'}</span>
             </Button>
           </div>
 
@@ -403,7 +407,7 @@ export const CMSPage = () => {
                 <button
                   onClick={() => deleteGalleryItem(item.id)}
                   className="absolute top-2 right-2 p-1.5 bg-red-600 text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity shadow"
-                  title="हटवा"
+                  title={isMarathi ? 'हटवा' : 'Delete'}
                 >
                   <Trash2 className="w-3.5 h-3.5" />
                 </button>
@@ -417,10 +421,10 @@ export const CMSPage = () => {
       {activeTab === 'videos' && (
         <div className="space-y-4">
           <div className="flex justify-between items-center">
-            <h3 className="text-sm font-bold text-slate-900">व्हिडिओ व्यवस्थापन</h3>
+            <h3 className="text-sm font-bold text-slate-900">{isMarathi ? 'व्हिडिओ व्यवस्थापन' : 'Video Management'}</h3>
             <Button variant="primary" size="sm" onClick={() => setVideoModalOpen(true)}>
               <Plus className="w-4 h-4 mr-1" />
-              <span>नवीन व्हिडिओ जोडा</span>
+              <span>{isMarathi ? 'नवीन व्हिडिओ जोडा' : 'Add New Video'}</span>
             </Button>
           </div>
 
@@ -435,6 +439,7 @@ export const CMSPage = () => {
                   <button
                     onClick={() => deleteVideo(v.id)}
                     className="p-1 text-red-500 hover:bg-red-50 rounded"
+                    title={isMarathi ? 'हटवा' : 'Delete'}
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
@@ -449,12 +454,12 @@ export const CMSPage = () => {
       <Modal
         isOpen={noticeModalOpen}
         onClose={() => setNoticeModalOpen(false)}
-        title="नवीन सूचना प्रकाशित करा (Publish Notice)"
+        title={isMarathi ? 'नवीन सूचना प्रकाशित करा (Publish Notice)' : 'Publish New Notice'}
         maxWidth="max-w-md"
       >
         <form onSubmit={handleCreateNotice} className="space-y-3">
           <div>
-            <label className="block text-xs font-semibold mb-1">शीर्षक (Title) *</label>
+            <label className="block text-xs font-semibold mb-1">{isMarathi ? 'शीर्षक (Title) *' : 'Title *'}</label>
             <input
               type="text"
               required
@@ -464,20 +469,20 @@ export const CMSPage = () => {
             />
           </div>
           <div>
-            <label className="block text-xs font-semibold mb-1">वर्गवारी (Category)</label>
+            <label className="block text-xs font-semibold mb-1">{isMarathi ? 'वर्गवारी (Category)' : 'Category'}</label>
             <select
               value={newNotice.category}
               onChange={(e) => setNewNotice({ ...newNotice, category: e.target.value })}
               className="w-full text-xs px-3 py-2 border rounded-lg bg-white"
             >
-              <option value="प्रवेश (Admission)">प्रवेश (Admission)</option>
-              <option value="अकॅडेमिक्स (Academics)">अकॅडेमिक्स (Academics)</option>
-              <option value="पालक सूचना (Parent Notice)">पालक सूचना (Parent Notice)</option>
-              <option value="सुट्टी (Holiday)">सुट्टी (Holiday)</option>
+              <option value="प्रवेश (Admission)">{isMarathi ? 'प्रवेश (Admission)' : 'Admission'}</option>
+              <option value="अकॅडेमिक्स (Academics)">{isMarathi ? 'अकॅडेमिक्स (Academics)' : 'Academics'}</option>
+              <option value="पालक सूचना (Parent Notice)">{isMarathi ? 'पालक सूचना (Parent Notice)' : 'Parent Notice'}</option>
+              <option value="सुट्टी (Holiday)">{isMarathi ? 'सुट्टी (Holiday)' : 'Holiday'}</option>
             </select>
           </div>
           <div>
-            <label className="block text-xs font-semibold mb-1">सविस्तर तपशील *</label>
+            <label className="block text-xs font-semibold mb-1">{isMarathi ? 'सविस्तर तपशील *' : 'Details *'}</label>
             <textarea
               rows={3}
               required
@@ -495,12 +500,16 @@ export const CMSPage = () => {
               className="rounded"
             />
             <label htmlFor="isImp" className="text-xs font-semibold text-red-700">
-              महत्त्वाची सूचना म्हणून चिन्हांकित करा (Mark as Important)
+              {isMarathi ? 'महत्त्वाची सूचना म्हणून चिन्हांकित करा (Mark as Important)' : 'Mark as Important Notice'}
             </label>
           </div>
           <div className="flex justify-end gap-2 pt-2">
-            <Button variant="outline" size="sm" onClick={() => setNoticeModalOpen(false)}>रद्द करा</Button>
-            <Button type="submit" variant="primary" size="sm">प्रकाशित करा</Button>
+            <Button variant="outline" size="sm" onClick={() => setNoticeModalOpen(false)}>
+              {isMarathi ? 'रद्द करा' : 'Cancel'}
+            </Button>
+            <Button type="submit" variant="primary" size="sm">
+              {isMarathi ? 'प्रकाशित करा' : 'Publish'}
+            </Button>
           </div>
         </form>
       </Modal>
@@ -509,12 +518,12 @@ export const CMSPage = () => {
       <Modal
         isOpen={galleryModalOpen}
         onClose={() => setGalleryModalOpen(false)}
-        title="नवीन फोटो जोडा (Add Gallery Image)"
+        title={isMarathi ? 'नवीन फोटो जोडा (Add Gallery Image)' : 'Add Gallery Image'}
         maxWidth="max-w-md"
       >
         <form onSubmit={handleCreateGallery} className="space-y-3">
           <div>
-            <label className="block text-xs font-semibold mb-1">शीर्षक *</label>
+            <label className="block text-xs font-semibold mb-1">{isMarathi ? 'शीर्षक *' : 'Title *'}</label>
             <input
               type="text"
               required
@@ -524,20 +533,20 @@ export const CMSPage = () => {
             />
           </div>
           <div>
-            <label className="block text-xs font-semibold mb-1">वर्गवारी *</label>
+            <label className="block text-xs font-semibold mb-1">{isMarathi ? 'वर्गवारी *' : 'Category *'}</label>
             <select
               value={newGalleryItem.category}
               onChange={(e) => setNewGalleryItem({ ...newGalleryItem, category: e.target.value })}
               className="w-full text-xs px-3 py-2 border rounded-lg bg-white"
             >
-              <option value="activities">उपक्रम (Activities)</option>
-              <option value="sports">क्रीडा (Sports)</option>
-              <option value="gathering">स्नेहसंमेलन (Gathering)</option>
-              <option value="result">निकाल (Result)</option>
+              <option value="activities">{isMarathi ? 'उपक्रम (Activities)' : 'Activities'}</option>
+              <option value="sports">{isMarathi ? 'क्रीडा (Sports)' : 'Sports'}</option>
+              <option value="gathering">{isMarathi ? 'स्नेहसंमेलन (Gathering)' : 'Annual Gathering'}</option>
+              <option value="result">{isMarathi ? 'निकाल (Result)' : 'Academic Results'}</option>
             </select>
           </div>
           <div>
-            <label className="block text-xs font-semibold mb-1">फोटो इमेज URL *</label>
+            <label className="block text-xs font-semibold mb-1">{isMarathi ? 'फोटो इमेज URL *' : 'Image URL *'}</label>
             <input
               type="url"
               required
@@ -548,8 +557,12 @@ export const CMSPage = () => {
             />
           </div>
           <div className="flex justify-end gap-2 pt-2">
-            <Button variant="outline" size="sm" onClick={() => setGalleryModalOpen(false)}>रद्द करा</Button>
-            <Button type="submit" variant="primary" size="sm">फोटो जतन करा</Button>
+            <Button variant="outline" size="sm" onClick={() => setGalleryModalOpen(false)}>
+              {isMarathi ? 'रद्द करा' : 'Cancel'}
+            </Button>
+            <Button type="submit" variant="primary" size="sm">
+              {isMarathi ? 'फोटो जतन करा' : 'Save Image'}
+            </Button>
           </div>
         </form>
       </Modal>
@@ -558,12 +571,12 @@ export const CMSPage = () => {
       <Modal
         isOpen={videoModalOpen}
         onClose={() => setVideoModalOpen(false)}
-        title="नवीन व्हिडिओ जोडा (Add YouTube Video)"
+        title={isMarathi ? 'नवीन व्हिडिओ जोडा (Add YouTube Video)' : 'Add YouTube Video'}
         maxWidth="max-w-md"
       >
         <form onSubmit={handleCreateVideo} className="space-y-3">
           <div>
-            <label className="block text-xs font-semibold mb-1">व्हिडिओ शीर्षक *</label>
+            <label className="block text-xs font-semibold mb-1">{isMarathi ? 'व्हिडिओ शीर्षक *' : 'Video Title *'}</label>
             <input
               type="text"
               required
@@ -573,19 +586,23 @@ export const CMSPage = () => {
             />
           </div>
           <div>
-            <label className="block text-xs font-semibold mb-1">YouTube Video ID *</label>
+            <label className="block text-xs font-semibold mb-1">{isMarathi ? 'YouTube Video ID *' : 'YouTube Video ID *'}</label>
             <input
               type="text"
               required
-              placeholder="उदा. b5XKb-pWFF4"
+              placeholder={isMarathi ? 'उदा. b5XKb-pWFF4' : 'e.g. b5XKb-pWFF4'}
               value={newVideoItem.youtubeId}
               onChange={(e) => setNewVideoItem({ ...newVideoItem, youtubeId: e.target.value })}
               className="w-full text-xs px-3 py-2 border rounded-lg"
             />
           </div>
           <div className="flex justify-end gap-2 pt-2">
-            <Button variant="outline" size="sm" onClick={() => setVideoModalOpen(false)}>रद्द करा</Button>
-            <Button type="submit" variant="primary" size="sm">व्हिडिओ जोडा</Button>
+            <Button variant="outline" size="sm" onClick={() => setVideoModalOpen(false)}>
+              {isMarathi ? 'रद्द करा' : 'Cancel'}
+            </Button>
+            <Button type="submit" variant="primary" size="sm">
+              {isMarathi ? 'व्हिडिओ जोडा' : 'Add Video'}
+            </Button>
           </div>
         </form>
       </Modal>

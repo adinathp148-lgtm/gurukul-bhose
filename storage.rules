@@ -75,10 +75,11 @@ service firebase.storage {
       allow write: if isAdmin() && (isPDFUnder15MB() || isImageUnder5MB());
     }
 
-    // Fallback for any other website CMS path
-    match /website/{folder}/{fileName} {
-      allow write: if isAdmin() && (isImageUnder5MB() || isPDFUnder15MB());
-      allow delete: if isAdmin();
+    // Phase 7 Admission Documents (PDF <= 15MB or Image <= 5MB, private to Admin/SuperAdmin)
+    match /admissions/{applicationId}/{documentType}/{fileName} {
+      allow read: if isAdmin();
+      allow write: if isAdmin() && (isPDFUnder15MB() || isImageUnder5MB());
+      allow delete: if isSuperAdmin();
     }
 
     // Default deny for other paths

@@ -5,6 +5,7 @@ import { ProtectedRoute } from '@shared/routes/ProtectedRoute';
 
 // Admin Login Portals
 import { AdminLoginPage } from '@shared/pages/auth/AdminLoginPage';
+import { AdminRegisterPage } from '@shared/pages/auth/AdminRegisterPage';
 import { SuperAdminLoginPage } from '@shared/pages/auth/SuperAdminLoginPage';
 
 // Admin & CRM Workspace Pages
@@ -21,6 +22,19 @@ import { ParentCommunicationPage } from '@shared/pages/admin/ParentCommunication
 import { MetaIntegrationPage } from '@shared/pages/admin/MetaIntegrationPage';
 import { CallMonitoringPage } from '@shared/pages/admin/CallMonitoringPage';
 import { TelecallerPerformancePage } from '@shared/pages/admin/TelecallerPerformancePage';
+import { AdminVisitsPage } from '@shared/pages/admin/AdminVisitsPage';
+import { AdminVisitDeskPage } from '@shared/pages/admin/AdminVisitDeskPage';
+import { AdminVisitCalendarPage } from '@shared/pages/admin/AdminVisitCalendarPage';
+import { AdminVisitSettingsPage } from '@shared/pages/admin/AdminVisitSettingsPage';
+
+// Phase 9 Dedicated Workspace Pages
+import { AdminEnquiriesPage } from '@shared/pages/admin/AdminEnquiriesPage';
+import { AdminReportsPage } from '@shared/pages/admin/AdminReportsPage';
+import { AdminNotificationsPage } from '@shared/pages/admin/AdminNotificationsPage';
+import { AdminAuditLogsPage } from '@shared/pages/admin/AdminAuditLogsPage';
+import { AdminSystemSettingsPage } from '@shared/pages/admin/AdminSystemSettingsPage';
+import { AdminProfilePage } from '@shared/pages/admin/AdminProfilePage';
+import { AdminManagementPage } from '@shared/pages/admin/AdminManagementPage';
 
 // Complete CMS Modules
 import { CMSDashboardPage } from '@shared/pages/admin/cms/CMSDashboardPage';
@@ -46,9 +60,11 @@ import { TelecallerLeadDetailsPage } from '@shared/pages/telecaller/TelecallerLe
 import { TelecallerFollowUpsPage } from '@shared/pages/telecaller/TelecallerFollowUpsPage';
 import { TelecallerCallsPage } from '@shared/pages/telecaller/TelecallerCallsPage';
 import { TelecallerCalendarPage } from '@shared/pages/telecaller/TelecallerCalendarPage';
+import { TelecallerVisitsPage } from '@shared/pages/telecaller/TelecallerVisitsPage';
 import { TelecallerProfilePage } from '@shared/pages/telecaller/TelecallerProfilePage';
 import { TelecallerChangePasswordPage } from '@shared/pages/telecaller/TelecallerChangePasswordPage';
 import { TelecallerLoginPage } from '@shared/pages/auth/TelecallerLoginPage';
+import { TelecallerRegisterPage } from '@shared/pages/auth/TelecallerRegisterPage';
 
 export const AppRoutes = () => {
   return (
@@ -56,8 +72,11 @@ export const AppRoutes = () => {
       {/* 1. Public Authentication Portals */}
       <Route path="/login" element={<AdminLoginPage />} />
       <Route path="/admin/login" element={<AdminLoginPage />} />
+      <Route path="/register" element={<AdminRegisterPage />} />
+      <Route path="/admin/register" element={<AdminRegisterPage />} />
       <Route path="/super-admin/login" element={<SuperAdminLoginPage />} />
       <Route path="/telecaller/login" element={<TelecallerLoginPage />} />
+      <Route path="/telecaller/register" element={<TelecallerRegisterPage />} />
 
       {/* 2. Protected Telecaller Dedicated Workspace (Accessible to Telecallers, Admin & Super Admin) */}
       <Route
@@ -74,6 +93,7 @@ export const AppRoutes = () => {
         <Route path="leads/:leadId" element={<TelecallerLeadDetailsPage />} />
         <Route path="calls" element={<TelecallerCallsPage />} />
         <Route path="calendar" element={<TelecallerCalendarPage />} />
+        <Route path="visits" element={<TelecallerVisitsPage />} />
         <Route path="follow-ups" element={<TelecallerFollowUpsPage />} />
         <Route path="history" element={<TelecallerFollowUpsPage />} />
         <Route path="profile" element={<TelecallerProfilePage />} />
@@ -102,6 +122,7 @@ export const AppRoutes = () => {
         <Route path="/telecallers/:id" element={<TelecallerDetailsPage />} />
 
         {/* CRM Pipeline & Admission Register */}
+        <Route path="/admin/enquiries" element={<AdminEnquiriesPage />} />
         <Route path="/admin/leads" element={<LeadsPage />} />
         <Route path="/admin/leads/:leadId" element={<LeadDetailsPage />} />
         <Route path="/admin/call-monitoring" element={<CallMonitoringPage />} />
@@ -110,6 +131,23 @@ export const AppRoutes = () => {
         <Route path="/admin/admissions" element={<AdmissionsPage />} />
         <Route path="/admin/parent-communication" element={<ParentCommunicationPage />} />
         <Route path="/admin/meta-integration" element={<MetaIntegrationPage />} />
+        <Route path="/admin/campus-visits" element={<AdminVisitsPage />} />
+        <Route path="/admin/visits" element={<Navigate to="/admin/campus-visits" replace />} />
+        <Route path="/admin/visit-desk" element={<AdminVisitDeskPage />} />
+        <Route path="/admin/visit-calendar" element={<AdminVisitCalendarPage />} />
+        <Route path="/admin/visit-settings" element={<AdminVisitSettingsPage />} />
+
+        {/* Phase 9 Administrative Control Modules */}
+        <Route path="/admin/admins" element={<AdminManagementPage />} />
+        <Route path="/admin/users" element={<AdminManagementPage />} />
+        <Route path="/admin/reports" element={<AdminReportsPage />} />
+        <Route path="/admin/notifications" element={<AdminNotificationsPage />} />
+        <Route path="/admin/audit-logs" element={<AdminAuditLogsPage />} />
+        <Route path="/admin/settings" element={<AdminSystemSettingsPage />} />
+        <Route path="/admin/profile" element={<AdminProfilePage />} />
+
+        {/* Short Aliases */}
+        <Route path="/enquiries" element={<Navigate to="/admin/enquiries" replace />} />
         <Route path="/leads" element={<Navigate to="/admin/leads" replace />} />
         <Route path="/leads/:leadId" element={<LeadDetailsPage />} />
         <Route path="/call-monitoring" element={<Navigate to="/admin/call-monitoring" replace />} />
@@ -118,6 +156,18 @@ export const AppRoutes = () => {
         <Route path="/admissions" element={<Navigate to="/admin/admissions" replace />} />
         <Route path="/parent-communication" element={<Navigate to="/admin/parent-communication" replace />} />
         <Route path="/meta-integration" element={<Navigate to="/admin/meta-integration" replace />} />
+        <Route path="/campus-visits" element={<Navigate to="/admin/campus-visits" replace />} />
+        <Route path="/visits" element={<Navigate to="/admin/campus-visits" replace />} />
+        <Route path="/visit-desk" element={<Navigate to="/admin/visit-desk" replace />} />
+        <Route path="/visit-calendar" element={<Navigate to="/admin/visit-calendar" replace />} />
+        <Route path="/visit-settings" element={<Navigate to="/admin/visit-settings" replace />} />
+        <Route path="/admins" element={<Navigate to="/admin/admins" replace />} />
+        <Route path="/users" element={<Navigate to="/admin/admins" replace />} />
+        <Route path="/reports" element={<Navigate to="/admin/reports" replace />} />
+        <Route path="/notifications" element={<Navigate to="/admin/notifications" replace />} />
+        <Route path="/audit-logs" element={<Navigate to="/admin/audit-logs" replace />} />
+        <Route path="/settings" element={<Navigate to="/admin/settings" replace />} />
+        <Route path="/profile" element={<Navigate to="/admin/profile" replace />} />
 
         {/* Website CMS Modules */}
         <Route path="/admin/cms" element={<CMSDashboardPage />} />

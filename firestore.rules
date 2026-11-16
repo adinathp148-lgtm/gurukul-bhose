@@ -12,7 +12,7 @@ rules_version = '2';
 //    - email: string (valid email format, 1-100 chars)
 //    - phone: string (optional, 10-15 chars)
 //    - role: string ('super_admin', 'superadmin', 'admin', 'telecaller')
-//    - status: string ('active', 'inactive')
+//    - status: string ('active', 'inactive', 'pending')
 //    - employeeId: string (1-50 chars)
 //    - profileImage: string / null (optional)
 //    - createdAt / updatedAt: timestamp or ISO string
@@ -28,7 +28,7 @@ rules_version = '2';
 //    - address: string (optional, max 500 chars)
 //    - joiningDate: string (optional, max 50 chars)
 //    - assignedDepartment: string (optional, max 100 chars)
-//    - status: string ('active', 'inactive')
+//    - status: string ('active', 'inactive', 'pending')
 //
 // 3. audit_logs/{logId}
 //    - actorId: string
@@ -148,6 +148,51 @@ rules_version = '2';
 //     - createdAt / sentAt: timestamp or ISO string
 //     (Client writes denied; created via Cloud Functions / Firebase Admin SDK)
 //
+// 15. campus_visits/{visitId} (Phase 7 Campus Visit Scheduling & Desk Operations):
+//     - visitId / visitNumber: string (optional)
+//     - parentName / studentName / mobileNumber / applyingClass: string (required)
+//     - requestedDate / timeSlot / status: string (required)
+//     - numberOfVisitors: number (1-10)
+//     - assignedStaffId / checkedInAt / checkedOutAt: optional visit tracking fields
+//     - createdAt / updatedAt: timestamp or ISO string
+//
+// 16. visit_slot_reservations/{reservationId} (Phase 7 Slot Capacity & Concurrency Locks):
+//     - scheduledDate / timeSlot / slotId / status: string
+//     - capacity / reservedCount: number
+//     (Public read for slot availability check; Admin / Cloud Functions write)
+//
+// 17. visit_schedule_settings/{settingsId} (Phase 7 Working Days & Slot Config):
+//     - workingDays: list of strings
+//     - startTime / endTime / slotDurationMinutes: schedule settings
+//     (Public read for operating hours; Admin write)
+//
+// 18. visit_feedback/{feedbackId} (Phase 7 Immutable Visit Feedback):
+//     - visitId / interestLevel / createdBy: string (required)
+//     - experienceRating: number (1-5)
+//     - facilitiesFeedback / nextAction / staffRemarks: string (optional)
+//     (Strictly immutable: update and delete denied)
+//
+// 19. admission_applications/{applicationId} (Phase 7 14-Stage Admission Applications):
+//     - studentName / parentName / parentMobile / applyingClass: string (required)
+//     - currentStage / approvalStatus / assignedStaffId: string (optional)
+//     - requiredDocuments / internalNotes: list
+//     - feeDetails: map
+//     (Admin create/update only; super admin delete)
+//
+// 20. admission_stage_history/{historyId} (Phase 7 Immutable Stage History):
+//     - applicationId / previousStage / newStage / changedBy: string
+//     - reason: string
+//     (Strictly immutable audit history: update and delete denied)
+//
+// 21. admission_documents/{documentId} (Phase 7 Admission Document Checklist):
+//     - applicationId / documentType / status / storagePath: string
+//     (Admin create/update; super admin delete)
+//
+// 22. system_settings/{settingsId} (Phase 9 System Configuration & Global Settings):
+//     - schoolNameMr, schoolNameEn, activeAcademicYear, upcomingAcademicYear, admissionsStatus, etc.
+//     - Read: true (allowed for all authenticated staff and public to read school settings/academic year)
+//     - Write (create, update, delete): isAdmin() (strictly restricted to Admin/Super Admin; denied for unauthenticated/ordinary users)
+//
 // ===============================================================
 
 service cloud.firestore {
@@ -243,7 +288,7 @@ service cloud.firestore {
         data.email is string && data.email.size() <= 100 && isValidEmail(data.email) &&
         data.role in ['super_admin', 'superadmin', 'admin', 'telecaller'] &&
         (!( 'phone' in data ) || data.phone == null || isValidPhone(data.phone)) &&
-        (!( 'status' in data ) || data.status in ['active', 'inactive']) &&
+        (!( 'status' in data ) || data.status in ['active', 'inactive', 'pending']) &&
         (!( 'employeeId' in data ) || (data.employeeId is string && data.employeeId.size() <= 50));
     }
 
@@ -259,7 +304,7 @@ service cloud.firestore {
         (!( 'address' in data ) || (data.address is string && data.address.size() <= 500)) &&
         (!( 'joiningDate' in data ) || (data.joiningDate is string && data.joiningDate.size() <= 50)) &&
         (!( 'assignedDepartment' in data ) || (data.assignedDepartment is string && data.assignedDepartment.size() <= 100)) &&
-        (!( 'status' in data ) || data.status in ['active', 'inactive']);
+        (!( 'status' in data ) || data.status in ['active', 'inactive', 'pending']);
     }
 
     // 3. Notification Validator
@@ -414,6 +459,117 @@ service cloud.firestore {
         (!( 'sentAt' in data ) || data.sentAt is timestamp || (data.sentAt is string && data.sentAt.size() <= 50));
     }
 
+    // 13. Campus Visit Validator (Phase 7)
+    function isValidCampusVisit(data) {
+      return hasRequiredFields(['parentName', 'studentName', 'mobileNumber', 'applyingClass', 'requestedDate', 'timeSlot', 'status']) &&
+        data.parentName is string && data.parentName.size() > 0 && data.parentName.size() <= 100 &&
+        data.studentName is string && data.studentName.size() > 0 && data.studentName.size() <= 100 &&
+        isValidPhone(data.mobileNumber) &&
+        data.applyingClass is string && data.applyingClass.size() > 0 && data.applyingClass.size() <= 50 &&
+        data.requestedDate is string && data.requestedDate.size() > 0 && data.requestedDate.size() <= 50 &&
+        data.timeSlot is string && data.timeSlot.size() > 0 && data.timeSlot.size() <= 50 &&
+        data.status is string && data.status.size() > 0 && data.status.size() <= 50 &&
+        (!( 'numberOfVisitors' in data ) || (data.numberOfVisitors is number && data.numberOfVisitors >= 1 && data.numberOfVisitors <= 10)) &&
+        (!( 'visitId' in data ) || (data.visitId is string && data.visitId.size() <= 100)) &&
+        (!( 'visitNumber' in data ) || (data.visitNumber is string && data.visitNumber.size() <= 50)) &&
+        (!( 'leadId' in data ) || data.leadId == null || (data.leadId is string && data.leadId.size() <= 100)) &&
+        (!( 'leadNumber' in data ) || data.leadNumber == null || (data.leadNumber is string && data.leadNumber.size() <= 50)) &&
+        (!( 'whatsappNumber' in data ) || data.whatsappNumber == null || isValidPhone(data.whatsappNumber)) &&
+        (!( 'email' in data ) || data.email == null || (data.email is string && data.email.size() <= 100)) &&
+        (!( 'currentClass' in data ) || (data.currentClass is string && data.currentClass.size() <= 50)) &&
+        (!( 'academicYear' in data ) || (data.academicYear is string && data.academicYear.size() <= 50)) &&
+        (!( 'timezone' in data ) || (data.timezone is string && data.timezone.size() <= 50)) &&
+        (!( 'purpose' in data ) || (data.purpose is string && data.purpose.size() <= 100)) &&
+        (!( 'assignedStaffId' in data ) || data.assignedStaffId == null || (data.assignedStaffId is string && data.assignedStaffId.size() <= 100)) &&
+        (!( 'assignedStaffName' in data ) || data.assignedStaffName == null || (data.assignedStaffName is string && data.assignedStaffName.size() <= 100)) &&
+        (!( 'createdBy' in data ) || (data.createdBy is string && data.createdBy.size() <= 100)) &&
+        (!( 'creatorRole' in data ) || (data.creatorRole is string && data.creatorRole.size() <= 50)) &&
+        (!( 'approvedBy' in data ) || data.approvedBy == null || (data.approvedBy is string && data.approvedBy.size() <= 100)) &&
+        (!( 'approvalReason' in data ) || data.approvalReason == null || (data.approvalReason is string && data.approvalReason.size() <= 500)) &&
+        (!( 'internalNotes' in data ) || (data.internalNotes is string && data.internalNotes.size() <= 2000)) &&
+        (!( 'checkedInAt' in data ) || data.checkedInAt == null || (data.checkedInAt is string && data.checkedInAt.size() <= 50)) &&
+        (!( 'checkedInBy' in data ) || data.checkedInBy == null || (data.checkedInBy is string && data.checkedInBy.size() <= 100)) &&
+        (!( 'checkedOutAt' in data ) || data.checkedOutAt == null || (data.checkedOutAt is string && data.checkedOutAt.size() <= 50)) &&
+        (!( 'checkedOutBy' in data ) || data.checkedOutBy == null || (data.checkedOutBy is string && data.checkedOutBy.size() <= 100)) &&
+        (!( 'createdAt' in data ) || data.createdAt is timestamp || (data.createdAt is string && data.createdAt.size() <= 50)) &&
+        (!( 'updatedAt' in data ) || data.updatedAt is timestamp || (data.updatedAt is string && data.updatedAt.size() <= 50));
+    }
+
+    // 14. Visit Feedback Validator (Phase 7)
+    function isValidVisitFeedback(data) {
+      return hasRequiredFields(['visitId', 'interestLevel']) &&
+        data.visitId is string && data.visitId.size() > 0 && data.visitId.size() <= 100 &&
+        data.interestLevel in ['Highly Interested', 'Interested', 'Need More Information', 'Not Interested'] &&
+        (!( 'feedbackId' in data ) || (data.feedbackId is string && data.feedbackId.size() <= 100)) &&
+        (!( 'leadId' in data ) || data.leadId == null || (data.leadId is string && data.leadId.size() <= 100)) &&
+        (!( 'experienceRating' in data ) || (data.experienceRating is number && data.experienceRating >= 1 && data.experienceRating <= 5)) &&
+        (!( 'facilitiesFeedback' in data ) || (data.facilitiesFeedback is string && data.facilitiesFeedback.size() <= 2000)) &&
+        (!( 'feeEnquiry' in data ) || data.feeEnquiry is bool) &&
+        (!( 'academicEnquiry' in data ) || data.academicEnquiry is bool) &&
+        (!( 'parentQuestions' in data ) || (data.parentQuestions is string && data.parentQuestions.size() <= 2000)) &&
+        (!( 'concerns' in data ) || (data.concerns is string && data.concerns.size() <= 2000)) &&
+        (!( 'nextAction' in data ) || (data.nextAction is string && data.nextAction.size() <= 100)) &&
+        (!( 'recommendedFollowUpAt' in data ) || data.recommendedFollowUpAt == null || (data.recommendedFollowUpAt is string && data.recommendedFollowUpAt.size() <= 50)) &&
+        (!( 'staffRemarks' in data ) || (data.staffRemarks is string && data.staffRemarks.size() <= 2000)) &&
+        (!( 'createdBy' in data ) || (data.createdBy is string && data.createdBy.size() <= 100)) &&
+        (!( 'createdByName' in data ) || (data.createdByName is string && data.createdByName.size() <= 100)) &&
+        (!( 'createdAt' in data ) || data.createdAt is timestamp || (data.createdAt is string && data.createdAt.size() <= 50));
+    }
+
+    // 15. Admission Application Validator (Phase 7)
+    function isValidAdmissionApplication(data) {
+      return hasRequiredFields(['studentName', 'parentName', 'parentMobile', 'applyingClass']) &&
+        data.studentName is string && data.studentName.size() > 0 && data.studentName.size() <= 100 &&
+        data.parentName is string && data.parentName.size() > 0 && data.parentName.size() <= 100 &&
+        isValidPhone(data.parentMobile) &&
+        data.applyingClass is string && data.applyingClass.size() > 0 && data.applyingClass.size() <= 50 &&
+        (!( 'applicationId' in data ) || (data.applicationId is string && data.applicationId.size() <= 100)) &&
+        (!( 'applicationNumber' in data ) || (data.applicationNumber is string && data.applicationNumber.size() <= 50)) &&
+        (!( 'leadId' in data ) || data.leadId == null || (data.leadId is string && data.leadId.size() <= 100)) &&
+        (!( 'leadNumber' in data ) || data.leadNumber == null || (data.leadNumber is string && data.leadNumber.size() <= 50)) &&
+        (!( 'parentEmail' in data ) || (data.parentEmail is string && data.parentEmail.size() <= 100)) &&
+        (!( 'academicYear' in data ) || (data.academicYear is string && data.academicYear.size() <= 50)) &&
+        (!( 'currentStage' in data ) || (data.currentStage is string && data.currentStage.size() <= 50)) &&
+        (!( 'assignedStaffId' in data ) || data.assignedStaffId == null || (data.assignedStaffId is string && data.assignedStaffId.size() <= 100)) &&
+        (!( 'assignedStaffName' in data ) || data.assignedStaffName == null || (data.assignedStaffName is string && data.assignedStaffName.size() <= 100)) &&
+        (!( 'approvalStatus' in data ) || (data.approvalStatus is string && data.approvalStatus.size() <= 50)) &&
+        (!( 'requiredDocuments' in data ) || data.requiredDocuments is list) &&
+        (!( 'feeDetails' in data ) || data.feeDetails is map) &&
+        (!( 'internalNotes' in data ) || data.internalNotes is list) &&
+        (!( 'createdAt' in data ) || data.createdAt is timestamp || (data.createdAt is string && data.createdAt.size() <= 50)) &&
+        (!( 'updatedAt' in data ) || data.updatedAt is timestamp || (data.updatedAt is string && data.updatedAt.size() <= 50));
+    }
+
+    // 16. Admission Stage History Validator (Phase 7)
+    function isValidAdmissionStageHistory(data) {
+      return hasRequiredFields(['applicationId', 'newStage']) &&
+        data.applicationId is string && data.applicationId.size() > 0 && data.applicationId.size() <= 100 &&
+        data.newStage is string && data.newStage.size() > 0 && data.newStage.size() <= 50 &&
+        (!( 'historyId' in data ) || (data.historyId is string && data.historyId.size() <= 100)) &&
+        (!( 'leadId' in data ) || data.leadId == null || (data.leadId is string && data.leadId.size() <= 100)) &&
+        (!( 'previousStage' in data ) || (data.previousStage is string && data.previousStage.size() <= 50)) &&
+        (!( 'changedBy' in data ) || (data.changedBy is string && data.changedBy.size() <= 100)) &&
+        (!( 'changedByName' in data ) || (data.changedByName is string && data.changedByName.size() <= 100)) &&
+        (!( 'changedByRole' in data ) || (data.changedByRole is string && data.changedByRole.size() <= 50)) &&
+        (!( 'reason' in data ) || (data.reason is string && data.reason.size() <= 1000)) &&
+        (!( 'createdAt' in data ) || data.createdAt is timestamp || (data.createdAt is string && data.createdAt.size() <= 50));
+    }
+
+    // 17. Admission Document Validator (Phase 7)
+    function isValidAdmissionDocument(data) {
+      return hasRequiredFields(['applicationId', 'documentType']) &&
+        data.applicationId is string && data.applicationId.size() > 0 && data.applicationId.size() <= 100 &&
+        data.documentType is string && data.documentType.size() > 0 && data.documentType.size() <= 100 &&
+        (!( 'documentId' in data ) || (data.documentId is string && data.documentId.size() <= 100)) &&
+        (!( 'status' in data ) || (data.status is string && data.status.size() <= 50)) &&
+        (!( 'storagePath' in data ) || (data.storagePath is string && data.storagePath.size() <= 500)) &&
+        (!( 'uploadedBy' in data ) || (data.uploadedBy is string && data.uploadedBy.size() <= 100)) &&
+        (!( 'reviewedBy' in data ) || (data.reviewedBy is string && data.reviewedBy.size() <= 100)) &&
+        (!( 'reviewNotes' in data ) || (data.reviewNotes is string && data.reviewNotes.size() <= 1000)) &&
+        (!( 'createdAt' in data ) || data.createdAt is timestamp || (data.createdAt is string && data.createdAt.size() <= 50)) &&
+        (!( 'updatedAt' in data ) || data.updatedAt is timestamp || (data.updatedAt is string && data.updatedAt.size() <= 50));
+    }
+
     // ===============================================================
     // Collection Match Rules
     // ===============================================================
@@ -423,10 +579,14 @@ service cloud.firestore {
       // Read: user can read their own document or admin
       allow read: if isOwner(userId) || isAdmin();
 
-      // Create: SuperAdmin can create any user; Admin can only create telecaller accounts
+      // Create:
+      // - SuperAdmin can create any user
+      // - Admin can create telecaller accounts
+      // - Authenticated user can self-register their own document (request.auth.uid == userId) with role 'telecaller' or 'admin'
       allow create: if isValidUser(request.resource.data) && (
         isSuperAdmin() ||
-        (isAdmin() && request.resource.data.role == 'telecaller')
+        (isAdmin() && request.resource.data.role == 'telecaller') ||
+        (isOwner(userId) && request.resource.data.role in ['telecaller', 'admin'])
       );
 
       // Update:
@@ -461,8 +621,11 @@ service cloud.firestore {
       // Read: profile owner or admin
       allow read: if isOwner(userId) || isAdmin();
 
-      // Create: Admin or SuperAdmin
-      allow create: if isAdmin() && isValidTelecallerProfile(request.resource.data);
+      // Create: Admin or self-registration owner (with status 'pending' or 'active')
+      allow create: if isValidTelecallerProfile(request.resource.data) && (
+        isAdmin() ||
+        (isOwner(userId) && (!('status' in request.resource.data) || request.resource.data.status in ['pending', 'active']))
+      );
 
       // Update:
       // - Admin: full update
@@ -503,8 +666,10 @@ service cloud.firestore {
         )
       );
 
-      // Create / Delete: Admin only
-      allow create: if isAdmin() && isValidNotification(request.resource.data);
+      // Create: Authenticated users can create valid notifications
+      allow create: if isAuthenticated() && isValidNotification(request.resource.data);
+
+      // Delete: Admin only
       allow delete: if isAdmin();
     }
 
@@ -742,10 +907,8 @@ service cloud.firestore {
       );
 
       // Update & Delete:
-      // - Admin/Super Admin: full update & delete
-      // - Telecaller: DENIED (historical call records are append-only/immutable for telecallers)
-      allow update: if isAdmin() && isValidCallRecord(request.resource.data);
-      allow delete: if isAdmin();
+      // - Historical call records are strictly append-only and immutable
+      allow update, delete: if false;
     }
 
     // 11. Follow-ups Queue Collection (Phase 6 Extended)
@@ -864,6 +1027,146 @@ service cloud.firestore {
 
       // Write: DENIED client-side (written exclusively via Cloud Functions / Firebase Admin SDK)
       allow write: if false;
+    }
+
+    // ===============================================================
+    // Phase 7: Campus Visit Management & Admission Workflow
+    // ===============================================================
+
+    // 15. Campus Visits Collection
+    match /campus_visits/{visitId} {
+      // Read:
+      // - Admin/Super Admin can read all
+      // - Telecaller can read if created by them, assigned staff, or lead is assigned to them
+      // - Public read DENIED
+      allow read: if isAdmin() || (
+        isTelecaller() && (
+          resource.data.createdBy == request.auth.uid ||
+          resource.data.assignedStaffId == request.auth.uid ||
+          (resource.data.leadId != null && resource.data.leadId is string &&
+           exists(/databases/$(database)/documents/enquiries/$(resource.data.leadId)) &&
+           get(/databases/$(database)/documents/enquiries/$(resource.data.leadId)).data.assignedTo == request.auth.uid)
+        )
+      );
+
+      // Create:
+      // - Public can create valid visit requests (Pending Approval, <= 10 visitors)
+      // - Telecaller can create visit for assigned leads (Pending Approval)
+      // - Admin can create directly (Confirmed or Pending Approval)
+      allow create: if isValidCampusVisit(request.resource.data) && (
+        (
+          // Public enquiry submission
+          request.resource.data.status == 'Pending Approval' &&
+          (!('numberOfVisitors' in request.resource.data) || request.resource.data.numberOfVisitors <= 10)
+        ) ||
+        (
+          // Telecaller creating for assigned lead
+          isTelecaller() &&
+          request.resource.data.status == 'Pending Approval' &&
+          request.resource.data.leadId != null &&
+          isEnquiryAssignedTo(request.resource.data.leadId, request.auth.uid)
+        ) ||
+        (
+          // Admin direct creation
+          isAdmin() &&
+          request.resource.data.status in ['Confirmed', 'Pending Approval']
+        )
+      );
+
+      // Update:
+      // - Admin can update all fields
+      // - Assigned staff can update check-in/check-out fields (Checked In, In Progress, Completed)
+      // - Telecaller cannot update status to Confirmed or Approved
+      allow update: if isValidCampusVisit(request.resource.data) && (
+        isAdmin() ||
+        (
+          isAuthenticated() &&
+          resource.data.assignedStaffId == request.auth.uid &&
+          request.resource.data.status in ['Checked In', 'In Progress', 'Completed'] &&
+          !(request.resource.data.status in ['Confirmed', 'Approved']) &&
+          areImmutableFieldsUnchanged(['visitId', 'visitNumber', 'leadId', 'parentName', 'studentName', 'mobileNumber', 'applyingClass', 'requestedDate', 'timeSlot', 'numberOfVisitors', 'createdBy', 'createdAt'])
+        )
+      );
+
+      // Delete: Super Admin only
+      allow delete: if isSuperAdmin();
+    }
+
+    // 16. Visit Slot Reservations Collection
+    match /visit_slot_reservations/{reservationId} {
+      // Read: Public (to check slot availability) or Authenticated
+      allow read: if true;
+
+      // Write: Admin only (or backend functions)
+      allow write: if isAdmin();
+    }
+
+    // 17. Visit Schedule Settings Collection
+    match /visit_schedule_settings/{settingsId} {
+      // Read: Public (to know working hours, days, and slots)
+      allow read: if true;
+
+      // Write: Admin only
+      allow write: if isAdmin();
+    }
+
+    // 18. Visit Feedback Collection (Immutable Audit Records)
+    match /visit_feedback/{feedbackId} {
+      // Read: Admin or creator
+      allow read: if isAdmin() || (isAuthenticated() && request.auth.uid == resource.data.createdBy);
+
+      // Create: Authenticated user with valid visitId and interestLevel
+      allow create: if isAuthenticated() &&
+                    isValidVisitFeedback(request.resource.data) &&
+                    request.auth.uid == request.resource.data.createdBy;
+
+      // Update & Delete: Strictly immutable audit requirement
+      allow update, delete: if false;
+    }
+
+    // 19. Admission Applications Collection
+    match /admission_applications/{applicationId} {
+      // Read: Admin or assigned staff telecaller
+      allow read: if isAdmin() || (isTelecaller() && resource.data.assignedStaffId == request.auth.uid);
+
+      // Create & Update: Admin only (Visit completed must never automatically confirm admission)
+      allow create, update: if isAdmin() && isValidAdmissionApplication(request.resource.data);
+
+      // Delete: Super Admin only
+      allow delete: if isSuperAdmin();
+    }
+
+    // 20. Admission Stage History Collection (Append-Only)
+    match /admission_stage_history/{historyId} {
+      // Read & Create: Admin only
+      allow read: if isAdmin();
+      allow create: if isAdmin() && isValidAdmissionStageHistory(request.resource.data);
+
+      // Update & Delete: Strictly immutable audit history
+      allow update, delete: if false;
+    }
+
+    // 21. Admission Documents Collection
+    match /admission_documents/{documentId} {
+      // Read & Write: Admin only
+      allow read: if isAdmin();
+      allow create, update: if isAdmin() && isValidAdmissionDocument(request.resource.data);
+
+      // Delete: Super Admin only
+      allow delete: if isSuperAdmin();
+    }
+
+    // ===============================================================
+    // Phase 9: System Settings & Global Configuration
+    // ===============================================================
+
+    // 22. System Settings Collection
+    match /system_settings/{settingsId} {
+      // Read: Allowed for all authenticated staff and public (to read school settings/academic year)
+      allow read: if true;
+
+      // Write (create, update, delete): Allowed ONLY for Admins/Super Admins and strictly denied for unauthenticated/ordinary users
+      allow create, update, delete: if isAdmin();
     }
 
     // ===============================================================
