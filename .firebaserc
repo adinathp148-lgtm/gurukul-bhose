@@ -1,0 +1,17 @@
+{
+  "projects": {
+    "default": "gurukul-bhose"
+  },
+  "targets": {
+    "gurukul-bhose": {
+      "hosting": {
+        "public": [
+          "gurukul-bhose-web"
+        ],
+        "admin": [
+          "gurukul-bhose-admin"
+        ]
+      }
+    }
+  }
+}

@@ -1,0 +1,89 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    
+    // Auth & Role Helpers
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isAdmin() {
+      return isAuthenticated() && 
+        (request.auth.token.role == 'super_admin' || 
+         request.auth.token.role == 'superadmin' || 
+         request.auth.token.role == 'admin' ||
+         request.auth.token.admin == true);
+    }
+    
+    function isSuperAdmin() {
+      return isAuthenticated() && 
+        (request.auth.token.role == 'super_admin' ||
+         request.auth.token.role == 'superadmin' ||
+         request.auth.token.super_admin == true);
+    }
+
+    // Validation Helpers
+    function isImageUnder5MB() {
+      return request.resource.size < 5 * 1024 * 1024
+        && request.resource.contentType.matches('image/.*');
+    }
+
+    function isPDFUnder15MB() {
+      return request.resource.size < 15 * 1024 * 1024
+        && request.resource.contentType == 'application/pdf';
+    }
+
+    // Public website assets are publicly readable
+    match /website/{allPaths=**} {
+      allow read: if true;
+    }
+
+    // Specific folder uploads with size and mime constraints
+    match /website/logo/{fileName} {
+      allow write: if isAdmin() && isImageUnder5MB();
+    }
+    match /website/banners/{fileName} {
+      allow write: if isAdmin() && isImageUnder5MB();
+    }
+    match /website/pages/{fileName} {
+      allow write: if isAdmin() && isImageUnder5MB();
+    }
+    match /website/programs/{fileName} {
+      allow write: if isAdmin() && isImageUnder5MB();
+    }
+    match /website/courses/{fileName} {
+      allow write: if isAdmin() && isImageUnder5MB();
+    }
+    match /website/gallery/{allPaths=**} {
+      allow write: if isAdmin() && isImageUnder5MB();
+    }
+    match /website/videos/{allPaths=**} {
+      allow write: if isAdmin() && isImageUnder5MB();
+    }
+    match /website/facilities/{fileName} {
+      allow write: if isAdmin() && isImageUnder5MB();
+    }
+    match /website/about/{fileName} {
+      allow write: if isAdmin() && isImageUnder5MB();
+    }
+    match /website/seo/{fileName} {
+      allow write: if isAdmin() && isImageUnder5MB();
+    }
+
+    // Notices & PDFs folder (supports PDF <= 15MB or image <= 5MB)
+    match /website/notices/{allPaths=**} {
+      allow write: if isAdmin() && (isPDFUnder15MB() || isImageUnder5MB());
+    }
+
+    // Fallback for any other website CMS path
+    match /website/{folder}/{fileName} {
+      allow write: if isAdmin() && (isImageUnder5MB() || isPDFUnder15MB());
+      allow delete: if isAdmin();
+    }
+
+    // Default deny for other paths
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

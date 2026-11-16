@@ -1,0 +1,890 @@
+import React, { useState } from 'react';
+import { useCMS } from '../../../contexts/CMSContext';
+import { 
+  Home, 
+  Plus, 
+  Trash2, 
+  Save, 
+  CheckCircle2, 
+  Image as ImageIcon, 
+  Upload, 
+  ArrowUp, 
+  ArrowDown, 
+  AlertCircle,
+  Sparkles,
+  BookOpen,
+  Bell,
+  Grid,
+  Video,
+  Check,
+  Eye
+} from 'lucide-react';
+import { uploadMediaFile } from '../../../services/storage/mediaUploadService';
+import { Button } from '../../../components/common/Button';
+
+export const CMSHomepagePage = () => {
+  const { 
+    homepageData, 
+    updateHomepage, 
+    programs = [], 
+    notices = [], 
+    gallery = [], 
+    videos = [] 
+  } = useCMS();
+
+  const [saving, setSaving] = useState(false);
+  const [successMsg, setSuccessMsg] = useState('');
+  const [errorMsg, setErrorMsg] = useState('');
+  const [uploadingSlideIdx, setUploadingSlideIdx] = useState(null);
+  const [uploadingWelcomeImg, setUploadingWelcomeImg] = useState(false);
+  const [uploadingAboutImg, setUploadingAboutImg] = useState(false);
+
+  // Local form states
+  const [slides, setSlides] = useState(() => homepageData?.heroSlides || []);
+  const [welcome, setWelcome] = useState(() => homepageData?.welcomeSection || {
+    heading: '',
+    introText: '',
+    imageUrl: '',
+    ctaText: 'अधिक माहिती वाचा',
+    ctaLink: '/about'
+  });
+  const [about, setAbout] = useState(() => homepageData?.aboutSection || {
+    title: '',
+    description: '',
+    imageUrl: '',
+    vision: '',
+    mission: ''
+  });
+  const [cta, setCta] = useState(() => homepageData?.admissionCTA || {
+    heading: '',
+    description: '',
+    buttonText: 'ऑनलाईन प्रवेश नोंदणी करा',
+    buttonLink: '/admission-enquiry'
+  });
+
+  // Section D: Featured Programs
+  const [featuredPrograms, setFeaturedPrograms] = useState(() => 
+    homepageData?.featuredPrograms || ['vidyamandir', 'junior-college', 'talent-search', 'science-academy']
+  );
+
+  // Section E: Homepage Notices
+  const [featuredNotices, setFeaturedNotices] = useState(() => 
+    homepageData?.featuredNotices || []
+  );
+
+  // Section F: Gallery Preview IDs
+  const [galleryPreview, setGalleryPreview] = useState(() => 
+    homepageData?.galleryPreview || []
+  );
+
+  // Section G: Video Preview IDs
+  const [videoPreview, setVideoPreview] = useState(() => 
+    homepageData?.videoPreview || []
+  );
+
+  // Enabled sections
+  const [enabledSections, setEnabledSections] = useState(() => 
+    homepageData?.enabledSections || {
+      hero: true,
+      welcome: true,
+      about: true,
+      featuredPrograms: true,
+      notices: true,
+      gallery: true,
+      videos: true,
+      cta: true
+    }
+  );
+
+  // Slide management
+  const handleAddSlide = () => {
+    const newSlide = {
+      id: `slide-${Date.now()}`,
+      title: 'नवीन बॅनर शीर्षक (New Banner Title)',
+      subtitle: 'सैनिक पॅटर्न निवासी शिक्षण (Sainik Pattern)',
+      description: 'इयत्ता ५ वी ते १२ वी मराठी व सेमी इंग्रजी माध्यम निवासी प्रवेश सुरू.',
+      imageUrl: 'https://images.unsplash.com/photo-1541829070764-84a7d30dd3f3?auto=format&fit=crop&w=1200&q=80',
+      ctaText: 'प्रवेश चौकशी करा',
+      ctaLink: '/admission-enquiry',
+      active: true,
+      displayOrder: slides.length + 1
+    };
+    setSlides([...slides, newSlide]);
+  };
+
+  const handleUpdateSlide = (index, field, value) => {
+    const updated = [...slides];
+    updated[index] = { ...updated[index], [field]: value };
+    setSlides(updated);
+  };
+
+  const handleDeleteSlide = (index) => {
+    if (slides.length <= 1) {
+      alert('किमान १ बॅनर आवश्यक आहे (At least 1 banner slide is required).');
+      return;
+    }
+    setSlides(slides.filter((_, i) => i !== index));
+  };
+
+  const handleMoveSlide = (index, direction) => {
+    const target = direction === 'up' ? index - 1 : index + 1;
+    if (target < 0 || target >= slides.length) return;
+    const updated = [...slides];
+    const temp = updated[index];
+    updated[index] = updated[target];
+    updated[target] = temp;
+    // Update display orders
+    updated.forEach((s, idx) => {
+      s.displayOrder = idx + 1;
+    });
+    setSlides(updated);
+  };
+
+  const handleSlideImageUpload = async (index, file) => {
+    if (!file) return;
+    setUploadingSlideIdx(index);
+    setErrorMsg('');
+    try {
+      const res = await uploadMediaFile(file, 'banners');
+      handleUpdateSlide(index, 'imageUrl', res.downloadURL);
+    } catch (err) {
+      setErrorMsg(err.message || 'इमेज अपलोड अयशस्वी झाली.');
+    } finally {
+      setUploadingSlideIdx(null);
+    }
+  };
+
+  const handleWelcomeImageUpload = async (file) => {
+    if (!file) return;
+    setUploadingWelcomeImg(true);
+    setErrorMsg('');
+    try {
+      const res = await uploadMediaFile(file, 'pages');
+      setWelcome(prev => ({ ...prev, imageUrl: res.downloadURL }));
+    } catch (err) {
+      setErrorMsg(err.message || 'स्वागत इमेज अपलोड अयशस्वी झाली.');
+    } finally {
+      setUploadingWelcomeImg(false);
+    }
+  };
+
+  const handleAboutImageUpload = async (file) => {
+    if (!file) return;
+    setUploadingAboutImg(true);
+    setErrorMsg('');
+    try {
+      const res = await uploadMediaFile(file, 'pages');
+      setAbout(prev => ({ ...prev, imageUrl: res.downloadURL }));
+    } catch (err) {
+      setErrorMsg(err.message || 'About इमेज अपलोड अयशस्वी झाली.');
+    } finally {
+      setUploadingAboutImg(false);
+    }
+  };
+
+  const toggleSection = (sectionKey) => {
+    setEnabledSections(prev => ({
+      ...prev,
+      [sectionKey]: !prev[sectionKey]
+    }));
+  };
+
+  const toggleProgramFeatured = (slug) => {
+    setFeaturedPrograms(prev => 
+      prev.includes(slug) ? prev.filter(s => s !== slug) : [...prev, slug]
+    );
+  };
+
+  const toggleNoticeFeatured = (noticeId) => {
+    setFeaturedNotices(prev => 
+      prev.includes(noticeId) ? prev.filter(id => id !== noticeId) : [...prev, noticeId]
+    );
+  };
+
+  const toggleGalleryPreview = (imageId) => {
+    setGalleryPreview(prev => 
+      prev.includes(imageId) ? prev.filter(id => id !== imageId) : [...prev, imageId]
+    );
+  };
+
+  const toggleVideoPreview = (videoId) => {
+    setVideoPreview(prev => 
+      prev.includes(videoId) ? prev.filter(id => id !== videoId) : [...prev, videoId]
+    );
+  };
+
+  const handleSaveAll = async (e) => {
+    if (e) e.preventDefault();
+    setSaving(true);
+    setSuccessMsg('');
+    setErrorMsg('');
+
+    try {
+      await updateHomepage({
+        heroSlides: slides,
+        welcomeSection: welcome,
+        aboutSection: about,
+        featuredPrograms,
+        featuredNotices,
+        galleryPreview,
+        videoPreview,
+        enabledSections,
+        admissionCTA: cta
+      });
+      setSuccessMsg('मुख्यपृष्ठ माहिती यशस्वीरीत्या प्रकाशित झाली! (Homepage published successfully)');
+      setTimeout(() => setSuccessMsg(''), 4000);
+    } catch (err) {
+      setErrorMsg('बदल सेव्ह करताना त्रुटी आली. कृपया पुन्हा प्रयत्न करा.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="space-y-8 max-w-5xl">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-4">
+        <div>
+          <h1 className="text-xl sm:text-2xl font-black text-gurukul-navy-900 flex items-center gap-2">
+            <Home className="w-6 h-6 text-gurukul-saffron-500" />
+            <span>मुख्यपृष्ठ व्यवस्थापक (Homepage Management)</span>
+          </h1>
+          <p className="text-xs text-slate-500 mt-1">
+            हिरो बॅनर्स, स्वागत संदेश, वैशिष्ट्ये, सूचना, गॅलरी व प्रवेश कॉल-टू-ॲक्शन संपादन
+          </p>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <Button
+            type="button"
+            variant="primary"
+            onClick={handleSaveAll}
+            isLoading={saving}
+            className="text-xs font-bold"
+          >
+            <Save className="w-4 h-4 mr-1.5" />
+            <span>बदल प्रकाशित करा (Publish Changes)</span>
+          </Button>
+        </div>
+      </div>
+
+      {successMsg && (
+        <div className="p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold flex items-center gap-2">
+          <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
+          <span>{successMsg}</span>
+        </div>
+      )}
+
+      {errorMsg && (
+        <div className="p-4 rounded-xl bg-red-50 border border-red-200 text-red-800 text-xs font-bold flex items-center gap-2">
+          <AlertCircle className="w-5 h-5 text-red-600 shrink-0" />
+          <span>{errorMsg}</span>
+        </div>
+      )}
+
+      {/* Section A: Hero Banners */}
+      <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-6">
+        <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+          <div>
+            <h2 className="text-base font-bold text-slate-800">१. हिरो बॅनर्स (Hero Carousel Banners)</h2>
+            <p className="text-xs text-slate-400">मुख्यपृष्ठावर फिरणारे मोठे इमेज बॅनर्स, क्रम व ॲक्टिव्ह स्थिती</p>
+          </div>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={handleAddSlide}
+            className="text-xs font-bold"
+          >
+            <Plus className="w-4 h-4 mr-1" />
+            <span>नवीन बॅनर जोडा</span>
+          </Button>
+        </div>
+
+        <div className="space-y-6">
+          {slides.map((slide, idx) => (
+            <div key={slide.id || idx} className="p-4 rounded-xl border border-slate-200 bg-slate-50/50 space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <span className="text-xs font-bold text-gurukul-navy-900 bg-white px-2.5 py-1 rounded-md border border-slate-200">
+                    बॅनर #{idx + 1}
+                  </span>
+                  <label className="flex items-center gap-1.5 cursor-pointer text-xs font-semibold text-slate-700">
+                    <input
+                      type="checkbox"
+                      checked={slide.active !== false}
+                      onChange={(e) => handleUpdateSlide(idx, 'active', e.target.checked)}
+                      className="rounded text-gurukul-saffron-500 focus:ring-gurukul-saffron-400"
+                    />
+                    <span>{slide.active !== false ? 'सक्रिय (Active)' : 'निष्क्रिय (Inactive)'}</span>
+                  </label>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1 text-xs text-slate-500">
+                    <span>क्रम:</span>
+                    <input
+                      type="number"
+                      min="1"
+                      value={slide.displayOrder ?? (idx + 1)}
+                      onChange={(e) => handleUpdateSlide(idx, 'displayOrder', parseInt(e.target.value) || 1)}
+                      className="w-14 px-1.5 py-0.5 text-xs border rounded bg-white"
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleMoveSlide(idx, 'up')}
+                    disabled={idx === 0}
+                    className="p-1 rounded text-slate-500 hover:bg-slate-200 disabled:opacity-30"
+                    title="वर हलवा"
+                  >
+                    <ArrowUp className="w-4 h-4" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleMoveSlide(idx, 'down')}
+                    disabled={idx === slides.length - 1}
+                    className="p-1 rounded text-slate-500 hover:bg-slate-200 disabled:opacity-30"
+                    title="खाली हलवा"
+                  >
+                    <ArrowDown className="w-4 h-4" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleDeleteSlide(idx)}
+                    className="p-1 rounded text-red-600 hover:bg-red-50 ml-2"
+                    title="बॅनर हटवा"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">मुख्य मथळा (Heading) *</label>
+                  <input
+                    type="text"
+                    value={slide.title || ''}
+                    onChange={(e) => handleUpdateSlide(idx, 'title', e.target.value)}
+                    className="w-full text-xs p-2.5 rounded-lg border border-slate-300 focus:ring-1 focus:ring-gurukul-saffron-500"
+                    placeholder="उदा. गुरुकुल भोसे सैनिक पॅटर्न निवासी संकुल"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">उप-मथळा (Subtitle)</label>
+                  <input
+                    type="text"
+                    value={slide.subtitle || ''}
+                    onChange={(e) => handleUpdateSlide(idx, 'subtitle', e.target.value)}
+                    className="w-full text-xs p-2.5 rounded-lg border border-slate-300 focus:ring-1 focus:ring-gurukul-saffron-500"
+                    placeholder="उदा. इ. ५ वी ते १२ वी सैनिक पॅटर्न निवासी प्रवेश सुरू"
+                  />
+                </div>
+
+                <div className="md:col-span-2">
+                  <label className="block text-xs font-bold text-slate-700 mb-1">तपशील (Description)</label>
+                  <textarea
+                    rows={2}
+                    value={slide.description || ''}
+                    onChange={(e) => handleUpdateSlide(idx, 'description', e.target.value)}
+                    className="w-full text-xs p-2.5 rounded-lg border border-slate-300 focus:ring-1 focus:ring-gurukul-saffron-500"
+                    placeholder="बॅनरवरील संक्षिप्त माहिती..."
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">CTA बटण मजकूर (Button Text)</label>
+                  <input
+                    type="text"
+                    value={slide.ctaText || ''}
+                    onChange={(e) => handleUpdateSlide(idx, 'ctaText', e.target.value)}
+                    className="w-full text-xs p-2.5 rounded-lg border border-slate-300"
+                    placeholder="उदा. प्रवेश चौकशी करा"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">CTA बटण लिंक (Button URL)</label>
+                  <input
+                    type="text"
+                    value={slide.ctaLink || ''}
+                    onChange={(e) => handleUpdateSlide(idx, 'ctaLink', e.target.value)}
+                    className="w-full text-xs p-2.5 rounded-lg border border-slate-300"
+                    placeholder="/admission-enquiry"
+                  />
+                </div>
+
+                <div className="md:col-span-2">
+                  <label className="block text-xs font-bold text-slate-700 mb-1">बॅनर प्रतिमा (Image URL किंवा Upload) *</label>
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+                    <input
+                      type="text"
+                      value={slide.imageUrl || ''}
+                      onChange={(e) => handleUpdateSlide(idx, 'imageUrl', e.target.value)}
+                      className="flex-1 text-xs p-2.5 rounded-lg border border-slate-300"
+                      placeholder="https://... किंवा उजवीकडून फाईल निवडा"
+                    />
+                    <label className="cursor-pointer inline-flex items-center gap-1.5 px-3 py-2 text-xs font-bold bg-gurukul-navy-900 text-white rounded-lg hover:bg-gurukul-navy-950 transition-colors shrink-0">
+                      <Upload className="w-3.5 h-3.5" />
+                      <span>{uploadingSlideIdx === idx ? 'अपलोड होत आहे...' : 'इमेज अपलोड'}</span>
+                      <input
+                        type="file"
+                        accept="image/png,image/jpeg,image/webp"
+                        className="hidden"
+                        onChange={(e) => handleSlideImageUpload(idx, e.target.files[0])}
+                      />
+                    </label>
+                  </div>
+                  {slide.imageUrl && (
+                    <div className="mt-2 w-36 h-20 rounded-lg overflow-hidden border border-slate-200">
+                      <img src={slide.imageUrl} alt="Banner Preview" className="w-full h-full object-cover" />
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Section B: Welcome Section */}
+      <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-4">
+        <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+          <h2 className="text-base font-bold text-slate-800">
+            २. स्वागत विभाग (Welcome Section)
+          </h2>
+          <label className="flex items-center gap-1.5 cursor-pointer text-xs font-semibold text-slate-700">
+            <input
+              type="checkbox"
+              checked={enabledSections.welcome !== false}
+              onChange={() => toggleSection('welcome')}
+              className="rounded text-gurukul-saffron-500"
+            />
+            <span>विभाग दाखवा (Enable)</span>
+          </label>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="md:col-span-2">
+            <label className="block text-xs font-bold text-slate-700 mb-1">स्वागत मथळा (Heading)</label>
+            <input
+              type="text"
+              value={welcome.heading || ''}
+              onChange={(e) => setWelcome({ ...welcome, heading: e.target.value })}
+              className="w-full text-xs p-2.5 rounded-lg border border-slate-300"
+            />
+          </div>
+          <div className="md:col-span-2">
+            <label className="block text-xs font-bold text-slate-700 mb-1">प्रस्तावना मजकूर (Intro Text)</label>
+            <textarea
+              rows={3}
+              value={welcome.introText || ''}
+              onChange={(e) => setWelcome({ ...welcome, introText: e.target.value })}
+              className="w-full text-xs p-2.5 rounded-lg border border-slate-300"
+            />
+          </div>
+
+          <div className="md:col-span-2">
+            <label className="block text-xs font-bold text-slate-700 mb-1">स्वागत इमेज (Image URL किंवा Upload)</label>
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+              <input
+                type="text"
+                value={welcome.imageUrl || ''}
+                onChange={(e) => setWelcome({ ...welcome, imageUrl: e.target.value })}
+                className="flex-1 text-xs p-2.5 rounded-lg border border-slate-300"
+                placeholder="https://..."
+              />
+              <label className="cursor-pointer inline-flex items-center gap-1.5 px-3 py-2 text-xs font-bold bg-gurukul-navy-900 text-white rounded-lg hover:bg-gurukul-navy-950 transition-colors shrink-0">
+                <Upload className="w-3.5 h-3.5" />
+                <span>{uploadingWelcomeImg ? 'अपलोड होत आहे...' : 'इमेज अपलोड'}</span>
+                <input
+                  type="file"
+                  accept="image/png,image/jpeg,image/webp"
+                  className="hidden"
+                  onChange={(e) => handleWelcomeImageUpload(e.target.files[0])}
+                />
+              </label>
+            </div>
+            {welcome.imageUrl && (
+              <div className="mt-2 w-32 h-20 rounded-lg overflow-hidden border border-slate-200">
+                <img src={welcome.imageUrl} alt="Welcome Preview" className="w-full h-full object-cover" />
+              </div>
+            )}
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold text-slate-700 mb-1">बटण मजकूर (Read More Button)</label>
+            <input
+              type="text"
+              value={welcome.ctaText || ''}
+              onChange={(e) => setWelcome({ ...welcome, ctaText: e.target.value })}
+              className="w-full text-xs p-2.5 rounded-lg border border-slate-300"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-bold text-slate-700 mb-1">बटण लिंक</label>
+            <input
+              type="text"
+              value={welcome.ctaLink || ''}
+              onChange={(e) => setWelcome({ ...welcome, ctaLink: e.target.value })}
+              className="w-full text-xs p-2.5 rounded-lg border border-slate-300"
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Section C: About Section */}
+      <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-4">
+        <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+          <h2 className="text-base font-bold text-slate-800">
+            ३. संस्थेबद्दल विभाग (About Section on Homepage)
+          </h2>
+          <label className="flex items-center gap-1.5 cursor-pointer text-xs font-semibold text-slate-700">
+            <input
+              type="checkbox"
+              checked={enabledSections.about !== false}
+              onChange={() => toggleSection('about')}
+              className="rounded text-gurukul-saffron-500"
+            />
+            <span>विभाग दाखवा (Enable)</span>
+          </label>
+        </div>
+
+        <div className="space-y-4">
+          <div>
+            <label className="block text-xs font-bold text-slate-700 mb-1">शीर्षक (Title)</label>
+            <input
+              type="text"
+              value={about.title || ''}
+              onChange={(e) => setAbout({ ...about, title: e.target.value })}
+              className="w-full text-xs p-2.5 rounded-lg border border-slate-300"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-bold text-slate-700 mb-1">संक्षिप्त माहिती (Description)</label>
+            <textarea
+              rows={3}
+              value={about.description || ''}
+              onChange={(e) => setAbout({ ...about, description: e.target.value })}
+              className="w-full text-xs p-2.5 rounded-lg border border-slate-300"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold text-slate-700 mb-1">कॅम्पस इमेज (Image URL किंवा Upload)</label>
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+              <input
+                type="text"
+                value={about.imageUrl || ''}
+                onChange={(e) => setAbout({ ...about, imageUrl: e.target.value })}
+                className="flex-1 text-xs p-2.5 rounded-lg border border-slate-300"
+                placeholder="https://..."
+              />
+              <label className="cursor-pointer inline-flex items-center gap-1.5 px-3 py-2 text-xs font-bold bg-gurukul-navy-900 text-white rounded-lg hover:bg-gurukul-navy-950 transition-colors shrink-0">
+                <Upload className="w-3.5 h-3.5" />
+                <span>{uploadingAboutImg ? 'अपलोड होत आहे...' : 'इमेज अपलोड'}</span>
+                <input
+                  type="file"
+                  accept="image/png,image/jpeg,image/webp"
+                  className="hidden"
+                  onChange={(e) => handleAboutImageUpload(e.target.files[0])}
+                />
+              </label>
+            </div>
+            {about.imageUrl && (
+              <div className="mt-2 w-32 h-20 rounded-lg overflow-hidden border border-slate-200">
+                <img src={about.imageUrl} alt="About Preview" className="w-full h-full object-cover" />
+              </div>
+            )}
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-bold text-slate-700 mb-1">दृष्टिकोन (Vision)</label>
+              <textarea
+                rows={2}
+                value={about.vision || ''}
+                onChange={(e) => setAbout({ ...about, vision: e.target.value })}
+                className="w-full text-xs p-2.5 rounded-lg border border-slate-300"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-slate-700 mb-1">ध्येय (Mission)</label>
+              <textarea
+                rows={2}
+                value={about.mission || ''}
+                onChange={(e) => setAbout({ ...about, mission: e.target.value })}
+                className="w-full text-xs p-2.5 rounded-lg border border-slate-300"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Section D: Featured Programs Selector */}
+      <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-4">
+        <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+          <div>
+            <h2 className="text-base font-bold text-slate-800 flex items-center gap-2">
+              <BookOpen className="w-4 h-4 text-gurukul-saffron-500" />
+              <span>४. मुख्यपृष्ठावरील वैशिष्ट्यपूर्ण शाखा (Featured Programs)</span>
+            </h2>
+            <p className="text-xs text-slate-400">मुख्यपृष्ठावर दर्शवायचे शैक्षणिक विभाग निवडा</p>
+          </div>
+          <label className="flex items-center gap-1.5 cursor-pointer text-xs font-semibold text-slate-700">
+            <input
+              type="checkbox"
+              checked={enabledSections.featuredPrograms !== false}
+              onChange={() => toggleSection('featuredPrograms')}
+              className="rounded text-gurukul-saffron-500"
+            />
+            <span>विभाग दाखवा (Enable)</span>
+          </label>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+          {programs.map((p) => {
+            const isFeatured = featuredPrograms.includes(p.slug || p.id);
+            return (
+              <div
+                key={p.id || p.slug}
+                onClick={() => toggleProgramFeatured(p.slug || p.id)}
+                className={`p-3 rounded-xl border cursor-pointer transition-all flex items-center justify-between ${
+                  isFeatured 
+                    ? 'border-gurukul-saffron-500 bg-orange-50/40 text-gurukul-navy-950 font-bold' 
+                    : 'border-slate-200 bg-slate-50/50 text-slate-600 hover:border-slate-300'
+                }`}
+              >
+                <div className="truncate mr-2">
+                  <p className="text-xs truncate">{p.name || p.title}</p>
+                  <p className="text-[10px] text-slate-400 font-normal">/{p.slug}</p>
+                </div>
+                <div className={`w-5 h-5 rounded-md flex items-center justify-center shrink-0 ${
+                  isFeatured ? 'bg-gurukul-saffron-500 text-white' : 'border border-slate-300'
+                }`}>
+                  {isFeatured && <Check className="w-3.5 h-3.5 stroke-[3]" />}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Section E: Homepage Notices Selector */}
+      <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-4">
+        <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+          <div>
+            <h2 className="text-base font-bold text-slate-800 flex items-center gap-2">
+              <Bell className="w-4 h-4 text-gurukul-saffron-500" />
+              <span>५. मुख्यपृष्ठावरील सूचना (Homepage Notices)</span>
+            </h2>
+            <p className="text-xs text-slate-400">विशिष्ट सूचना निवडा किंवा रिक्त ठेवल्यास आपोआप ताज्या ३ सूचना दिसतील</p>
+          </div>
+          <label className="flex items-center gap-1.5 cursor-pointer text-xs font-semibold text-slate-700">
+            <input
+              type="checkbox"
+              checked={enabledSections.notices !== false}
+              onChange={() => toggleSection('notices')}
+              className="rounded text-gurukul-saffron-500"
+            />
+            <span>विभाग दाखवा (Enable)</span>
+          </label>
+        </div>
+
+        <div className="space-y-2">
+          {notices.slice(0, 8).map((n) => {
+            const isFeatured = featuredNotices.includes(n.noticeId || n.id);
+            return (
+              <div
+                key={n.noticeId || n.id}
+                onClick={() => toggleNoticeFeatured(n.noticeId || n.id)}
+                className={`p-3 rounded-xl border cursor-pointer transition-all flex items-center justify-between ${
+                  isFeatured 
+                    ? 'border-gurukul-saffron-500 bg-orange-50/40 text-gurukul-navy-950 font-bold' 
+                    : 'border-slate-200 bg-slate-50/50 text-slate-600 hover:border-slate-300'
+                }`}
+              >
+                <div className="truncate mr-3">
+                  <span className="text-[10px] font-bold text-gurukul-saffron-600 mr-2 uppercase">
+                    [{n.category || 'सामान्य'}]
+                  </span>
+                  <span className="text-xs">{n.title}</span>
+                  {n.isImportant && (
+                    <span className="ml-2 text-[10px] bg-red-100 text-red-700 px-1.5 py-0.5 rounded font-bold">
+                      महत्त्वाची
+                    </span>
+                  )}
+                </div>
+                <div className={`w-5 h-5 rounded-md flex items-center justify-center shrink-0 ${
+                  isFeatured ? 'bg-gurukul-saffron-500 text-white' : 'border border-slate-300'
+                }`}>
+                  {isFeatured && <Check className="w-3.5 h-3.5 stroke-[3]" />}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Section F: Gallery Preview Selector */}
+      <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-4">
+        <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+          <div>
+            <h2 className="text-base font-bold text-slate-800 flex items-center gap-2">
+              <Grid className="w-4 h-4 text-gurukul-saffron-500" />
+              <span>६. फोटो गॅलरी प्रिव्ह्यू (Gallery Preview on Homepage)</span>
+            </h2>
+            <p className="text-xs text-slate-400">मुख्यपृष्ठावर दर्शवायचे फोटो निवडा (रिक्त ठेवल्यास ६ नवीन फोटो आपोआप दिसतील)</p>
+          </div>
+          <label className="flex items-center gap-1.5 cursor-pointer text-xs font-semibold text-slate-700">
+            <input
+              type="checkbox"
+              checked={enabledSections.gallery !== false}
+              onChange={() => toggleSection('gallery')}
+              className="rounded text-gurukul-saffron-500"
+            />
+            <span>विभाग दाखवा (Enable)</span>
+          </label>
+        </div>
+
+        <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-3">
+          {gallery.slice(0, 12).map((img) => {
+            const isSelected = galleryPreview.includes(img.imageId || img.id);
+            return (
+              <div
+                key={img.imageId || img.id}
+                onClick={() => toggleGalleryPreview(img.imageId || img.id)}
+                className={`relative rounded-xl overflow-hidden aspect-video border-2 cursor-pointer transition-all ${
+                  isSelected ? 'border-gurukul-saffron-500 ring-2 ring-gurukul-saffron-300' : 'border-transparent opacity-70 hover:opacity-100'
+                }`}
+              >
+                <img src={img.imageUrl} alt={img.title || ''} className="w-full h-full object-cover" />
+                {isSelected && (
+                  <div className="absolute top-1.5 right-1.5 w-5 h-5 bg-gurukul-saffron-500 text-white rounded-full flex items-center justify-center">
+                    <Check className="w-3 h-3 stroke-[3]" />
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Section G: Video Preview Selector */}
+      <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-4">
+        <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+          <div>
+            <h2 className="text-base font-bold text-slate-800 flex items-center gap-2">
+              <Video className="w-4 h-4 text-gurukul-saffron-500" />
+              <span>७. व्हिडिओ प्रिव्ह्यू (Video Preview on Homepage)</span>
+            </h2>
+            <p className="text-xs text-slate-400">मुख्यपृष्ठावर दर्शवायचे व्हिडिओ निवडा (रिक्त ठेवल्यास ३ नवीन व्हिडिओ आपोआप दिसतील)</p>
+          </div>
+          <label className="flex items-center gap-1.5 cursor-pointer text-xs font-semibold text-slate-700">
+            <input
+              type="checkbox"
+              checked={enabledSections.videos !== false}
+              onChange={() => toggleSection('videos')}
+              className="rounded text-gurukul-saffron-500"
+            />
+            <span>विभाग दाखवा (Enable)</span>
+          </label>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          {videos.slice(0, 6).map((v) => {
+            const isSelected = videoPreview.includes(v.videoId || v.id);
+            return (
+              <div
+                key={v.videoId || v.id}
+                onClick={() => toggleVideoPreview(v.videoId || v.id)}
+                className={`p-3 rounded-xl border cursor-pointer transition-all ${
+                  isSelected 
+                    ? 'border-gurukul-saffron-500 bg-orange-50/40 text-gurukul-navy-950 font-bold' 
+                    : 'border-slate-200 bg-slate-50/50 text-slate-600 hover:border-slate-300'
+                }`}
+              >
+                <p className="text-xs truncate">{v.title}</p>
+                <p className="text-[10px] text-slate-400 mt-0.5">{v.category || 'कॅम्पस उपक्रम'}</p>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Section H: Admission CTA */}
+      <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-4">
+        <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+          <h2 className="text-base font-bold text-slate-800">
+            ८. प्रवेश नोंदणी बॅनर (Admission CTA Section)
+          </h2>
+          <label className="flex items-center gap-1.5 cursor-pointer text-xs font-semibold text-slate-700">
+            <input
+              type="checkbox"
+              checked={enabledSections.cta !== false}
+              onChange={() => toggleSection('cta')}
+              className="rounded text-gurukul-saffron-500"
+            />
+            <span>विभाग दाखवा (Enable)</span>
+          </label>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="md:col-span-2">
+            <label className="block text-xs font-bold text-slate-700 mb-1">CTA मथळा (Heading)</label>
+            <input
+              type="text"
+              value={cta.heading || ''}
+              onChange={(e) => setCta({ ...cta, heading: e.target.value })}
+              className="w-full text-xs p-2.5 rounded-lg border border-slate-300"
+            />
+          </div>
+          <div className="md:col-span-2">
+            <label className="block text-xs font-bold text-slate-700 mb-1">CTA वर्णन (Description)</label>
+            <textarea
+              rows={2}
+              value={cta.description || ''}
+              onChange={(e) => setCta({ ...cta, description: e.target.value })}
+              className="w-full text-xs p-2.5 rounded-lg border border-slate-300"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-bold text-slate-700 mb-1">बटण मजकूर (Button Text)</label>
+            <input
+              type="text"
+              value={cta.buttonText || ''}
+              onChange={(e) => setCta({ ...cta, buttonText: e.target.value })}
+              className="w-full text-xs p-2.5 rounded-lg border border-slate-300"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-bold text-slate-700 mb-1">बटण लिंक (Admission URL)</label>
+            <input
+              type="text"
+              value={cta.buttonLink || ''}
+              onChange={(e) => setCta({ ...cta, buttonLink: e.target.value })}
+              className="w-full text-xs p-2.5 rounded-lg border border-slate-300"
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Footer Save Button */}
+      <div className="flex justify-end pt-4">
+        <Button
+          type="button"
+          variant="primary"
+          onClick={handleSaveAll}
+          isLoading={saving}
+          className="text-xs font-bold px-6 py-3"
+        >
+          <Save className="w-4 h-4 mr-2" />
+          <span>मुख्यपृष्ठ बदल प्रकाशित करा (Save & Publish)</span>
+        </Button>
+      </div>
+    </div>
+  );
+};
+
+export default CMSHomepagePage;

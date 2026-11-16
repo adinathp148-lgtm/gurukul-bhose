@@ -1,0 +1,107 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    font-family: 'Plus Jakarta Sans', 'Mukta', 'Noto Sans Devanagari', system-ui, sans-serif;
+  }
+
+  body {
+    @apply bg-slate-50 text-slate-900 min-h-screen antialiased;
+  }
+
+  /* When Marathi (mr) language is active, optimize Devanagari typography, weights & scaling */
+  html[lang="mr"],
+  html.lang-mr {
+    font-family: 'Mukta', 'Noto Sans Devanagari', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-size: 16.5px; /* Optical scale boost to match Latin x-height and let matras breathe */
+    letter-spacing: 0.01em;
+  }
+
+  html[lang="mr"] body,
+  html.lang-mr body {
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* Optical adjustments for small text classes in Marathi so labels, tags and badges are clear */
+  html[lang="mr"] .text-\[10px\],
+  html.lang-mr .text-\[10px\] {
+    font-size: 11.5px;
+    line-height: 1.35;
+  }
+
+  html[lang="mr"] .text-\[11px\],
+  html.lang-mr .text-\[11px\] {
+    font-size: 12.5px;
+    line-height: 1.35;
+  }
+
+  html[lang="mr"] .text-xs,
+  html.lang-mr .text-xs {
+    font-size: 0.84rem;
+    line-height: 1.45;
+  }
+
+  html[lang="mr"] .text-sm,
+  html.lang-mr .text-sm {
+    font-size: 0.935rem;
+    line-height: 1.5;
+  }
+
+  /* Devanagari medium weight can be thin; provide crisp, confident stroke weight */
+  html[lang="mr"] .font-medium,
+  html.lang-mr .font-medium {
+    font-weight: 550;
+  }
+
+  html[lang="mr"] .font-semibold,
+  html.lang-mr .font-semibold {
+    font-weight: 650;
+  }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  ::-webkit-scrollbar-track {
+    background: #f1f5f9;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+  }
+}
+
+@layer utilities {
+  .text-shadow {
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+  }
+  .text-shadow-lg {
+    text-shadow: 0 4px 8px rgba(0, 0, 0, 0.6);
+  }
+}
+
+/* Marquee continuous smooth animation */
+@keyframes ticker {
+  0% { transform: translateX(100%); }
+  100% { transform: translateX(-100%); }
+}
+
+.animate-ticker {
+  display: inline-block;
+  white-space: nowrap;
+  animation: ticker 30s linear infinite;
+}
+
+.animate-ticker:hover {
+  animation-play-state: paused;
+}

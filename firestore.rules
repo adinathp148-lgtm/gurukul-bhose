@@ -1,0 +1,509 @@
+rules_version = '2';
+
+// ===============================================================
+// Assumed Data Model & Schema Invariants
+// ===============================================================
+//
+// Application: Gurukul Bhose School Website + Multi-Tier Admission CRM
+//
+// 1. users/{userId}
+//    - uid: string (matches document ID userId)
+//    - fullName: string (1-100 chars)
+//    - email: string (valid email format, 1-100 chars)
+//    - phone: string (optional, 10-15 chars)
+//    - role: string ('super_admin', 'superadmin', 'admin', 'telecaller')
+//    - status: string ('active', 'inactive')
+//    - employeeId: string (1-50 chars)
+//    - profileImage: string / null (optional)
+//    - createdAt / updatedAt: timestamp or ISO string
+//
+// 2. telecaller_profiles/{userId}
+//    - userId: string (matches document ID userId)
+//    - employeeId: string (1-50 chars)
+//    - fullName: string (1-100 chars)
+//    - email: string (1-100 chars)
+//    - phone: string (10-15 chars)
+//    - whatsappNumber: string (optional, 10-15 chars)
+//    - gender: string (optional, max 50 chars)
+//    - address: string (optional, max 500 chars)
+//    - joiningDate: string (optional, max 50 chars)
+//    - assignedDepartment: string (optional, max 100 chars)
+//    - status: string ('active', 'inactive')
+//
+// 3. audit_logs/{logId}
+//    - actorId: string
+//    - actorRole: string
+//    - action: string
+//    - targetUserId: string / null
+//    - timestamp: timestamp or string
+//    - metadata: map
+//    (Append-only via Firebase Admin SDK / Cloud Functions; Client writes denied)
+//
+// 4. notifications/{notificationId}
+//    - recipientId: string (UID of target user)
+//    - title: string (1-200 chars)
+//    - message: string (1-2000 chars)
+//    - read: bool
+//    - createdAt: timestamp or string
+//
+// 5. leads/{leadId}
+//    - studentName: string (1-100 chars, required)
+//    - parentName: string (1-100 chars, required)
+//    - mobileNumber: string (10-15 chars, required)
+//    - admissionClass: string (1-50 chars, required)
+//    - whatsappNumber: string (optional, 10-15 chars)
+//    - email: string (optional, max 100 chars)
+//    - course: string (optional, max 150 chars)
+//    - leadSource: string (optional, max 50 chars)
+//    - assignedTelecallerId: string (optional, max 100 chars)
+//    - assignedTelecallerName: string (optional, max 100 chars)
+//    - leadStatus: string (optional, max 50 chars)
+//    - notes / message: string (optional, max 2000 chars)
+//    - city / district: string (optional, max 100 chars)
+//
+// 6. followUps/{followUpId}
+//    - leadId: string (required)
+//    - parentResponse: string (1-2000 chars, required)
+//    - statusOutcome: string (optional, max 100 chars)
+//    - telecallerId: string (optional, max 100 chars)
+//    - telecallerName: string (optional, max 100 chars)
+//    - scheduledNextDate: string (optional, max 50 chars)
+//
+// 7. admissions/{admissionId}
+//    - studentName: string (1-100 chars, required)
+//    - parentName: string (1-100 chars, required)
+//    - mobileNumber: string (10-15 chars, required)
+//    - admissionNumber: string (1-50 chars, required)
+//    - admissionClass: string (1-50 chars, required)
+//    - feesTotal: number (optional)
+//    - feesPaid: number (optional)
+//    - feesPending: number (optional)
+//    - status: string (optional, max 50 chars)
+//
+// 8. parentCommunications/{commId}
+//    - message: string (1-2000 chars, required)
+//    - type: string (optional, max 50 chars)
+//    - sentAt: timestamp or string (optional)
+//
+// 9. CMS Collections (Phase 4 CMS Architecture):
+//    - website_pages, courses, programs, gallery, videos, notices, facilities, heroSlides:
+//      * Read: resource.data.status == 'published' || !('status' in resource.data) || isAdmin()
+//              (draft content hidden from unauthenticated public, visible only to Admin/Super Admin)
+//      * Write: isAdmin() && !isTelecaller() (strictly deny telecaller role)
+//    - website_content, websiteSettings, website_settings, about_us, contact_info, institutions:
+//      * Read: true (publicly readable website content and global settings)
+//      * Write: isAdmin()
+//    - content_activity_logs:
+//      * Read: isAdmin()
+//      * Create: isAdmin()
+//      * Update: false (immutable audit trail)
+//      * Delete: isSuperAdmin()
+//
+// ===============================================================
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ===============================================================
+    // Helper Functions & Role Verification
+    // ===============================================================
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // Role resolution with custom claims priority and Firestore fallback
+    function getUserRole() {
+      return ('role' in request.auth.token) ? request.auth.token.role :
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) ?
+          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role :
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid)) ?
+          get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.role :
+        '';
+    }
+
+    function isSuperAdmin() {
+      return isAuthenticated() && (
+        getUserRole() == 'super_admin' ||
+        getUserRole() == 'superadmin'
+      );
+    }
+
+    function isAdmin() {
+      return isSuperAdmin() || (
+        isAuthenticated() && getUserRole() == 'admin'
+      );
+    }
+
+    function isTelecaller() {
+      return isAuthenticated() && getUserRole() == 'telecaller';
+    }
+
+    function isStaff() {
+      return isAdmin() || isTelecaller();
+    }
+
+    // Schema helper functions
+    function hasRequiredFields(fields) {
+      return request.resource.data.keys().hasAll(fields);
+    }
+
+    function areImmutableFieldsUnchanged(fields) {
+      return !request.resource.data.diff(resource.data).affectedKeys().hasAny(fields);
+    }
+
+    function isValidEmail(email) {
+      return email is string && email.matches('^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$');
+    }
+
+    function isValidPhone(phone) {
+      return phone is string && phone.size() >= 10 && phone.size() <= 15;
+    }
+
+    function isValidOptionalString(field, minLen, maxLen) {
+      return !(field in request.resource.data) ||
+        (request.resource.data[field] is string &&
+         request.resource.data[field].size() >= minLen &&
+         request.resource.data[field].size() <= maxLen);
+    }
+
+    // ===============================================================
+    // Domain Validators
+    // ===============================================================
+
+    // 1. User Account Validator
+    function isValidUser(data) {
+      return hasRequiredFields(['fullName', 'email', 'role']) &&
+        data.fullName is string && data.fullName.size() > 0 && data.fullName.size() <= 100 &&
+        data.email is string && data.email.size() <= 100 && isValidEmail(data.email) &&
+        data.role in ['super_admin', 'superadmin', 'admin', 'telecaller'] &&
+        (!( 'phone' in data ) || data.phone == null || isValidPhone(data.phone)) &&
+        (!( 'status' in data ) || data.status in ['active', 'inactive']) &&
+        (!( 'employeeId' in data ) || (data.employeeId is string && data.employeeId.size() <= 50));
+    }
+
+    // 2. Telecaller Profile Validator
+    function isValidTelecallerProfile(data) {
+      return hasRequiredFields(['fullName', 'email', 'phone']) &&
+        data.fullName is string && data.fullName.size() > 0 && data.fullName.size() <= 100 &&
+        data.email is string && data.email.size() <= 100 && isValidEmail(data.email) &&
+        isValidPhone(data.phone) &&
+        (!( 'whatsappNumber' in data ) || data.whatsappNumber == null || isValidPhone(data.whatsappNumber)) &&
+        (!( 'employeeId' in data ) || (data.employeeId is string && data.employeeId.size() <= 50)) &&
+        (!( 'gender' in data ) || (data.gender is string && data.gender.size() <= 50)) &&
+        (!( 'address' in data ) || (data.address is string && data.address.size() <= 500)) &&
+        (!( 'joiningDate' in data ) || (data.joiningDate is string && data.joiningDate.size() <= 50)) &&
+        (!( 'assignedDepartment' in data ) || (data.assignedDepartment is string && data.assignedDepartment.size() <= 100)) &&
+        (!( 'status' in data ) || data.status in ['active', 'inactive']);
+    }
+
+    // 3. Notification Validator
+    function isValidNotification(data) {
+      return hasRequiredFields(['recipientId', 'title', 'message']) &&
+        data.recipientId is string && data.recipientId.size() > 0 && data.recipientId.size() <= 100 &&
+        data.title is string && data.title.size() > 0 && data.title.size() <= 200 &&
+        data.message is string && data.message.size() > 0 && data.message.size() <= 2000 &&
+        (!( 'read' in data ) || data.read is bool);
+    }
+
+    // 4. Admission Enquiry / Lead Validator
+    function isValidLead(data) {
+      return hasRequiredFields(['studentName', 'parentName', 'mobileNumber', 'admissionClass']) &&
+        data.studentName is string && data.studentName.size() > 0 && data.studentName.size() <= 100 &&
+        data.parentName is string && data.parentName.size() > 0 && data.parentName.size() <= 100 &&
+        isValidPhone(data.mobileNumber) &&
+        data.admissionClass is string && data.admissionClass.size() > 0 && data.admissionClass.size() <= 50 &&
+        (!( 'whatsappNumber' in data ) || data.whatsappNumber == null || isValidPhone(data.whatsappNumber)) &&
+        (!( 'email' in data ) || data.email == null || (data.email is string && data.email.size() <= 100)) &&
+        (!( 'course' in data ) || (data.course is string && data.course.size() <= 150)) &&
+        (!( 'leadSource' in data ) || (data.leadSource is string && data.leadSource.size() <= 50)) &&
+        (!( 'assignedTelecallerId' in data ) || (data.assignedTelecallerId is string && data.assignedTelecallerId.size() <= 100)) &&
+        (!( 'assignedTelecallerName' in data ) || (data.assignedTelecallerName is string && data.assignedTelecallerName.size() <= 100)) &&
+        (!( 'leadStatus' in data ) || (data.leadStatus is string && data.leadStatus.size() <= 50)) &&
+        (!( 'notes' in data ) || (data.notes is string && data.notes.size() <= 2000)) &&
+        (!( 'message' in data ) || (data.message is string && data.message.size() <= 2000)) &&
+        (!( 'city' in data ) || (data.city is string && data.city.size() <= 100)) &&
+        (!( 'district' in data ) || (data.district is string && data.district.size() <= 100));
+    }
+
+    // 5. Follow-up Interaction Validator
+    function isValidFollowUp(data) {
+      return hasRequiredFields(['leadId', 'parentResponse']) &&
+        data.leadId is string && data.leadId.size() > 0 && data.leadId.size() <= 100 &&
+        data.parentResponse is string && data.parentResponse.size() > 0 && data.parentResponse.size() <= 2000 &&
+        (!( 'statusOutcome' in data ) || (data.statusOutcome is string && data.statusOutcome.size() <= 100)) &&
+        (!( 'callType' in data ) || (data.callType is string && data.callType.size() <= 100)) &&
+        (!( 'telecallerId' in data ) || (data.telecallerId is string && data.telecallerId.size() <= 100)) &&
+        (!( 'telecallerName' in data ) || (data.telecallerName is string && data.telecallerName.size() <= 100)) &&
+        (!( 'scheduledNextDate' in data ) || (data.scheduledNextDate is string && data.scheduledNextDate.size() <= 50)) &&
+        (!( 'suggestedAction' in data ) || (data.suggestedAction is string && data.suggestedAction.size() <= 1000));
+    }
+
+    // 6. Confirmed Admission Validator
+    function isValidAdmission(data) {
+      return hasRequiredFields(['studentName', 'parentName', 'mobileNumber', 'admissionNumber', 'admissionClass']) &&
+        data.studentName is string && data.studentName.size() > 0 && data.studentName.size() <= 100 &&
+        data.parentName is string && data.parentName.size() > 0 && data.parentName.size() <= 100 &&
+        isValidPhone(data.mobileNumber) &&
+        data.admissionNumber is string && data.admissionNumber.size() > 0 && data.admissionNumber.size() <= 50 &&
+        data.admissionClass is string && data.admissionClass.size() > 0 && data.admissionClass.size() <= 50 &&
+        (!( 'course' in data ) || (data.course is string && data.course.size() <= 150)) &&
+        (!( 'status' in data ) || (data.status is string && data.status.size() <= 50)) &&
+        (!( 'feesTotal' in data ) || data.feesTotal is number) &&
+        (!( 'feesPaid' in data ) || data.feesPaid is number) &&
+        (!( 'feesPending' in data ) || data.feesPending is number);
+    }
+
+    // 7. Parent Communication Validator
+    function isValidParentCommunication(data) {
+      return hasRequiredFields(['message']) &&
+        data.message is string && data.message.size() > 0 && data.message.size() <= 2000 &&
+        (!( 'type' in data ) || (data.type is string && data.type.size() <= 50));
+    }
+
+    // ===============================================================
+    // Collection Match Rules
+    // ===============================================================
+
+    // 1. Staff / User Accounts Collection
+    match /users/{userId} {
+      // Read: user can read their own document or admin
+      allow read: if isOwner(userId) || isAdmin();
+
+      // Create: SuperAdmin can create any user; Admin can only create telecaller accounts
+      allow create: if isValidUser(request.resource.data) && (
+        isSuperAdmin() ||
+        (isAdmin() && request.resource.data.role == 'telecaller')
+      );
+
+      // Update:
+      // - SuperAdmin: full update capability
+      // - Admin: can update telecaller records (cannot escalate telecaller role)
+      // - Self: can update personal details provided sensitive fields remain untouched
+      allow update: if isValidUser(request.resource.data) && (
+        isSuperAdmin() ||
+        (isAdmin() && resource.data.role == 'telecaller' && request.resource.data.role == 'telecaller') ||
+        (
+          isOwner(userId) &&
+          areImmutableFieldsUnchanged(['role', 'status', 'employeeId', 'createdAt', 'uid'])
+        )
+      );
+
+      // Delete: SuperAdmin only
+      allow delete: if isSuperAdmin();
+    }
+
+    // Legacy Admins Collection (maintained for backward compatibility)
+    match /admins/{userId} {
+      allow read: if isOwner(userId) || isAdmin();
+      allow create: if isSuperAdmin() || (isAdmin() && request.resource.data.role == 'telecaller');
+      allow update: if isSuperAdmin() ||
+                    (isAdmin() && resource.data.role == 'telecaller' && request.resource.data.role == 'telecaller') ||
+                    (isOwner(userId) && areImmutableFieldsUnchanged(['role', 'status', 'employeeId']));
+      allow delete: if isSuperAdmin();
+    }
+
+    // 2. Telecaller Profiles Collection
+    match /telecaller_profiles/{userId} {
+      // Read: profile owner or admin
+      allow read: if isOwner(userId) || isAdmin();
+
+      // Create: Admin or SuperAdmin
+      allow create: if isAdmin() && isValidTelecallerProfile(request.resource.data);
+
+      // Update:
+      // - Admin: full update
+      // - Telecaller self: can update non-privileged personal info
+      allow update: if isValidTelecallerProfile(request.resource.data) && (
+        isAdmin() ||
+        (
+          isOwner(userId) &&
+          areImmutableFieldsUnchanged(['status', 'employeeId', 'joiningDate', 'createdBy', 'userId', 'createdAt'])
+        )
+      );
+
+      // Delete: SuperAdmin only
+      allow delete: if isSuperAdmin();
+    }
+
+    // 3. Audit Logs Collection
+    match /audit_logs/{logId} {
+      // Read: Admin or SuperAdmin
+      allow read: if isAdmin();
+
+      // Write: Denied client-side; Append-only via Firebase Admin SDK / Cloud Functions
+      allow write: if false;
+    }
+
+    // 4. Notifications Collection
+    match /notifications/{notificationId} {
+      // Read: Recipient or Admin
+      allow read: if (isAuthenticated() && resource.data.recipientId == request.auth.uid) || isAdmin();
+
+      // Update: Recipient can mark as read / update their own notification without tampering structure
+      allow update: if isValidNotification(request.resource.data) && (
+        isAdmin() ||
+        (
+          isAuthenticated() &&
+          resource.data.recipientId == request.auth.uid &&
+          areImmutableFieldsUnchanged(['recipientId', 'id', 'createdAt', 'title', 'message'])
+        )
+      );
+
+      // Create / Delete: Admin only
+      allow create: if isAdmin() && isValidNotification(request.resource.data);
+      allow delete: if isAdmin();
+    }
+
+    // 5. Leads Collection (Admission CRM)
+    match /leads/{leadId} {
+      // Create: Public enquiry from website or staff member
+      allow create: if isValidLead(request.resource.data) || isStaff();
+
+      // Read: Admin can read all leads; Telecaller can only read assigned leads
+      allow read: if isAdmin() || (isTelecaller() && resource.data.assignedTelecallerId == request.auth.uid);
+
+      // Update:
+      // - Admin: full update capability
+      // - Telecaller: can only update assigned leads and cannot reassign to other callers
+      allow update: if isValidLead(request.resource.data) && (
+        isAdmin() ||
+        (
+          isTelecaller() &&
+          resource.data.assignedTelecallerId == request.auth.uid &&
+          request.resource.data.assignedTelecallerId == resource.data.assignedTelecallerId
+        )
+      );
+
+      // Delete: Admin or SuperAdmin
+      allow delete: if isAdmin();
+    }
+
+    // 6. Follow-ups Collection
+    match /followUps/{followUpId} {
+      // Read & Create: Staff members
+      allow read: if isStaff();
+      allow create: if isStaff() && isValidFollowUp(request.resource.data);
+
+      // Update & Delete: Admin only
+      allow update: if isAdmin() && isValidFollowUp(request.resource.data);
+      allow delete: if isAdmin();
+    }
+
+    // 7. Confirmed Admissions Collection
+    match /admissions/{admissionId} {
+      // Read: Staff members
+      allow read: if isStaff();
+
+      // Write: Admin only
+      allow create, update: if isAdmin() && isValidAdmission(request.resource.data);
+      allow delete: if isAdmin();
+    }
+
+    // 8. Parent Communications & Broadcast Logs
+    match /parentCommunications/{commId} {
+      // Read: Staff members
+      allow read: if isStaff();
+
+      // Write: Admin only
+      allow create, update: if isAdmin() && isValidParentCommunication(request.resource.data);
+      allow delete: if isAdmin();
+    }
+
+    // 9. CMS Collections (Phase 4 CMS Architecture)
+
+    // Dynamic CMS Collections:
+    // Read: Published content is publicly accessible; drafts are hidden from public and visible to Admin/Super Admin
+    // Write: Strictly restricted to Admin/Super Admin (telecaller role strictly denied)
+    match /website_pages/{pageId} {
+      allow read: if resource.data.status == 'published' || !('status' in resource.data) || isAdmin();
+      allow write: if isAdmin() && !isTelecaller();
+    }
+
+    match /courses/{courseId} {
+      allow read: if resource.data.status == 'published' || !('status' in resource.data) || isAdmin();
+      allow write: if isAdmin() && !isTelecaller();
+    }
+
+    match /programs/{programId} {
+      allow read: if resource.data.status == 'published' || !('status' in resource.data) || isAdmin();
+      allow write: if isAdmin() && !isTelecaller();
+    }
+
+    match /gallery/{galleryId} {
+      allow read: if resource.data.status == 'published' || !('status' in resource.data) || isAdmin();
+      allow write: if isAdmin() && !isTelecaller();
+    }
+
+    match /videos/{videoId} {
+      allow read: if resource.data.status == 'published' || !('status' in resource.data) || isAdmin();
+      allow write: if isAdmin() && !isTelecaller();
+    }
+
+    match /notices/{noticeId} {
+      allow read: if resource.data.status == 'published' || !('status' in resource.data) || isAdmin();
+      allow write: if isAdmin() && !isTelecaller();
+    }
+
+    match /facilities/{facilityId} {
+      allow read: if resource.data.status == 'published' || !('status' in resource.data) || isAdmin();
+      allow write: if isAdmin() && !isTelecaller();
+    }
+
+    match /heroSlides/{slideId} {
+      allow read: if resource.data.status == 'published' || !('status' in resource.data) || isAdmin();
+      allow write: if isAdmin() && !isTelecaller();
+    }
+
+    // CMS Website Content, General Info & Settings
+    match /website_content/{contentId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /websiteSettings/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /website_settings/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /about_us/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /contact_info/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /institutions/{instId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // CMS Content Activity Logs
+    // Append-only audit trail for administrative CMS mutations
+    match /content_activity_logs/{logId} {
+      allow read: if isAdmin();
+      allow create: if isAdmin();
+      allow update: if false;
+      allow delete: if isSuperAdmin();
+    }
+
+    // ===============================================================
+    // Default Deny Rule
+    // ===============================================================
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

@@ -1,0 +1,203 @@
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import { 
+  auth, 
+  db, 
+  onAuthStateChanged,
+  doc, 
+  getDoc,
+  isConfigured 
+} from '../firebase/config';
+import { 
+  loginWithEmail, 
+  logoutUser, 
+  sendPasswordReset 
+} from '../services/auth/authService';
+import { demoUsers } from '../data/initialData';
+
+const AuthContext = createContext(null);
+
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+};
+
+export const AuthProvider = ({ children }) => {
+  const [currentUser, setCurrentUser] = useState(null);
+  const [userProfile, setUserProfile] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  // Initialize and restore session from localStorage / Firebase Auth
+  useEffect(() => {
+    let isMounted = true;
+
+    // Check if there is an active user in localStorage
+    const savedUser = localStorage.getItem('gurukul_active_user');
+    if (savedUser) {
+      try {
+        const parsed = JSON.parse(savedUser);
+        if (isMounted) {
+          setCurrentUser(parsed);
+          setUserProfile(parsed);
+        }
+      } catch (e) {
+        console.error('Failed to parse active user from localStorage', e);
+      }
+    } else {
+      // Default to superadmin demo for immediate dashboard preview
+      const defaultUser = demoUsers[0];
+      if (isMounted) {
+        setCurrentUser(defaultUser);
+        setUserProfile(defaultUser);
+        localStorage.setItem('gurukul_active_user', JSON.stringify(defaultUser));
+      }
+    }
+
+    // Subscribe to live Firebase Auth state changes
+    let unsubscribe = () => {};
+    if (isConfigured && auth) {
+      unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+        if (!isMounted) return;
+
+        if (firebaseUser) {
+          try {
+            // Read Custom Claims
+            const idTokenResult = await firebaseUser.getIdTokenResult(true);
+            const customRole = idTokenResult.claims.role;
+
+            // Read Firestore Profile
+            let profileData = null;
+            const userSnap = await getDoc(doc(db, 'users', firebaseUser.uid));
+            if (userSnap.exists()) {
+              profileData = userSnap.data();
+            } else {
+              const teleSnap = await getDoc(doc(db, 'telecaller_profiles', firebaseUser.uid));
+              if (teleSnap.exists()) {
+                profileData = teleSnap.data();
+              }
+            }
+
+            const normalizedRole = customRole || profileData?.role || 'telecaller';
+            const profile = {
+              uid: firebaseUser.uid,
+              email: firebaseUser.email,
+              displayName: profileData?.fullName || firebaseUser.displayName || firebaseUser.email.split('@')[0],
+              role: normalizedRole,
+              employeeId: profileData?.employeeId || '',
+              phone: profileData?.phone || '',
+              status: profileData?.status || 'active',
+              isActive: profileData?.status !== 'inactive'
+            };
+
+            setCurrentUser(profile);
+            setUserProfile(profile);
+            localStorage.setItem('gurukul_active_user', JSON.stringify(profile));
+          } catch (err) {
+            console.warn('Live user profile fetch error:', err);
+          }
+        }
+      });
+    }
+
+    if (isMounted) {
+      setLoading(false);
+    }
+
+    return () => {
+      isMounted = false;
+      unsubscribe();
+    };
+  }, []);
+
+  // Standard Login function
+  const login = async (email, password) => {
+    setLoading(true);
+    const result = await loginWithEmail(email, password);
+    if (result.success) {
+      setCurrentUser(result.user);
+      setUserProfile(result.user);
+    }
+    setLoading(false);
+    return result;
+  };
+
+  // Standard Logout function
+  const logout = async () => {
+    await logoutUser();
+    setCurrentUser(null);
+    setUserProfile(null);
+  };
+
+  // Password Reset function
+  const requestPasswordReset = async (email) => {
+    return await sendPasswordReset(email);
+  };
+
+  // Refresh profile
+  const refreshUserProfile = async () => {
+    if (!currentUser?.uid) return;
+    if (isConfigured && db) {
+      try {
+        const snap = await getDoc(doc(db, 'users', currentUser.uid));
+        if (snap.exists()) {
+          const updated = { ...currentUser, ...snap.data() };
+          setCurrentUser(updated);
+          setUserProfile(updated);
+          localStorage.setItem('gurukul_active_user', JSON.stringify(updated));
+        }
+      } catch (e) {
+        console.warn('Could not refresh user profile:', e);
+      }
+    }
+  };
+
+  // Demo account switch helper for testing role views
+  const switchDemoAccount = (roleType) => {
+    let target = demoUsers[0];
+    if (roleType === 'superadmin' || roleType === 'super_admin') {
+      target = demoUsers.find(u => u.role === 'superadmin' || u.role === 'super_admin') || demoUsers[0];
+    } else if (roleType === 'admin') {
+      target = demoUsers.find(u => u.role === 'admin') || demoUsers[1];
+    } else if (roleType === 'telecaller') {
+      target = demoUsers.find(u => u.role === 'telecaller') || demoUsers[2];
+    }
+    setCurrentUser(target);
+    setUserProfile(target);
+    localStorage.setItem('gurukul_active_user', JSON.stringify(target));
+  };
+
+  // Normalized Role Computations
+  const rawRole = (userProfile?.role || currentUser?.role || 'guest').toLowerCase();
+  const isSuperAdmin = rawRole === 'super_admin' || rawRole === 'superadmin';
+  const isAdmin = isSuperAdmin || rawRole === 'admin';
+  const isTelecaller = rawRole === 'telecaller';
+  const canManageUsers = isSuperAdmin || rawRole === 'admin';
+  const canAccessAllLeads = isSuperAdmin || rawRole === 'admin';
+
+  const role = isSuperAdmin ? 'super_admin' : rawRole;
+
+  const value = {
+    currentUser,
+    userProfile,
+    role,
+    isSuperAdmin,
+    isAdmin,
+    isTelecaller,
+    canManageUsers,
+    canAccessAllLeads,
+    login,
+    logout,
+    requestPasswordReset,
+    refreshUserProfile,
+    switchDemoAccount,
+    loading
+  };
+
+  return (
+    <AuthContext.Provider value={value}>
+      {!loading && children}
+    </AuthContext.Provider>
+  );
+};
