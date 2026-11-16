@@ -14,6 +14,7 @@ import { TelecallersListPage } from '@shared/pages/admin/TelecallersListPage';
 import { CreateTelecallerPage } from '@shared/pages/admin/CreateTelecallerPage';
 import { TelecallerDetailsPage } from '@shared/pages/admin/TelecallerDetailsPage';
 import { LeadsPage } from '@shared/pages/admin/LeadsPage';
+import { LeadDetailsPage } from '@shared/pages/admin/LeadDetailsPage';
 import { FollowUpsPage } from '@shared/pages/admin/FollowUpsPage';
 import { AdmissionsPage } from '@shared/pages/admin/AdmissionsPage';
 import { ParentCommunicationPage } from '@shared/pages/admin/ParentCommunicationPage';
@@ -83,11 +84,13 @@ export const AppRoutes = () => {
 
         {/* CRM Pipeline & Admission Register */}
         <Route path="/admin/leads" element={<LeadsPage />} />
+        <Route path="/admin/leads/:leadId" element={<LeadDetailsPage />} />
         <Route path="/admin/follow-ups" element={<FollowUpsPage />} />
         <Route path="/admin/admissions" element={<AdmissionsPage />} />
         <Route path="/admin/parent-communication" element={<ParentCommunicationPage />} />
         <Route path="/admin/meta-integration" element={<MetaIntegrationPage />} />
         <Route path="/leads" element={<Navigate to="/admin/leads" replace />} />
+        <Route path="/leads/:leadId" element={<LeadDetailsPage />} />
         <Route path="/follow-ups" element={<Navigate to="/admin/follow-ups" replace />} />
         <Route path="/admissions" element={<Navigate to="/admin/admissions" replace />} />
         <Route path="/parent-communication" element={<Navigate to="/admin/parent-communication" replace />} />

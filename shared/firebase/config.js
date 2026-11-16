@@ -26,6 +26,7 @@ import {
   serverTimestamp 
 } from 'firebase/firestore';
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { getFunctions, httpsCallable } from 'firebase/functions';
 
 // Safe helper to read environment variables in Vite and Node.js runtimes
 const getEnv = (key, fallback = '') => {
@@ -66,6 +67,7 @@ const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 export const db = getFirestore(app);
 export const storage = getStorage(app);
+export const functions = getFunctions(app);
 
 // Safe helper for Firebase Cloud Messaging (supported on modern browsers with HTTPS/ServiceWorker)
 export const getCloudMessaging = async () => {
@@ -106,7 +108,8 @@ export {
   serverTimestamp,
   ref,
   uploadBytes,
-  getDownloadURL
+  getDownloadURL,
+  httpsCallable
 };
 
 export default app;

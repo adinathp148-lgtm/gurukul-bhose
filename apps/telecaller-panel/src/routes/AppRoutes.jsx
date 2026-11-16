@@ -7,6 +7,7 @@ import { ProtectedRoute } from '@shared/routes/ProtectedRoute';
 import { TelecallerLoginPage } from '@shared/pages/auth/TelecallerLoginPage';
 import { TelecallerDashboardPage } from '@shared/pages/telecaller/TelecallerDashboardPage';
 import { TelecallerLeadsPage } from '@shared/pages/telecaller/TelecallerLeadsPage';
+import { TelecallerLeadDetailsPage } from '@shared/pages/telecaller/TelecallerLeadDetailsPage';
 import { TelecallerFollowUpsPage } from '@shared/pages/telecaller/TelecallerFollowUpsPage';
 import { TelecallerProfilePage } from '@shared/pages/telecaller/TelecallerProfilePage';
 import { TelecallerChangePasswordPage } from '@shared/pages/telecaller/TelecallerChangePasswordPage';
@@ -56,6 +57,7 @@ export const AppRoutes = () => {
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
         <Route path="/dashboard" element={<TelecallerDashboardPage />} />
         <Route path="/leads" element={<TelecallerLeadsPage />} />
+        <Route path="/leads/:leadId" element={<TelecallerLeadDetailsPage />} />
         <Route path="/follow-ups" element={<TelecallerFollowUpsPage />} />
         <Route path="/history" element={<TelecallerFollowUpsPage />} />
         <Route path="/notifications" element={<TelecallerNotificationsPage />} />

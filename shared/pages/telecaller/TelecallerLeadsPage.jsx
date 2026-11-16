@@ -108,11 +108,22 @@ export const TelecallerLeadsPage = () => {
                 
                 <div className="space-y-1.5">
                   <div className="flex items-center gap-2.5 flex-wrap">
-                    <span className="font-bold text-sm text-slate-900">{lead.studentName}</span>
+                    <Link
+                      to={`/leads/${lead.id}`}
+                      className="font-bold text-sm text-slate-900 hover:text-emerald-700 hover:underline flex items-center gap-1"
+                    >
+                      <span>{lead.studentName}</span>
+                      <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
+                    </Link>
                     <Badge size="xs" variant={lead.leadStatus}>{lead.leadStatus}</Badge>
                     <span className="text-[11px] font-bold text-gurukul-navy-900 px-2 py-0.5 rounded bg-blue-50">
                       {lead.admissionClass}
                     </span>
+                    {lead.leadNumber && (
+                      <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-100 text-slate-600 font-semibold">
+                        {lead.leadNumber}
+                      </span>
+                    )}
                   </div>
 
                   <p className="text-xs text-slate-600">

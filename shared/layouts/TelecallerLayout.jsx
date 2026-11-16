@@ -23,6 +23,7 @@ import { useCRM } from '../contexts/CRMContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { Badge } from '../components/common/Badge';
 import { LanguageSwitcher } from '../components/common/LanguageSwitcher';
+import { NotificationCenter } from '../components/common/NotificationCenter';
 
 export const TelecallerLayout = () => {
   const { currentUser, userProfile, logout } = useAuth();
@@ -253,6 +254,9 @@ export const TelecallerLayout = () => {
 
             {/* Language Switcher for Telecaller */}
             <LanguageSwitcher />
+
+            {/* In-App Notification Center */}
+            <NotificationCenter isTelecaller={true} />
 
             <Badge variant="Telecaller">
               TELECALLER

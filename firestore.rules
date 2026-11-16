@@ -365,7 +365,7 @@ service cloud.firestore {
       allow create: if isValidLead(request.resource.data) || isStaff();
 
       // Read: Admin can read all leads; Telecaller can only read assigned leads
-      allow read: if isAdmin() || (isTelecaller() && resource.data.assignedTelecallerId == request.auth.uid);
+      allow read: if isAdmin() || (isTelecaller() && (resource.data.assignedTelecallerId == request.auth.uid || resource.data.assignedTo == request.auth.uid));
 
       // Update:
       // - Admin: full update capability
@@ -374,13 +374,83 @@ service cloud.firestore {
         isAdmin() ||
         (
           isTelecaller() &&
-          resource.data.assignedTelecallerId == request.auth.uid &&
-          request.resource.data.assignedTelecallerId == resource.data.assignedTelecallerId
+          (resource.data.assignedTelecallerId == request.auth.uid || resource.data.assignedTo == request.auth.uid) &&
+          (!('assignedTelecallerId' in request.resource.data) || request.resource.data.assignedTelecallerId == resource.data.assignedTelecallerId) &&
+          (!('assignedTo' in request.resource.data) || request.resource.data.assignedTo == resource.data.assignedTo)
         )
       );
 
       // Delete: Admin or SuperAdmin
       allow delete: if isAdmin();
+    }
+
+    // 5b. Phase 5 Enquiries Collection (Full Lifecycle Lead CRM)
+    match /enquiries/{leadId} {
+      // Read: Admin can read all; Telecaller can ONLY read their assigned leads
+      allow read: if isAdmin() || (isTelecaller() && (resource.data.assignedTo == request.auth.uid || resource.data.assignedTelecallerId == request.auth.uid));
+
+      // Create: Staff can create manual enquiries; Public submissions go through trusted submitAdmissionEnquiry Cloud Function
+      allow create: if isAdmin() || (isStaff() && request.auth.uid == request.resource.data.createdBy);
+
+      // Update:
+      // - Admin: full update
+      // - Telecaller: can only update permitted fields on currently assigned leads
+      allow update: if isAdmin() || (
+        isTelecaller() &&
+        (resource.data.assignedTo == request.auth.uid || resource.data.assignedTelecallerId == request.auth.uid) &&
+        areImmutableFieldsUnchanged(['leadNumber', 'parentName', 'studentName', 'mobile', 'normalizedMobile', 'assignedTo', 'assignedTelecallerId', 'createdBy', 'createdAt', 'isDuplicate'])
+      );
+
+      // Delete: Admin only
+      allow delete: if isAdmin();
+    }
+
+    // 5c. Lead Assignments (Audit & Tracking)
+    match /lead_assignments/{assignmentId} {
+      // Read: Admin can read all; Telecaller can read their own assignments
+      allow read: if isAdmin() || (isTelecaller() && resource.data.telecallerId == request.auth.uid);
+      // Write: Admin only (typically created via backend functions)
+      allow write: if isAdmin();
+    }
+
+    // 5d. Lead Activities (Append-Only Chronological Timeline)
+    match /lead_activities/{activityId} {
+      allow read: if isAdmin() || (
+        isTelecaller() && (
+          resource.data.performedBy == request.auth.uid ||
+          (resource.data.leadId is string && exists(/databases/$(database)/documents/enquiries/$(resource.data.leadId)) &&
+           (get(/databases/$(database)/documents/enquiries/$(resource.data.leadId)).data.assignedTo == request.auth.uid ||
+            get(/databases/$(database)/documents/enquiries/$(resource.data.leadId)).data.assignedTelecallerId == request.auth.uid))
+        )
+      );
+      // Create: Staff can record activity
+      allow create: if isStaff();
+      // Immutable: Never edit or delete activity records
+      allow update, delete: if false;
+    }
+
+    // 5e. Lead Status History (Append-Only Status Transitions)
+    match /lead_status_history/{historyId} {
+      allow read: if isAdmin() || (
+        isTelecaller() && (
+          resource.data.changedBy == request.auth.uid ||
+          (resource.data.leadId is string && exists(/databases/$(database)/documents/enquiries/$(resource.data.leadId)) &&
+           (get(/databases/$(database)/documents/enquiries/$(resource.data.leadId)).data.assignedTo == request.auth.uid ||
+            get(/databases/$(database)/documents/enquiries/$(resource.data.leadId)).data.assignedTelecallerId == request.auth.uid))
+        )
+      );
+      allow create: if isStaff();
+      allow update, delete: if false;
+    }
+
+    // 5f. Lead Duplicates (Admin Duplicate Resolution)
+    match /lead_duplicates/{duplicateId} {
+      allow read, write: if isAdmin();
+    }
+
+    // 5g. Sequential Lead Counters (Internal, Cloud Functions only)
+    match /counters/{counterId} {
+      allow read, write: if false;
     }
 
     // 6. Follow-ups Collection
