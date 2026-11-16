@@ -99,6 +99,55 @@ rules_version = '2';
 //      * Update: false (immutable audit trail)
 //      * Delete: isSuperAdmin()
 //
+// 10. call_records/{callId} (Phase 6 Telecaller Calling Logs):
+//     - callId: string (optional, max 100 chars)
+//     - leadId: string (1-100 chars, required)
+//     - leadNumber: string (optional, max 50 chars)
+//     - telecallerId: string (1-100 chars, required)
+//     - telecallerName: string (optional, max 100 chars)
+//     - callOutcome: string (1-100 chars, required)
+//     - callDurationSeconds: number (optional, >= 0)
+//     - interestLevel: string (optional, max 50 chars)
+//     - notes: string (optional, max 2000 chars)
+//     - parentResponse: string (optional, max 2000 chars)
+//     - callTimestamp / createdAt / updatedAt: timestamp or ISO string
+//
+// 11. follow_ups/{followUpId} (Phase 6 Follow-ups & Reminders):
+//     - followUpId: string (optional, max 100 chars)
+//     - leadId: string (1-100 chars, required)
+//     - leadNumber: string (optional, max 50 chars)
+//     - parentName: string (optional, max 100 chars)
+//     - studentName: string (optional, max 100 chars)
+//     - mobileNumber: string (optional, max 20 chars)
+//     - assignedTo: string (1-100 chars, required)
+//     - assignedTelecallerName: string (optional, max 100 chars)
+//     - createdBy: string (optional, max 100 chars)
+//     - scheduledAt: timestamp or string (required)
+//     - scheduledDate / scheduledTime / timezone / priority / status: string (optional)
+//     - notes: string (optional, max 2000 chars)
+//     - reminderSettings: map (optional)
+//     - reminderHistory: list (optional, max 50 items)
+//     - completedAt / completedBy / completionNotes: optional completion fields
+//     - createdAt / updatedAt: timestamp or ISO string
+//
+// 12. follow_up_history/{historyId} (Phase 6 Follow-up Change Audit History):
+//     - followUpId / leadId / leadNumber: string (optional)
+//     - action / previousStatus / newStatus / changedBy / telecallerId: string (optional)
+//     - notes: string (optional, max 2000 chars)
+//     - createdAt / timestamp: timestamp or ISO string
+//
+// 13. telecaller_daily_stats/{statId} (Phase 6 Telecaller Daily Performance Metrics):
+//     - telecallerId: string (1-100 chars, required)
+//     - date: string (optional, max 50 chars)
+//     - totalCalls / connectedCalls / followUpsCompleted / followUpsScheduled / conversions: numbers
+//     - createdAt / updatedAt: timestamp or ISO string
+//
+// 14. notification_logs/{logId} (Phase 6 Automated Notification Logs):
+//     - recipientId: string (1-100 chars, required)
+//     - title / message / type / status: string (optional)
+//     - createdAt / sentAt: timestamp or ISO string
+//     (Client writes denied; created via Cloud Functions / Firebase Admin SDK)
+//
 // ===============================================================
 
 service cloud.firestore {
@@ -169,6 +218,18 @@ service cloud.firestore {
         (request.resource.data[field] is string &&
          request.resource.data[field].size() >= minLen &&
          request.resource.data[field].size() <= maxLen);
+    }
+
+    // Verify lead/enquiry is assigned to a specific staff member (telecaller)
+    function isEnquiryAssignedTo(leadId, userId) {
+      return leadId is string && (
+        (exists(/databases/$(database)/documents/enquiries/$(leadId)) &&
+         (get(/databases/$(database)/documents/enquiries/$(leadId)).data.assignedTo == userId ||
+          get(/databases/$(database)/documents/enquiries/$(leadId)).data.assignedTelecallerId == userId)) ||
+        (exists(/databases/$(database)/documents/leads/$(leadId)) &&
+         (get(/databases/$(database)/documents/leads/$(leadId)).data.assignedTo == userId ||
+          get(/databases/$(database)/documents/leads/$(leadId)).data.assignedTelecallerId == userId))
+      );
     }
 
     // ===============================================================
@@ -263,6 +324,94 @@ service cloud.firestore {
       return hasRequiredFields(['message']) &&
         data.message is string && data.message.size() > 0 && data.message.size() <= 2000 &&
         (!( 'type' in data ) || (data.type is string && data.type.size() <= 50));
+    }
+
+    // 8. Call Record Validator (Phase 6)
+    function isValidCallRecord(data) {
+      return hasRequiredFields(['leadId', 'telecallerId', 'callOutcome']) &&
+        data.leadId is string && data.leadId.size() > 0 && data.leadId.size() <= 100 &&
+        data.telecallerId is string && data.telecallerId.size() > 0 && data.telecallerId.size() <= 100 &&
+        data.callOutcome is string && data.callOutcome.size() > 0 && data.callOutcome.size() <= 100 &&
+        (!( 'callId' in data ) || (data.callId is string && data.callId.size() <= 100)) &&
+        (!( 'leadNumber' in data ) || (data.leadNumber is string && data.leadNumber.size() <= 50)) &&
+        (!( 'telecallerName' in data ) || (data.telecallerName is string && data.telecallerName.size() <= 100)) &&
+        (!( 'callDurationSeconds' in data ) || (data.callDurationSeconds is number && data.callDurationSeconds >= 0)) &&
+        (!( 'interestLevel' in data ) || (data.interestLevel is string && data.interestLevel.size() <= 50)) &&
+        (!( 'notes' in data ) || (data.notes is string && data.notes.size() <= 2000)) &&
+        (!( 'parentResponse' in data ) || (data.parentResponse is string && data.parentResponse.size() <= 2000)) &&
+        (!( 'callTimestamp' in data ) || data.callTimestamp is timestamp || (data.callTimestamp is string && data.callTimestamp.size() <= 50)) &&
+        (!( 'createdAt' in data ) || data.createdAt is timestamp || (data.createdAt is string && data.createdAt.size() <= 50)) &&
+        (!( 'updatedAt' in data ) || data.updatedAt is timestamp || (data.updatedAt is string && data.updatedAt.size() <= 50));
+    }
+
+    // 9. Follow-up Record Validator (Phase 6)
+    function isValidFollowUpRecord(data) {
+      return hasRequiredFields(['leadId', 'assignedTo']) &&
+        data.leadId is string && data.leadId.size() > 0 && data.leadId.size() <= 100 &&
+        data.assignedTo is string && data.assignedTo.size() > 0 && data.assignedTo.size() <= 100 &&
+        (!( 'followUpId' in data ) || (data.followUpId is string && data.followUpId.size() <= 100)) &&
+        (!( 'leadNumber' in data ) || (data.leadNumber is string && data.leadNumber.size() <= 50)) &&
+        (!( 'parentName' in data ) || (data.parentName is string && data.parentName.size() <= 100)) &&
+        (!( 'studentName' in data ) || (data.studentName is string && data.studentName.size() <= 100)) &&
+        (!( 'mobileNumber' in data ) || (data.mobileNumber is string && data.mobileNumber.size() <= 20)) &&
+        (!( 'assignedTelecallerName' in data ) || (data.assignedTelecallerName is string && data.assignedTelecallerName.size() <= 100)) &&
+        (!( 'createdBy' in data ) || (data.createdBy is string && data.createdBy.size() <= 100)) &&
+        (!( 'scheduledAt' in data ) || data.scheduledAt is timestamp || (data.scheduledAt is string && data.scheduledAt.size() <= 50)) &&
+        (!( 'scheduledDate' in data ) || (data.scheduledDate is string && data.scheduledDate.size() <= 50)) &&
+        (!( 'scheduledTime' in data ) || (data.scheduledTime is string && data.scheduledTime.size() <= 50)) &&
+        (!( 'timezone' in data ) || (data.timezone is string && data.timezone.size() <= 50)) &&
+        (!( 'priority' in data ) || (data.priority is string && data.priority.size() <= 50)) &&
+        (!( 'status' in data ) || (data.status is string && data.status.size() <= 50)) &&
+        (!( 'notes' in data ) || (data.notes is string && data.notes.size() <= 2000)) &&
+        (!( 'reminderSettings' in data ) || data.reminderSettings is map) &&
+        (!( 'reminderHistory' in data ) || (data.reminderHistory is list && data.reminderHistory.size() <= 50)) &&
+        (!( 'completedAt' in data ) || data.completedAt is timestamp || (data.completedAt is string && data.completedAt.size() <= 50)) &&
+        (!( 'completedBy' in data ) || (data.completedBy is string && data.completedBy.size() <= 100)) &&
+        (!( 'completionNotes' in data ) || (data.completionNotes is string && data.completionNotes.size() <= 2000)) &&
+        (!( 'createdAt' in data ) || data.createdAt is timestamp || (data.createdAt is string && data.createdAt.size() <= 50)) &&
+        (!( 'updatedAt' in data ) || data.updatedAt is timestamp || (data.updatedAt is string && data.updatedAt.size() <= 50));
+    }
+
+    // 10. Follow-up Audit History Validator (Phase 6)
+    function isValidFollowUpHistory(data) {
+      return (!( 'followUpId' in data ) || (data.followUpId is string && data.followUpId.size() <= 100)) &&
+        (!( 'leadId' in data ) || (data.leadId is string && data.leadId.size() <= 100)) &&
+        (!( 'leadNumber' in data ) || (data.leadNumber is string && data.leadNumber.size() <= 50)) &&
+        (!( 'action' in data ) || (data.action is string && data.action.size() <= 100)) &&
+        (!( 'previousStatus' in data ) || (data.previousStatus is string && data.previousStatus.size() <= 50)) &&
+        (!( 'newStatus' in data ) || (data.newStatus is string && data.newStatus.size() <= 50)) &&
+        (!( 'changedBy' in data ) || (data.changedBy is string && data.changedBy.size() <= 100)) &&
+        (!( 'telecallerId' in data ) || (data.telecallerId is string && data.telecallerId.size() <= 100)) &&
+        (!( 'assignedTo' in data ) || (data.assignedTo is string && data.assignedTo.size() <= 100)) &&
+        (!( 'notes' in data ) || (data.notes is string && data.notes.size() <= 2000)) &&
+        (!( 'createdAt' in data ) || data.createdAt is timestamp || (data.createdAt is string && data.createdAt.size() <= 50)) &&
+        (!( 'timestamp' in data ) || data.timestamp is timestamp || (data.timestamp is string && data.timestamp.size() <= 50));
+    }
+
+    // 11. Telecaller Daily Stats Validator (Phase 6)
+    function isValidTelecallerDailyStats(data) {
+      return hasRequiredFields(['telecallerId']) &&
+        data.telecallerId is string && data.telecallerId.size() > 0 && data.telecallerId.size() <= 100 &&
+        (!( 'date' in data ) || (data.date is string && data.date.size() <= 50)) &&
+        (!( 'totalCalls' in data ) || data.totalCalls is number) &&
+        (!( 'connectedCalls' in data ) || data.connectedCalls is number) &&
+        (!( 'followUpsCompleted' in data ) || data.followUpsCompleted is number) &&
+        (!( 'followUpsScheduled' in data ) || data.followUpsScheduled is number) &&
+        (!( 'conversions' in data ) || data.conversions is number) &&
+        (!( 'createdAt' in data ) || data.createdAt is timestamp || (data.createdAt is string && data.createdAt.size() <= 50)) &&
+        (!( 'updatedAt' in data ) || data.updatedAt is timestamp || (data.updatedAt is string && data.updatedAt.size() <= 50));
+    }
+
+    // 12. Notification Log Validator (Phase 6)
+    function isValidNotificationLog(data) {
+      return hasRequiredFields(['recipientId']) &&
+        data.recipientId is string && data.recipientId.size() > 0 && data.recipientId.size() <= 100 &&
+        (!( 'title' in data ) || (data.title is string && data.title.size() <= 200)) &&
+        (!( 'message' in data ) || (data.message is string && data.message.size() <= 2000)) &&
+        (!( 'type' in data ) || (data.type is string && data.type.size() <= 100)) &&
+        (!( 'status' in data ) || (data.status is string && data.status.size() <= 50)) &&
+        (!( 'createdAt' in data ) || data.createdAt is timestamp || (data.createdAt is string && data.createdAt.size() <= 50)) &&
+        (!( 'sentAt' in data ) || data.sentAt is timestamp || (data.sentAt is string && data.sentAt.size() <= 50));
     }
 
     // ===============================================================
@@ -567,6 +716,154 @@ service cloud.firestore {
       allow create: if isAdmin();
       allow update: if false;
       allow delete: if isSuperAdmin();
+    }
+
+    // ===============================================================
+    // Phase 6: Telecaller Calling Logs, Follow-ups, and Scheduling
+    // ===============================================================
+
+    // 10. Call Records Collection
+    match /call_records/{callId} {
+      // Read:
+      // - Admin/Super Admin: full read
+      // - Telecaller: read only their own call records
+      allow read: if isAdmin() || (isTelecaller() && resource.data.telecallerId == request.auth.uid);
+
+      // Create:
+      // - Admin/Super Admin: can record any call record
+      // - Telecaller: can create if telecallerId matches caller auth UID AND enquiry is assigned to them
+      allow create: if isValidCallRecord(request.resource.data) && (
+        isAdmin() ||
+        (
+          isTelecaller() &&
+          request.resource.data.telecallerId == request.auth.uid &&
+          isEnquiryAssignedTo(request.resource.data.leadId, request.auth.uid)
+        )
+      );
+
+      // Update & Delete:
+      // - Admin/Super Admin: full update & delete
+      // - Telecaller: DENIED (historical call records are append-only/immutable for telecallers)
+      allow update: if isAdmin() && isValidCallRecord(request.resource.data);
+      allow delete: if isAdmin();
+    }
+
+    // 11. Follow-ups Queue Collection (Phase 6 Extended)
+    match /follow_ups/{followUpId} {
+      // Read:
+      // - Admin/Super Admin: full read
+      // - Telecaller: read if assigned to caller
+      allow read: if isAdmin() || (isTelecaller() && resource.data.assignedTo == request.auth.uid);
+
+      // Create:
+      // - Admin/Super Admin: can schedule any follow-up
+      // - Telecaller: can create if assignedTo matches caller auth UID
+      allow create: if isValidFollowUpRecord(request.resource.data) && (
+        isAdmin() ||
+        (
+          isTelecaller() &&
+          request.resource.data.assignedTo == request.auth.uid
+        )
+      );
+
+      // Update:
+      // - Admin/Super Admin: full update
+      // - Telecaller: can update (e.g. reschedule, mark completed) if currently assigned to caller,
+      //   preventing reassignment and preserving immutable linkage fields
+      allow update: if isValidFollowUpRecord(request.resource.data) && (
+        isAdmin() ||
+        (
+          isTelecaller() &&
+          resource.data.assignedTo == request.auth.uid &&
+          request.resource.data.assignedTo == request.auth.uid &&
+          areImmutableFieldsUnchanged(['followUpId', 'leadId', 'createdBy', 'createdAt'])
+        )
+      );
+
+      // Delete:
+      // - Admin/Super Admin only; Telecaller delete DENIED
+      allow delete: if isAdmin();
+    }
+
+    // 12. Follow-up Audit History (Append-Only)
+    match /follow_up_history/{historyId} {
+      // Read:
+      // - Admin/Super Admin: full read
+      // - Telecaller: read if enquiry is assigned to them or change was made by them
+      allow read: if isAdmin() || (
+        isTelecaller() && (
+          resource.data.changedBy == request.auth.uid ||
+          resource.data.telecallerId == request.auth.uid ||
+          resource.data.assignedTo == request.auth.uid ||
+          (resource.data.leadId is string && isEnquiryAssignedTo(resource.data.leadId, request.auth.uid))
+        )
+      );
+
+      // Create:
+      // - Admin/Super Admin: can record history
+      // - Telecaller: can create history when rescheduling/updating assigned leads
+      allow create: if isValidFollowUpHistory(request.resource.data) && (
+        isAdmin() ||
+        (
+          isTelecaller() && (
+            request.resource.data.changedBy == request.auth.uid ||
+            request.resource.data.telecallerId == request.auth.uid ||
+            isEnquiryAssignedTo(request.resource.data.leadId, request.auth.uid)
+          )
+        )
+      );
+
+      // Update: DENIED for all users (strictly immutable audit records)
+      allow update: if false;
+
+      // Delete: Super Admin only
+      allow delete: if isSuperAdmin();
+    }
+
+    // 13. Telecaller Daily Metrics Collection
+    match /telecaller_daily_stats/{statId} {
+      // Read:
+      // - Admin/Super Admin: full read
+      // - Telecaller: read only their own daily stats
+      allow read: if isAdmin() || (isTelecaller() && resource.data.telecallerId == request.auth.uid);
+
+      // Create:
+      // - Admin/Super Admin: can create
+      // - Telecaller: can create only their own stats
+      allow create: if isValidTelecallerDailyStats(request.resource.data) && (
+        isAdmin() ||
+        (
+          isTelecaller() &&
+          request.resource.data.telecallerId == request.auth.uid
+        )
+      );
+
+      // Update:
+      // - Admin/Super Admin: can update
+      // - Telecaller: can update their own stats without changing telecallerId ownership
+      allow update: if isValidTelecallerDailyStats(request.resource.data) && (
+        isAdmin() ||
+        (
+          isTelecaller() &&
+          resource.data.telecallerId == request.auth.uid &&
+          request.resource.data.telecallerId == request.auth.uid &&
+          areImmutableFieldsUnchanged(['telecallerId', 'date', 'createdAt'])
+        )
+      );
+
+      // Delete: Admin only (Telecallers cannot delete statistics)
+      allow delete: if isAdmin();
+    }
+
+    // 14. Notification Logs Collection (Automated Reminder Logs)
+    match /notification_logs/{logId} {
+      // Read:
+      // - Admin/Super Admin: full read
+      // - Telecaller: read if recipientId matches caller auth UID
+      allow read: if isAdmin() || (isTelecaller() && resource.data.recipientId == request.auth.uid);
+
+      // Write: DENIED client-side (written exclusively via Cloud Functions / Firebase Admin SDK)
+      allow write: if false;
     }
 
     // ===============================================================

@@ -765,3 +765,661 @@ export const exportLeadsToCSV = (leads = [], actor) => {
 
   return { success: true, count: leads.length };
 };
+
+// ===============================================================
+// PHASE 6: CALL MANAGEMENT, FOLLOW-UP CALENDAR & PERFORMANCE
+// ===============================================================
+
+export const VALID_CALL_OUTCOMES = [
+  'Connected',
+  'No Answer',
+  'Busy',
+  'Switched Off',
+  'Invalid Number',
+  'Call Back Requested',
+  'Interested',
+  'Not Interested',
+  'Admission Confirmed',
+  'Visit Scheduled'
+];
+
+export const VALID_INTEREST_LEVELS = ['High', 'Medium', 'Low', 'Not Interested'];
+export const VALID_PRIORITIES = ['High', 'Medium', 'Low'];
+export const VALID_FOLLOW_UP_STATUSES = ['Scheduled', 'Due', 'Completed', 'Overdue', 'Cancelled', 'Rescheduled'];
+
+/**
+ * Record a call attempt and outcome for an enquiry
+ */
+export const recordCall = async ({
+  leadId,
+  leadNumber,
+  callOutcome,
+  callDurationSeconds = 0,
+  interestLevel = 'Medium',
+  notes = '',
+  parentResponse = '',
+  nextFollowUpRequired = false,
+  nextFollowUpDate,
+  nextFollowUpTime = '10:00',
+  followUpPriority = 'Medium',
+  caller
+}) => {
+  if (!leadId) return { success: false, error: "leadId is required." };
+  if (!VALID_CALL_OUTCOMES.includes(callOutcome)) {
+    return { success: false, error: `Invalid call outcome. Choose one of: ${VALID_CALL_OUTCOMES.join(', ')}` };
+  }
+
+  // 1. Try Cloud Function
+  if (isConfigured && functions) {
+    try {
+      const fn = httpsCallable(functions, 'recordCall');
+      const res = await fn({
+        leadId,
+        callOutcome,
+        callDurationSeconds,
+        interestLevel,
+        notes,
+        parentResponse,
+        nextFollowUpRequired,
+        nextFollowUpDate,
+        nextFollowUpTime,
+        followUpPriority
+      });
+      return res.data;
+    } catch (err) {
+      console.warn("recordCall function notice, fallback to direct Firestore:", err.message);
+    }
+  }
+
+  // 2. Direct Firestore fallback
+  const now = new Date();
+  const callerUid = caller?.uid || 'LOCAL_USER';
+  const callerName = caller?.displayName || caller?.fullName || 'Counselor';
+
+  let newStatus = 'Contacted';
+  if (callOutcome === 'Admission Confirmed') newStatus = 'Converted';
+  else if (callOutcome === 'Visit Scheduled') newStatus = 'Visited';
+  else if (callOutcome === 'Interested') newStatus = 'Interested';
+  else if (callOutcome === 'Not Interested') newStatus = 'Not Interested';
+  else if (callOutcome === 'Call Back Requested' || nextFollowUpRequired) newStatus = 'Follow-up';
+
+  let callId = 'call-' + Date.now();
+  if (isConfigured && db) {
+    const callRef = await addDoc(collection(db, 'call_records'), {
+      leadId,
+      leadNumber: leadNumber || leadId,
+      telecallerId: callerUid,
+      telecallerName: callerName,
+      callOutcome,
+      callDurationSeconds: Number(callDurationSeconds) || 0,
+      interestLevel,
+      notes,
+      parentResponse,
+      nextFollowUpRequired: !!nextFollowUpRequired,
+      callTimestamp: serverTimestamp(),
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp()
+    });
+    callId = callRef.id;
+
+    // Schedule follow-up if requested
+    if (nextFollowUpRequired && nextFollowUpDate) {
+      const scheduledIso = `${nextFollowUpDate}T${nextFollowUpTime}:00+05:30`;
+      await addDoc(collection(db, 'follow_ups'), {
+        leadId,
+        leadNumber: leadNumber || leadId,
+        assignedTo: callerUid,
+        assignedTelecallerName: callerName,
+        createdBy: callerUid,
+        scheduledAt: scheduledIso,
+        scheduledDate: nextFollowUpDate,
+        scheduledTime: nextFollowUpTime,
+        timezone: 'Asia/Kolkata',
+        priority: followUpPriority,
+        status: 'Scheduled',
+        notes: notes || `Follow-up following call outcome: ${callOutcome}`,
+        reminderSettings: { oneDayBefore: true, oneHourBefore: true, atTime: true, overdue: true },
+        reminderHistory: [],
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
+      });
+    }
+
+    // Update enquiry doc
+    const updateLead = {
+      lastContactedAt: serverTimestamp(),
+      lastCallOutcome: callOutcome,
+      status: newStatus,
+      leadStatus: newStatus,
+      updatedAt: serverTimestamp()
+    };
+    if (nextFollowUpRequired && nextFollowUpDate) {
+      updateLead.nextFollowupAt = `${nextFollowUpDate}T${nextFollowUpTime}:00+05:30`;
+      updateLead.nextFollowUp = nextFollowUpDate;
+    }
+    await updateDoc(doc(db, 'enquiries', leadId), updateLead).catch(() => {});
+
+    // Activity timeline
+    await addDoc(collection(db, 'lead_activities'), {
+      leadId,
+      leadNumber: leadNumber || leadId,
+      activityType: 'Call Attempt',
+      description: `Call recorded by ${callerName}: Outcome "${callOutcome}", Interest "${interestLevel}". ${notes ? `Notes: ${notes}` : ''}`,
+      previousValue: 'Existing',
+      newValue: newStatus,
+      performedBy: callerUid,
+      performedByRole: caller?.role || 'telecaller',
+      createdAt: serverTimestamp()
+    }).catch(() => {});
+  }
+
+  return {
+    success: true,
+    callId,
+    leadStatus: newStatus
+  };
+};
+
+/**
+ * Schedule a new follow-up
+ */
+export const scheduleFollowUp = async ({
+  leadId,
+  leadNumber,
+  parentName,
+  studentName,
+  mobileNumber,
+  admissionClass,
+  academicYear,
+  assignedTo,
+  assignedTelecallerName,
+  scheduledDate,
+  scheduledTime = '10:00',
+  priority = 'Medium',
+  notes = '',
+  reminderSettings = {},
+  caller
+}) => {
+  if (!leadId || !scheduledDate) return { success: false, error: "leadId and scheduledDate are required." };
+
+  const scheduledAtIso = `${scheduledDate}T${scheduledTime}:00+05:30`;
+  const scheduledMillis = Date.parse(scheduledAtIso);
+  if (isNaN(scheduledMillis) || scheduledMillis <= Date.now()) {
+    return { success: false, error: "Cannot schedule follow-up in the past. Date and time must be in the future." };
+  }
+
+  if (isConfigured && functions) {
+    try {
+      const fn = httpsCallable(functions, 'scheduleFollowUp');
+      const res = await fn({
+        leadId,
+        scheduledDate,
+        scheduledTime,
+        priority,
+        notes,
+        reminderSettings
+      });
+      return res.data;
+    } catch (err) {
+      console.warn("scheduleFollowUp function notice, fallback to direct Firestore:", err.message);
+    }
+  }
+
+  let followUpId = 'fu-' + Date.now();
+  if (isConfigured && db) {
+    const fuRef = await addDoc(collection(db, 'follow_ups'), {
+      leadId,
+      leadNumber: leadNumber || leadId,
+      parentName: parentName || '',
+      studentName: studentName || '',
+      mobileNumber: mobileNumber || '',
+      admissionClass: admissionClass || '',
+      academicYear: academicYear || '',
+      assignedTo: assignedTo || caller?.uid || '',
+      assignedTelecallerName: assignedTelecallerName || caller?.displayName || '',
+      createdBy: caller?.uid || 'SYSTEM',
+      scheduledAt: scheduledAtIso,
+      scheduledDate,
+      scheduledTime,
+      timezone: 'Asia/Kolkata',
+      priority,
+      status: 'Scheduled',
+      notes,
+      reminderSettings: {
+        oneDayBefore: reminderSettings.oneDayBefore !== false,
+        oneHourBefore: reminderSettings.oneHourBefore !== false,
+        atTime: reminderSettings.atTime !== false,
+        overdue: reminderSettings.overdue !== false
+      },
+      reminderHistory: [],
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp()
+    });
+    followUpId = fuRef.id;
+
+    await updateDoc(doc(db, 'enquiries', leadId), {
+      nextFollowupAt: scheduledAtIso,
+      nextFollowUp: scheduledDate,
+      status: 'Follow-up',
+      leadStatus: 'Follow-up',
+      updatedAt: serverTimestamp()
+    }).catch(() => {});
+
+    await addDoc(collection(db, 'lead_activities'), {
+      leadId,
+      leadNumber: leadNumber || leadId,
+      activityType: 'Follow-up Scheduled',
+      description: `Follow-up scheduled for ${scheduledDate} at ${scheduledTime} (${priority} priority). Notes: ${notes || 'N/A'}`,
+      previousValue: 'None',
+      newValue: scheduledAtIso,
+      performedBy: caller?.uid || 'SYSTEM',
+      performedByRole: caller?.role || 'telecaller',
+      createdAt: serverTimestamp()
+    }).catch(() => {});
+  }
+
+  return {
+    success: true,
+    followUpId,
+    scheduledAt: scheduledAtIso
+  };
+};
+
+/**
+ * Reschedule an existing follow-up (preserves historical record)
+ */
+export const rescheduleFollowUp = async ({
+  followUpId,
+  leadId,
+  leadNumber,
+  previousScheduledAt,
+  newScheduledDate,
+  newScheduledTime = '10:00',
+  newPriority = 'Medium',
+  reason = '',
+  caller
+}) => {
+  if (!followUpId || !newScheduledDate) return { success: false, error: "followUpId and newScheduledDate are required." };
+  if (!reason || !reason.trim()) {
+    return { success: false, error: "A valid reason is required to reschedule a follow-up." };
+  }
+
+  const newScheduledAtIso = `${newScheduledDate}T${newScheduledTime}:00+05:30`;
+  const newMillis = Date.parse(newScheduledAtIso);
+  if (isNaN(newMillis) || newMillis <= Date.now()) {
+    return { success: false, error: "New follow-up schedule must be in the future." };
+  }
+
+  if (isConfigured && functions) {
+    try {
+      const fn = httpsCallable(functions, 'rescheduleFollowUp');
+      const res = await fn({
+        followUpId,
+        newScheduledDate,
+        newScheduledTime,
+        newPriority,
+        reason
+      });
+      return res.data;
+    } catch (err) {
+      console.warn("rescheduleFollowUp function notice, fallback to direct Firestore:", err.message);
+    }
+  }
+
+  const callerName = caller?.displayName || caller?.fullName || 'Counselor';
+  let historyId = 'hist-' + Date.now();
+
+  if (isConfigured && db) {
+    // 1. History record
+    const histRef = await addDoc(collection(db, 'follow_up_history'), {
+      followUpId,
+      leadId: leadId || '',
+      previousScheduledAt: previousScheduledAt || '',
+      newScheduledAt: newScheduledAtIso,
+      previousStatus: 'Scheduled',
+      newStatus: 'Rescheduled',
+      changedBy: caller?.uid || 'SYSTEM',
+      changedByName: callerName,
+      changeReason: reason || 'Rescheduled by user request',
+      createdAt: serverTimestamp()
+    });
+    historyId = histRef.id;
+
+    // 2. Update follow_up
+    await updateDoc(doc(db, 'follow_ups', followUpId), {
+      scheduledAt: newScheduledAtIso,
+      scheduledDate: newScheduledDate,
+      scheduledTime: newScheduledTime,
+      priority: newPriority,
+      status: 'Rescheduled',
+      reminderHistory: [],
+      updatedAt: serverTimestamp()
+    });
+
+    if (leadId) {
+      await updateDoc(doc(db, 'enquiries', leadId), {
+        nextFollowupAt: newScheduledAtIso,
+        nextFollowUp: newScheduledDate,
+        updatedAt: serverTimestamp()
+      }).catch(() => {});
+
+      await addDoc(collection(db, 'lead_activities'), {
+        leadId,
+        leadNumber: leadNumber || leadId,
+        activityType: 'Follow-up Rescheduled',
+        description: `Follow-up rescheduled by ${callerName} to ${newScheduledDate} at ${newScheduledTime}. Reason: ${reason || 'N/A'}`,
+        previousValue: previousScheduledAt || '',
+        newValue: newScheduledAtIso,
+        performedBy: caller?.uid || 'SYSTEM',
+        performedByRole: caller?.role || 'telecaller',
+        createdAt: serverTimestamp()
+      }).catch(() => {});
+    }
+  }
+
+  return {
+    success: true,
+    followUpId,
+    status: 'Rescheduled',
+    newScheduledAt: newScheduledAtIso,
+    historyId
+  };
+};
+
+/**
+ * Mark a follow-up as completed
+ */
+export const completeFollowUp = async ({
+  followUpId,
+  leadId,
+  leadNumber,
+  completionNotes = '',
+  leadOutcome,
+  caller
+}) => {
+  if (!followUpId) return { success: false, error: "followUpId is required." };
+
+  if (isConfigured && functions) {
+    try {
+      const fn = httpsCallable(functions, 'completeFollowUp');
+      const res = await fn({
+        followUpId,
+        completionNotes,
+        leadOutcome
+      });
+      return res.data;
+    } catch (err) {
+      console.warn("completeFollowUp function notice, fallback to direct Firestore:", err.message);
+    }
+  }
+
+  const callerName = caller?.displayName || caller?.fullName || 'Counselor';
+
+  if (isConfigured && db) {
+    await updateDoc(doc(db, 'follow_ups', followUpId), {
+      status: 'Completed',
+      completedAt: serverTimestamp(),
+      completedBy: caller?.uid || 'SYSTEM',
+      completedByName: callerName,
+      completionNotes,
+      updatedAt: serverTimestamp()
+    });
+
+    if (leadId) {
+      const updateLead = { updatedAt: serverTimestamp() };
+      if (leadOutcome === 'Admission Confirmed') updateLead.status = 'Converted';
+      else if (leadOutcome === 'Visit Scheduled') updateLead.status = 'Visited';
+      else if (leadOutcome === 'Interested') updateLead.status = 'Interested';
+      else if (leadOutcome === 'Not Interested') updateLead.status = 'Not Interested';
+
+      await updateDoc(doc(db, 'enquiries', leadId), updateLead).catch(() => {});
+
+      await addDoc(collection(db, 'lead_activities'), {
+        leadId,
+        leadNumber: leadNumber || leadId,
+        activityType: 'Follow-up Completed',
+        description: `Follow-up marked completed by ${callerName}. Notes: ${completionNotes || 'N/A'}`,
+        previousValue: 'Scheduled',
+        newValue: 'Completed',
+        performedBy: caller?.uid || 'SYSTEM',
+        performedByRole: caller?.role || 'telecaller',
+        createdAt: serverTimestamp()
+      }).catch(() => {});
+    }
+  }
+
+  return {
+    success: true,
+    followUpId,
+    status: 'Completed',
+    completedAt: new Date().toISOString()
+  };
+};
+
+/**
+ * Trigger check for automated follow-up reminders
+ */
+export const triggerFollowUpReminders = async () => {
+  if (isConfigured && functions) {
+    try {
+      const fn = httpsCallable(functions, 'checkFollowUpReminders');
+      const res = await fn({});
+      return res.data;
+    } catch (err) {
+      console.warn("triggerFollowUpReminders error:", err.message);
+    }
+  }
+  return { success: true, remindersSent: 0, evaluated: 0 };
+};
+
+/**
+ * Calculate Telecaller Performance Analytics
+ */
+export const calculateTelecallerPerformance = ({
+  telecallers = [],
+  enquiries = [],
+  calls = [],
+  followUps = []
+}) => {
+  const nowMs = Date.now();
+
+  const results = telecallers.map(t => {
+    const uid = t.uid || t.id;
+
+    // Assigned leads
+    const assignedLeads = enquiries.filter(e => e.assignedTo === uid || e.assignedTelecallerId === uid);
+    const convertedLeads = assignedLeads.filter(e => e.status === 'Converted' || e.leadStatus === 'Converted').length;
+    const interestedLeads = assignedLeads.filter(e => e.status === 'Interested' || e.leadStatus === 'Interested').length;
+
+    // Calls made
+    const myCalls = calls.filter(c => c.telecallerId === uid);
+    const callsMade = myCalls.length;
+    const connectedCalls = myCalls.filter(c => ['Connected', 'Interested', 'Admission Confirmed', 'Visit Scheduled'].includes(c.callOutcome)).length;
+
+    // Follow-ups
+    const myFollowUps = followUps.filter(f => f.assignedTo === uid);
+    const completedFollowUps = myFollowUps.filter(f => f.status === 'Completed').length;
+    const todayStr = new Date().toISOString().split('T')[0];
+    const overdueFollowUps = myFollowUps.filter(f => f.status === 'Overdue' || (f.status !== 'Completed' && (
+      (f.scheduledDate && f.scheduledDate < todayStr) || 
+      (f.scheduledAt && Date.parse(f.scheduledAt) < nowMs)
+    ))).length;
+    const pendingFollowUps = myFollowUps.filter(f => f.status === 'Scheduled' || f.status === 'Due' || f.status === 'Rescheduled').length;
+
+    // Conversion rate: Converted / Eligible Assigned Leads * 100
+    const conversionRate = assignedLeads.length > 0
+      ? Math.round((convertedLeads / assignedLeads.length) * 1000) / 10
+      : 0;
+
+    // Follow-up completion rate: Completed / (Completed + Overdue) * 100
+    const dueTotal = completedFollowUps + overdueFollowUps;
+    const followUpCompletionRate = dueTotal > 0
+      ? Math.round((completedFollowUps / dueTotal) * 1000) / 10
+      : (completedFollowUps > 0 ? 100 : 0);
+
+    return {
+      telecallerId: uid,
+      telecallerName: t.fullName || t.displayName || 'Counselor',
+      email: t.email || '',
+      phone: t.phone || '',
+      status: t.status || 'active',
+      assignedLeads: assignedLeads.length,
+      assignedLeadsCount: assignedLeads.length,
+      callsMade,
+      totalCalls: callsMade,
+      connectedCalls,
+      interestedLeads,
+      convertedLeads,
+      convertedAdmissions: convertedLeads,
+      completedFollowUps,
+      pendingFollowUps,
+      overdueFollowUps,
+      conversionRate,
+      followUpCompletionRate,
+      completionRate: followUpCompletionRate
+    };
+  });
+
+  // Sort by conversions DESC, then conversion rate DESC
+  results.sort((a, b) => b.convertedLeads - a.convertedLeads || b.conversionRate - a.conversionRate);
+
+  return results;
+};
+
+/**
+ * Export Telecaller Performance report to CSV
+ */
+export const exportPerformanceToCSV = (performanceList = [], actor) => {
+  if (!performanceList || performanceList.length === 0) return { success: false, message: 'No records to export.' };
+
+  const headers = [
+    'समुपदेशक नाव (Telecaller Name)',
+    'ईमेल (Email)',
+    'फोन (Phone)',
+    'खाते स्थिती (Account Status)',
+    'असाइन लीड्स (Assigned Leads)',
+    'एकूण कॉल्स (Calls Made)',
+    'कनेक्ट झालेले कॉल्स (Connected Calls)',
+    'इच्छुक लीड्स (Interested Leads)',
+    'प्रवेश निश्चित (Converted Admissions)',
+    'कन्वर्शन दर (Conversion Rate %)',
+    'पूर्ण केलेले फॉलो-अप्स (Completed Follow-ups)',
+    'प्रलंबित फॉलो-अप्स (Pending Follow-ups)',
+    'थकबाकी फॉलो-अप्स (Overdue Follow-ups)',
+    'फॉलो-अप पूर्णता दर (Completion Rate %)'
+  ];
+
+  const escapeCSV = (val) => {
+    if (val === null || val === undefined) return '""';
+    const s = String(val).replace(/"/g, '""');
+    return `"${s}"`;
+  };
+
+  const rows = performanceList.map(p => [
+    escapeCSV(p.telecallerName || ''),
+    escapeCSV(p.email || ''),
+    escapeCSV(p.phone || ''),
+    escapeCSV(p.status || 'active'),
+    escapeCSV(p.assignedLeadsCount || p.assignedLeads || 0),
+    escapeCSV(p.callsMade || p.totalCalls || 0),
+    escapeCSV(p.connectedCalls || 0),
+    escapeCSV(p.interestedLeads || 0),
+    escapeCSV(p.convertedLeads || p.convertedAdmissions || 0),
+    escapeCSV(`${p.conversionRate || 0}%`),
+    escapeCSV(p.completedFollowUps || 0),
+    escapeCSV(p.pendingFollowUps || 0),
+    escapeCSV(p.overdueFollowUps || 0),
+    escapeCSV(`${p.followUpCompletionRate || p.completionRate || 0}%`)
+  ]);
+
+  const csvContent = '\uFEFF' + [
+    headers.map(h => `"${h}"`).join(','),
+    ...rows.map(r => r.join(','))
+  ].join('\r\n');
+
+  if (typeof window !== 'undefined' && typeof document !== 'undefined') {
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', `Gurukul_Bhose_Telecaller_Performance_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  }
+
+  return { success: true, count: performanceList.length, csvData: csvContent };
+};
+
+/**
+ * Export Call Monitoring & Follow-ups report to CSV
+ */
+export const exportCallMonitoringToCSV = (calls = [], followUps = [], actor) => {
+  const headers = [
+    'रेकॉर्ड प्रकार (Record Type)',
+    'लीड क्रमांक (Lead Number)',
+    'पालक नाव (Parent Name)',
+    'विद्यार्थी नाव (Student Name)',
+    'समुपदेशक (Telecaller)',
+    'कॉल निकाल / स्थिती (Call Outcome / Status)',
+    'कालावधी (Duration)',
+    'इन्टरेस्ट लेव्हल / प्रायॉरिटी (Interest / Priority)',
+    'तारीख व वेळ (Date & Time)',
+    'नोंदी (Notes)'
+  ];
+
+  const escapeCSV = (val) => {
+    if (val === null || val === undefined) return '""';
+    const s = String(val).replace(/"/g, '""');
+    return `"${s}"`;
+  };
+
+  const callRows = calls.map(c => [
+    escapeCSV('कॉल रेकॉर्ड (Call)'),
+    escapeCSV(c.leadNumber || c.leadId || ''),
+    escapeCSV(c.parentName || ''),
+    escapeCSV(c.studentName || ''),
+    escapeCSV(c.telecallerName || ''),
+    escapeCSV(c.callOutcome || ''),
+    escapeCSV(c.callDurationSeconds ? `${c.callDurationSeconds}s` : '0s'),
+    escapeCSV(c.interestLevel || 'Medium'),
+    escapeCSV(c.callTimestamp ? new Date(c.callTimestamp?.toDate ? c.callTimestamp.toDate() : c.callTimestamp).toLocaleString('en-IN') : ''),
+    escapeCSV(c.notes || '')
+  ]);
+
+  const followUpRows = followUps.map(f => [
+    escapeCSV('फॉलो-अप (Follow-up)'),
+    escapeCSV(f.leadNumber || f.leadId || ''),
+    escapeCSV(f.parentName || ''),
+    escapeCSV(f.studentName || ''),
+    escapeCSV(f.assignedTelecallerName || ''),
+    escapeCSV(f.status || 'Scheduled'),
+    escapeCSV('N/A'),
+    escapeCSV(f.priority || 'Medium'),
+    escapeCSV(`${f.scheduledDate || ''} ${f.scheduledTime || ''}`),
+    escapeCSV(f.notes || '')
+  ]);
+
+  const allRows = [...callRows, ...followUpRows];
+
+  const csvContent = '\uFEFF' + [
+    headers.map(h => `"${h}"`).join(','),
+    ...allRows.map(r => r.join(','))
+  ].join('\r\n');
+
+  if (typeof window !== 'undefined' && typeof document !== 'undefined') {
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', `Gurukul_Bhose_Call_Monitoring_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  }
+
+  return { success: true, count: allRows.length, csvData: csvContent };
+};
+

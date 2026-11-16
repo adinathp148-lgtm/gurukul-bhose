@@ -38,6 +38,8 @@ import { FollowUpsPage } from '../pages/admin/FollowUpsPage';
 import { AdmissionsPage } from '../pages/admin/AdmissionsPage';
 import { ParentCommunicationPage } from '../pages/admin/ParentCommunicationPage';
 import { MetaIntegrationPage } from '../pages/admin/MetaIntegrationPage';
+import { CallMonitoringPage } from '../pages/admin/CallMonitoringPage';
+import { TelecallerPerformancePage } from '../pages/admin/TelecallerPerformancePage';
 
 // Website CMS Modules (Phase 4)
 import { CMSDashboardPage } from '../pages/admin/cms/CMSDashboardPage';
@@ -60,6 +62,8 @@ import { TelecallerDashboardPage } from '../pages/telecaller/TelecallerDashboard
 import { TelecallerProfilePage } from '../pages/telecaller/TelecallerProfilePage';
 import { TelecallerLeadsPage } from '../pages/telecaller/TelecallerLeadsPage';
 import { TelecallerLeadDetailsPage } from '../pages/telecaller/TelecallerLeadDetailsPage';
+import { TelecallerCallsPage } from '../pages/telecaller/TelecallerCallsPage';
+import { TelecallerCalendarPage } from '../pages/telecaller/TelecallerCalendarPage';
 import { TelecallerFollowUpsPage } from '../pages/telecaller/TelecallerFollowUpsPage';
 import { TelecallerChangePasswordPage } from '../pages/telecaller/TelecallerChangePasswordPage';
 
@@ -112,6 +116,8 @@ export const AppRoutes = () => {
 
         {/* CRM Modules */}
         <Route path="leads" element={<LeadsPage />} />
+        <Route path="call-monitoring" element={<CallMonitoringPage />} />
+        <Route path="telecaller-performance" element={<TelecallerPerformancePage />} />
         <Route path="follow-ups" element={<FollowUpsPage />} />
         <Route path="admissions" element={<AdmissionsPage />} />
         {/* Website CMS Management Modules (Phase 4) */}
@@ -159,6 +165,8 @@ export const AppRoutes = () => {
         <Route path="dashboard" element={<TelecallerDashboardPage />} />
         <Route path="leads" element={<TelecallerLeadsPage />} />
         <Route path="leads/:leadId" element={<TelecallerLeadDetailsPage />} />
+        <Route path="calls" element={<TelecallerCallsPage />} />
+        <Route path="calendar" element={<TelecallerCalendarPage />} />
         <Route path="follow-ups" element={<TelecallerFollowUpsPage />} />
         <Route path="history" element={<TelecallerFollowUpsPage />} />
         <Route path="profile" element={<TelecallerProfilePage />} />

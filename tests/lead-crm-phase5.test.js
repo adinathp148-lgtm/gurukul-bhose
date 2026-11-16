@@ -438,3 +438,27 @@ test('TEST 20: Firestore rules and index schema files exist and declare Phase 5 
   const indexesContent = fs.readFileSync(indexesPath, 'utf8');
   assert.match(indexesContent, /"collectionGroup": "enquiries"/, 'Indexes must contain enquiries collection');
 });
+
+test('TEST 21: Firestore rules declare Phase 6 Calling, Follow-ups, and Scheduling collections with strict RBAC', () => {
+  const rulesPath = path.join(projectRoot, 'firestore.rules');
+  const rulesContent = fs.readFileSync(rulesPath, 'utf8');
+
+  // Verify Phase 6 match rules
+  assert.match(rulesContent, /match \/call_records\/\{callId\}/, 'Rules must declare call_records collection');
+  assert.match(rulesContent, /match \/follow_ups\/\{followUpId\}/, 'Rules must declare follow_ups collection');
+  assert.match(rulesContent, /match \/follow_up_history\/\{historyId\}/, 'Rules must declare follow_up_history collection');
+  assert.match(rulesContent, /match \/telecaller_daily_stats\/\{statId\}/, 'Rules must declare telecaller_daily_stats collection');
+  assert.match(rulesContent, /match \/notification_logs\/\{logId\}/, 'Rules must declare notification_logs collection');
+
+  // Verify domain validators
+  assert.match(rulesContent, /function isValidCallRecord\(data\)/, 'Rules must define isValidCallRecord validator');
+  assert.match(rulesContent, /function isValidFollowUpRecord\(data\)/, 'Rules must define isValidFollowUpRecord validator');
+  assert.match(rulesContent, /function isValidFollowUpHistory\(data\)/, 'Rules must define isValidFollowUpHistory validator');
+  assert.match(rulesContent, /function isValidTelecallerDailyStats\(data\)/, 'Rules must define isValidTelecallerDailyStats validator');
+  assert.match(rulesContent, /function isValidNotificationLog\(data\)/, 'Rules must define isValidNotificationLog validator');
+
+  // Verify helper and immutability
+  assert.match(rulesContent, /function isEnquiryAssignedTo\(leadId, userId\)/, 'Rules must define isEnquiryAssignedTo helper');
+  assert.match(rulesContent, /notification_logs[\s\S]*?allow write: if false;/, 'Notification logs must deny client write');
+});
+

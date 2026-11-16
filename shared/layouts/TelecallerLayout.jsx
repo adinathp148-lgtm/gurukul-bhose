@@ -16,7 +16,8 @@ import {
   ExternalLink,
   Phone,
   Flame,
-  CheckCircle2
+  CheckCircle2,
+  Calendar
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useCRM } from '../contexts/CRMContext';
@@ -60,6 +61,16 @@ export const TelecallerLayout = () => {
       title: isMarathi ? 'माझे डॅशबोर्ड (My Dashboard)' : 'My Dashboard',
       path: `${prefix}/dashboard` || '/dashboard',
       icon: LayoutDashboard
+    },
+    {
+      title: isMarathi ? 'कॉल व्यवस्थापन (Call Management)' : 'Call Management',
+      path: `${prefix}/calls` || '/calls',
+      icon: PhoneCall
+    },
+    {
+      title: isMarathi ? 'फॉलो-अप कॅलेंडर (Calendar)' : 'Follow-up Calendar',
+      path: `${prefix}/calendar` || '/calendar',
+      icon: Calendar
     },
     {
       title: isMarathi ? 'माझ्या लीड्स (My Assigned Leads)' : 'My Assigned Leads',

@@ -1465,3 +1465,747 @@ exports.exportLeadsData = onCall(async (request) => {
   };
 });
 
+// ===============================================================
+// PHASE 6: CALL MANAGEMENT, FOLLOW-UP CALENDAR & REMINDERS
+// ===============================================================
+
+const VALID_CALL_OUTCOMES = [
+  'Connected',
+  'No Answer',
+  'Busy',
+  'Switched Off',
+  'Invalid Number',
+  'Call Back Requested',
+  'Interested',
+  'Not Interested',
+  'Admission Confirmed',
+  'Visit Scheduled'
+];
+
+const VALID_INTEREST_LEVELS = ['High', 'Medium', 'Low', 'Not Interested'];
+const VALID_PRIORITIES = ['High', 'Medium', 'Low'];
+const VALID_FOLLOW_UP_STATUSES = ['Scheduled', 'Due', 'Completed', 'Overdue', 'Cancelled', 'Rescheduled'];
+
+/**
+ * 14. Record Call Details (Telecaller & Admin)
+ * Telecaller must have lead assigned.
+ * Creates immutable call record in call_records, updates lastContactedAt on enquiry,
+ * updates lead status based on outcome, creates follow-up if requested, and logs activity.
+ */
+exports.recordCall = onCall(async (request) => {
+  if (!request.auth) {
+    throw new HttpsError("unauthenticated", "Authentication required.");
+  }
+  const callerUid = request.auth.uid;
+  const callerRole = request.auth.token?.role || 'telecaller';
+  const data = request.data || {};
+
+  const {
+    leadId,
+    callOutcome,
+    callDurationSeconds = 0,
+    interestLevel = 'Medium',
+    notes = '',
+    parentResponse = '',
+    nextFollowUpRequired = false,
+    nextFollowUpDate,
+    nextFollowUpTime,
+    followUpPriority = 'Medium'
+  } = data;
+
+  if (!leadId) {
+    throw new HttpsError("invalid-argument", "leadId is required.");
+  }
+  if (!VALID_CALL_OUTCOMES.includes(callOutcome)) {
+    throw new HttpsError("invalid-argument", `Invalid callOutcome. Must be one of: ${VALID_CALL_OUTCOMES.join(', ')}`);
+  }
+
+  const enquiryRef = db.collection('enquiries').doc(leadId);
+  const enquirySnap = await enquiryRef.get();
+  if (!enquirySnap.exists) {
+    throw new HttpsError("not-found", "Enquiry not found.");
+  }
+
+  const lead = enquirySnap.data();
+
+  // Telecaller isolation check
+  if (callerRole === 'telecaller' && lead.assignedTo !== callerUid && lead.assignedTelecallerId !== callerUid) {
+    throw new HttpsError("permission-denied", "Unauthorized. You can only record calls on leads assigned to you.");
+  }
+
+  const now = admin.firestore.Timestamp.now();
+  const callerName = request.auth.token?.name || callerRole;
+
+  // Derive new lead status
+  let newStatus = lead.status || lead.leadStatus || 'Contacted';
+  if (callOutcome === 'Admission Confirmed') {
+    newStatus = 'Converted';
+  } else if (callOutcome === 'Visit Scheduled') {
+    newStatus = 'Visited';
+  } else if (callOutcome === 'Interested') {
+    newStatus = 'Interested';
+  } else if (callOutcome === 'Not Interested') {
+    newStatus = 'Not Interested';
+  } else if (callOutcome === 'Call Back Requested' || nextFollowUpRequired) {
+    newStatus = 'Follow-up';
+  } else if (newStatus === 'New' || newStatus === 'Assigned') {
+    newStatus = 'Contacted';
+  }
+
+  // 1. Create call record
+  const callRecordRef = db.collection('call_records').doc();
+  const callRecordData = {
+    callId: callRecordRef.id,
+    leadId,
+    leadNumber: lead.leadNumber || leadId,
+    parentName: lead.parentName || '',
+    studentName: lead.studentName || '',
+    parentMobile: lead.normalizedMobile || lead.mobile || '',
+    telecallerId: callerUid,
+    telecallerName: callerName,
+    callOutcome,
+    callDurationSeconds: Math.max(0, Number(callDurationSeconds) || 0),
+    interestLevel: VALID_INTEREST_LEVELS.includes(interestLevel) ? interestLevel : 'Medium',
+    notes: sanitizeString(notes, 2000),
+    parentResponse: sanitizeString(parentResponse, 2000),
+    nextFollowUpRequired: !!nextFollowUpRequired,
+    callTimestamp: now,
+    createdAt: now,
+    updatedAt: now
+  };
+  await callRecordRef.set(callRecordData);
+
+  // 2. Schedule follow-up if required
+  let followUpId = null;
+  let scheduledAtIso = null;
+  if (nextFollowUpRequired && nextFollowUpDate) {
+    const timeStr = nextFollowUpTime || '10:00';
+    scheduledAtIso = `${nextFollowUpDate}T${timeStr}:00+05:30`;
+    const scheduledMillis = Date.parse(scheduledAtIso);
+    if (isNaN(scheduledMillis) || scheduledMillis <= Date.now()) {
+      throw new HttpsError("invalid-argument", "Follow-up date and time must be in the future.");
+    }
+
+    const followUpRef = db.collection('follow_ups').doc();
+    followUpId = followUpRef.id;
+    await followUpRef.set({
+      followUpId,
+      leadId,
+      leadNumber: lead.leadNumber || leadId,
+      parentName: lead.parentName || '',
+      studentName: lead.studentName || '',
+      mobileNumber: lead.normalizedMobile || lead.mobile || '',
+      admissionClass: lead.admissionClass || '',
+      academicYear: lead.academicYear || '',
+      assignedTo: lead.assignedTo || callerUid,
+      assignedTelecallerName: lead.assignedTelecallerName || callerName,
+      createdBy: callerUid,
+      scheduledAt: scheduledAtIso,
+      scheduledDate: nextFollowUpDate,
+      scheduledTime: timeStr,
+      timezone: 'Asia/Kolkata',
+      priority: VALID_PRIORITIES.includes(followUpPriority) ? followUpPriority : 'Medium',
+      status: 'Scheduled',
+      notes: sanitizeString(notes, 1000) || `Follow-up following call outcome: ${callOutcome}`,
+      reminderSettings: {
+        oneDayBefore: true,
+        oneHourBefore: true,
+        atTime: true,
+        overdue: true
+      },
+      reminderHistory: [],
+      createdAt: now,
+      updatedAt: now
+    });
+  }
+
+  // 3. Update enquiry document
+  const updatePayload = {
+    lastContactedAt: now,
+    lastCallOutcome: callOutcome,
+    status: newStatus,
+    leadStatus: newStatus,
+    updatedAt: now
+  };
+  if (scheduledAtIso) {
+    updatePayload.nextFollowupAt = scheduledAtIso;
+    updatePayload.nextFollowUp = nextFollowUpDate;
+  }
+  await enquiryRef.update(updatePayload);
+
+  // 4. Log activity
+  await db.collection('lead_activities').add({
+    leadId,
+    leadNumber: lead.leadNumber || leadId,
+    activityType: 'Call Attempt',
+    description: `Call recorded by ${callerName}: Outcome "${callOutcome}", Interest: "${interestLevel}". ${notes ? `Notes: ${notes}` : ''}`,
+    previousValue: lead.status || lead.leadStatus || 'New',
+    newValue: newStatus,
+    performedBy: callerUid,
+    performedByRole: callerRole,
+    createdAt: now
+  });
+
+  // 5. Update telecaller daily stats
+  const todayStr = new Date().toISOString().split('T')[0];
+  const statRef = db.collection('telecaller_daily_stats').doc(`${callerUid}_${todayStr}`);
+  const statSnap = await statRef.get();
+  const isConnected = ['Connected', 'Interested', 'Admission Confirmed', 'Visit Scheduled'].includes(callOutcome);
+  const isConverted = callOutcome === 'Admission Confirmed';
+
+  if (!statSnap.exists) {
+    await statRef.set({
+      telecallerId: callerUid,
+      telecallerName: callerName,
+      date: todayStr,
+      totalCalls: 1,
+      connectedCalls: isConnected ? 1 : 0,
+      completedFollowUps: 0,
+      overdueFollowUps: 0,
+      convertedLeads: isConverted ? 1 : 0,
+      createdAt: now,
+      updatedAt: now
+    });
+  } else {
+    await statRef.update({
+      totalCalls: admin.firestore.FieldValue.increment(1),
+      connectedCalls: isConnected ? admin.firestore.FieldValue.increment(1) : admin.firestore.FieldValue.increment(0),
+      convertedLeads: isConverted ? admin.firestore.FieldValue.increment(1) : admin.firestore.FieldValue.increment(0),
+      updatedAt: now
+    });
+  }
+
+  await recordAuditLog(callerUid, callerRole, "CALL_RECORDED", leadId, {
+    callOutcome,
+    callId: callRecordRef.id,
+    newStatus
+  });
+
+  return {
+    success: true,
+    callId: callRecordRef.id,
+    followUpId,
+    leadStatus: newStatus
+  };
+});
+
+/**
+ * 15. Schedule Follow-Up (Telecaller & Admin)
+ */
+exports.scheduleFollowUp = onCall(async (request) => {
+  if (!request.auth) {
+    throw new HttpsError("unauthenticated", "Authentication required.");
+  }
+  const callerUid = request.auth.uid;
+  const callerRole = request.auth.token?.role || 'telecaller';
+  const data = request.data || {};
+
+  const {
+    leadId,
+    scheduledDate,
+    scheduledTime = '10:00',
+    priority = 'Medium',
+    notes = '',
+    reminderSettings = {}
+  } = data;
+
+  if (!leadId || !scheduledDate) {
+    throw new HttpsError("invalid-argument", "leadId and scheduledDate are required.");
+  }
+
+  const scheduledAtIso = `${scheduledDate}T${scheduledTime}:00+05:30`;
+  const scheduledMillis = Date.parse(scheduledAtIso);
+  if (isNaN(scheduledMillis) || scheduledMillis <= Date.now()) {
+    throw new HttpsError("invalid-argument", "Scheduled follow-up date and time must be in the future.");
+  }
+
+  const enquiryRef = db.collection('enquiries').doc(leadId);
+  const enquirySnap = await enquiryRef.get();
+  if (!enquirySnap.exists) {
+    throw new HttpsError("not-found", "Enquiry not found.");
+  }
+  const lead = enquirySnap.data();
+
+  if (callerRole === 'telecaller' && lead.assignedTo !== callerUid && lead.assignedTelecallerId !== callerUid) {
+    throw new HttpsError("permission-denied", "Unauthorized. You can only schedule follow-ups for leads assigned to you.");
+  }
+
+  const now = admin.firestore.Timestamp.now();
+  const callerName = request.auth.token?.name || callerRole;
+
+  const followUpRef = db.collection('follow_ups').doc();
+  const followUpId = followUpRef.id;
+
+  await followUpRef.set({
+    followUpId,
+    leadId,
+    leadNumber: lead.leadNumber || leadId,
+    parentName: lead.parentName || '',
+    studentName: lead.studentName || '',
+    mobileNumber: lead.normalizedMobile || lead.mobile || '',
+    admissionClass: lead.admissionClass || '',
+    academicYear: lead.academicYear || '',
+    assignedTo: lead.assignedTo || callerUid,
+    assignedTelecallerName: lead.assignedTelecallerName || callerName,
+    createdBy: callerUid,
+    scheduledAt: scheduledAtIso,
+    scheduledDate,
+    scheduledTime,
+    timezone: 'Asia/Kolkata',
+    priority: VALID_PRIORITIES.includes(priority) ? priority : 'Medium',
+    status: 'Scheduled',
+    notes: sanitizeString(notes, 1000),
+    reminderSettings: {
+      oneDayBefore: reminderSettings.oneDayBefore !== false,
+      oneHourBefore: reminderSettings.oneHourBefore !== false,
+      atTime: reminderSettings.atTime !== false,
+      overdue: reminderSettings.overdue !== false
+    },
+    reminderHistory: [],
+    createdAt: now,
+    updatedAt: now
+  });
+
+  await enquiryRef.update({
+    nextFollowupAt: scheduledAtIso,
+    nextFollowUp: scheduledDate,
+    status: lead.status === 'New' || lead.status === 'Assigned' ? 'Follow-up' : lead.status,
+    leadStatus: lead.leadStatus === 'New' || lead.leadStatus === 'Assigned' ? 'Follow-up' : lead.leadStatus,
+    updatedAt: now
+  });
+
+  await db.collection('lead_activities').add({
+    leadId,
+    leadNumber: lead.leadNumber || leadId,
+    activityType: 'Follow-up Scheduled',
+    description: `Follow-up scheduled by ${callerName} for ${scheduledDate} at ${scheduledTime} (${priority} priority). Notes: ${notes || 'N/A'}`,
+    previousValue: lead.nextFollowupAt || 'None',
+    newValue: scheduledAtIso,
+    performedBy: callerUid,
+    performedByRole: callerRole,
+    createdAt: now
+  });
+
+  return {
+    success: true,
+    followUpId,
+    scheduledAt: scheduledAtIso
+  };
+});
+
+/**
+ * 16. Reschedule Follow-Up (Records History)
+ */
+exports.rescheduleFollowUp = onCall(async (request) => {
+  if (!request.auth) {
+    throw new HttpsError("unauthenticated", "Authentication required.");
+  }
+  const callerUid = request.auth.uid;
+  const callerRole = request.auth.token?.role || 'telecaller';
+  const data = request.data || {};
+
+  const {
+    followUpId,
+    newScheduledDate,
+    newScheduledTime = '10:00',
+    newPriority,
+    reason = ''
+  } = data;
+
+  if (!followUpId || !newScheduledDate) {
+    throw new HttpsError("invalid-argument", "followUpId and newScheduledDate are required.");
+  }
+
+  const newScheduledAtIso = `${newScheduledDate}T${newScheduledTime}:00+05:30`;
+  const newMillis = Date.parse(newScheduledAtIso);
+  if (isNaN(newMillis) || newMillis <= Date.now()) {
+    throw new HttpsError("invalid-argument", "New follow-up schedule must be in the future.");
+  }
+
+  const followUpRef = db.collection('follow_ups').doc(followUpId);
+  const followUpSnap = await followUpRef.get();
+  if (!followUpSnap.exists) {
+    throw new HttpsError("not-found", "Follow-up record not found.");
+  }
+  const followUp = followUpSnap.data();
+
+  if (callerRole === 'telecaller' && followUp.assignedTo !== callerUid) {
+    throw new HttpsError("permission-denied", "Unauthorized. You can only reschedule your own assigned follow-ups.");
+  }
+
+  const now = admin.firestore.Timestamp.now();
+  const callerName = request.auth.token?.name || callerRole;
+
+  // 1. Record in follow_up_history (immutable)
+  await db.collection('follow_up_history').add({
+    followUpId,
+    leadId: followUp.leadId,
+    previousScheduledAt: followUp.scheduledAt,
+    newScheduledAt: newScheduledAtIso,
+    previousStatus: followUp.status,
+    newStatus: 'Rescheduled',
+    changedBy: callerUid,
+    changedByName: callerName,
+    changeReason: sanitizeString(reason, 500) || 'Follow-up rescheduled by user request.',
+    createdAt: now
+  });
+
+  // 2. Update follow_ups doc
+  const updateData = {
+    scheduledAt: newScheduledAtIso,
+    scheduledDate: newScheduledDate,
+    scheduledTime: newScheduledTime,
+    status: 'Rescheduled',
+    // Reset reminders for new schedule
+    reminderHistory: [],
+    updatedAt: now
+  };
+  if (newPriority && VALID_PRIORITIES.includes(newPriority)) {
+    updateData.priority = newPriority;
+  }
+  await followUpRef.update(updateData);
+
+  // 3. Update enquiry document
+  await db.collection('enquiries').doc(followUp.leadId).update({
+    nextFollowupAt: newScheduledAtIso,
+    nextFollowUp: newScheduledDate,
+    updatedAt: now
+  });
+
+  // 4. Log to lead_activities
+  await db.collection('lead_activities').add({
+    leadId: followUp.leadId,
+    leadNumber: followUp.leadNumber || followUp.leadId,
+    activityType: 'Follow-up Rescheduled',
+    description: `Follow-up rescheduled by ${callerName} from ${followUp.scheduledDate} to ${newScheduledDate} at ${newScheduledTime}. Reason: ${reason || 'N/A'}`,
+    previousValue: followUp.scheduledAt,
+    newValue: newScheduledAtIso,
+    performedBy: callerUid,
+    performedByRole: callerRole,
+    createdAt: now
+  });
+
+  return {
+    success: true,
+    followUpId,
+    newScheduledAt: newScheduledAtIso
+  };
+});
+
+/**
+ * 17. Complete Follow-Up (Telecaller & Admin)
+ */
+exports.completeFollowUp = onCall(async (request) => {
+  if (!request.auth) {
+    throw new HttpsError("unauthenticated", "Authentication required.");
+  }
+  const callerUid = request.auth.uid;
+  const callerRole = request.auth.token?.role || 'telecaller';
+  const data = request.data || {};
+
+  const { followUpId, completionNotes = '', leadOutcome } = data;
+  if (!followUpId) {
+    throw new HttpsError("invalid-argument", "followUpId is required.");
+  }
+
+  const followUpRef = db.collection('follow_ups').doc(followUpId);
+  const followUpSnap = await followUpRef.get();
+  if (!followUpSnap.exists) {
+    throw new HttpsError("not-found", "Follow-up record not found.");
+  }
+  const followUp = followUpSnap.data();
+
+  if (callerRole === 'telecaller' && followUp.assignedTo !== callerUid) {
+    throw new HttpsError("permission-denied", "Unauthorized. You can only complete your own assigned follow-ups.");
+  }
+
+  const now = admin.firestore.Timestamp.now();
+  const callerName = request.auth.token?.name || callerRole;
+
+  await followUpRef.update({
+    status: 'Completed',
+    completedAt: now,
+    completedBy: callerUid,
+    completedByName: callerName,
+    completionNotes: sanitizeString(completionNotes, 1000),
+    updatedAt: now
+  });
+
+  // Update enquiry nextFollowupAt if it matched this follow-up
+  const enquiryRef = db.collection('enquiries').doc(followUp.leadId);
+  const enquirySnap = await enquiryRef.get();
+  if (enquirySnap.exists) {
+    const leadData = enquirySnap.data();
+    const updateEnquiry = { updatedAt: now };
+    if (leadData.nextFollowupAt === followUp.scheduledAt) {
+      updateEnquiry.nextFollowupAt = null;
+      updateEnquiry.nextFollowUp = null;
+    }
+    if (leadOutcome && VALID_CALL_OUTCOMES.includes(leadOutcome)) {
+      if (leadOutcome === 'Admission Confirmed') updateEnquiry.status = 'Converted';
+      else if (leadOutcome === 'Visit Scheduled') updateEnquiry.status = 'Visited';
+      else if (leadOutcome === 'Interested') updateEnquiry.status = 'Interested';
+      else if (leadOutcome === 'Not Interested') updateEnquiry.status = 'Not Interested';
+    }
+    await enquiryRef.update(updateEnquiry);
+  }
+
+  // Update telecaller daily stats
+  const todayStr = new Date().toISOString().split('T')[0];
+  const statRef = db.collection('telecaller_daily_stats').doc(`${followUp.assignedTo}_${todayStr}`);
+  const statSnap = await statRef.get();
+  if (statSnap.exists) {
+    await statRef.update({
+      completedFollowUps: admin.firestore.FieldValue.increment(1),
+      updatedAt: now
+    });
+  } else {
+    await statRef.set({
+      telecallerId: followUp.assignedTo,
+      telecallerName: followUp.assignedTelecallerName || callerName,
+      date: todayStr,
+      totalCalls: 0,
+      connectedCalls: 0,
+      completedFollowUps: 1,
+      overdueFollowUps: 0,
+      convertedLeads: 0,
+      createdAt: now,
+      updatedAt: now
+    });
+  }
+
+  // Log activity
+  await db.collection('lead_activities').add({
+    leadId: followUp.leadId,
+    leadNumber: followUp.leadNumber || followUp.leadId,
+    activityType: 'Follow-up Completed',
+    description: `Follow-up completed by ${callerName}. Notes: ${completionNotes || 'N/A'}`,
+    previousValue: followUp.status,
+    newValue: 'Completed',
+    performedBy: callerUid,
+    performedByRole: callerRole,
+    createdAt: now
+  });
+
+  return {
+    success: true,
+    followUpId,
+    status: 'Completed'
+  };
+});
+
+/**
+ * 18. Check & Trigger Follow-Up Reminders (Automated & Callable)
+ * Checks follow-ups due in 1 day, 1 hour, at time, and overdue.
+ * Prevents duplicate reminders via reminderHistory tags.
+ */
+exports.checkFollowUpReminders = onCall(async (request) => {
+  const callerRole = request.auth?.token?.role;
+  // Allow admins or internal triggers
+  const nowMs = Date.now();
+  const now = admin.firestore.Timestamp.now();
+
+  const snap = await db.collection('follow_ups')
+    .where('status', 'in', ['Scheduled', 'Due', 'Rescheduled', 'Overdue'])
+    .get();
+
+  const reminderResults = {
+    evaluated: snap.size,
+    remindersSent: 0,
+    overdueUpdated: 0,
+    skipped: 0
+  };
+
+  for (const docSnap of snap.docs) {
+    const f = docSnap.data();
+    const scheduledMs = Date.parse(f.scheduledAt);
+    if (isNaN(scheduledMs)) continue;
+
+    const diffMs = scheduledMs - nowMs;
+    const history = Array.isArray(f.reminderHistory) ? f.reminderHistory : [];
+    const settings = f.reminderSettings || { oneDayBefore: true, oneHourBefore: true, atTime: true, overdue: true };
+
+    const tagsToAdd = [];
+    let notifTitle = null;
+    let notifMsg = null;
+    let notifType = null;
+
+    // Check Overdue: scheduledMs in the past by > 15 mins
+    if (diffMs < -15 * 60 * 1000 && !history.includes('overdue') && settings.overdue) {
+      tagsToAdd.push('overdue');
+      notifTitle = 'थकबाकी फॉलो-अप सूचना (Overdue Follow-up)';
+      notifMsg = `पालकांशी ठरलेली चर्चा वेळ उलटून गेली आहे (Lead #${f.leadNumber || 'N/A'}). कृपया त्वरित संपर्क साधा.`;
+      notifType = 'reminder_overdue';
+
+      // Update status to Overdue if not already completed
+      await docSnap.ref.update({ status: 'Overdue', updatedAt: now });
+      reminderResults.overdueUpdated++;
+    }
+    // Check At Time: within -15 to +15 minutes
+    else if (Math.abs(diffMs) <= 15 * 60 * 1000 && !history.includes('at_time') && settings.atTime) {
+      tagsToAdd.push('at_time');
+      notifTitle = 'फॉलो-अप वेळ झाली आहे (Follow-up Due Now)';
+      notifMsg = `Lead #${f.leadNumber || 'N/A'} साठी आज ${f.scheduledTime || ''} वाजता ठरलेला फॉलो-अप त्वरित सुरू करा.`;
+      notifType = 'reminder_at_time';
+
+      await docSnap.ref.update({ status: 'Due', updatedAt: now });
+    }
+    // Check 1 Hour Before: diff between 45 mins and 75 mins
+    else if (diffMs > 0 && diffMs <= 75 * 60 * 1000 && diffMs >= 45 * 60 * 1000 && !history.includes('1_hour_before') && settings.oneHourBefore) {
+      tagsToAdd.push('1_hour_before');
+      notifTitle = '१ तासात फॉलो-अप (Follow-up in 1 Hour)';
+      notifMsg = `Lead #${f.leadNumber || 'N/A'} साठी १ तासात फॉलो-अप नियोजित आहे (${f.scheduledTime || ''}).`;
+      notifType = 'reminder_1_hour';
+    }
+    // Check 1 Day Before: diff between 23 hrs and 25 hrs
+    else if (diffMs > 0 && diffMs <= 25 * 3600 * 1000 && diffMs >= 23 * 3600 * 1000 && !history.includes('1_day_before') && settings.oneDayBefore) {
+      tagsToAdd.push('1_day_before');
+      notifTitle = 'उद्याचा फॉलो-अप (Follow-up Tomorrow)';
+      notifMsg = `Lead #${f.leadNumber || 'N/A'} साठी उद्या ${f.scheduledTime || ''} वाजता फॉलो-अप नियोजित आहे.`;
+      notifType = 'reminder_1_day';
+    }
+
+    if (tagsToAdd.length > 0 && notifTitle && f.assignedTo) {
+      // 1. Create in-app notification
+      await db.collection('notifications').add({
+        recipientId: f.assignedTo,
+        recipientRole: 'telecaller',
+        title: notifTitle,
+        message: notifMsg,
+        category: 'followup',
+        leadId: f.leadId,
+        followUpId: docSnap.id,
+        read: false,
+        createdAt: now
+      });
+
+      // 2. Log in notification_logs
+      await db.collection('notification_logs').add({
+        recipientId: f.assignedTo,
+        followUpId: docSnap.id,
+        leadId: f.leadId,
+        notificationType: notifType,
+        scheduledAt: f.scheduledAt,
+        sentAt: now,
+        deliveryStatus: 'sent',
+        retryCount: 0,
+        createdAt: now
+      });
+
+      // 3. Atomically add tag to reminderHistory to prevent duplicate
+      await docSnap.ref.update({
+        reminderHistory: admin.firestore.FieldValue.arrayUnion(...tagsToAdd),
+        updatedAt: now
+      });
+
+      reminderResults.remindersSent++;
+    } else {
+      reminderResults.skipped++;
+    }
+  }
+
+  return {
+    success: true,
+    ...reminderResults,
+    timestamp: new Date().toISOString()
+  };
+});
+
+/**
+ * 19. Telecaller Performance Aggregator (Admin & Super Admin)
+ */
+exports.getTelecallerPerformance = onCall(async (request) => {
+  verifyAdmin(request.auth);
+
+  const telecallersSnap = await db.collection('users')
+    .where('role', '==', 'telecaller')
+    .get();
+
+  const enquiriesSnap = await db.collection('enquiries').get();
+  const callsSnap = await db.collection('call_records').get();
+  const followUpsSnap = await db.collection('follow_ups').get();
+
+  const performanceList = [];
+
+  telecallersSnap.forEach(tDoc => {
+    const t = tDoc.data();
+    const uid = tDoc.id;
+
+    // 1. Filter Leads
+    const assignedLeads = [];
+    enquiriesSnap.forEach(eDoc => {
+      const e = eDoc.data();
+      if (e.assignedTo === uid || e.assignedTelecallerId === uid) {
+        assignedLeads.push(e);
+      }
+    });
+
+    // 2. Filter Calls
+    const calls = [];
+    callsSnap.forEach(cDoc => {
+      const c = cDoc.data();
+      if (c.telecallerId === uid) {
+        calls.push(c);
+      }
+    });
+
+    // 3. Filter Follow-ups
+    const followUps = [];
+    followUpsSnap.forEach(fDoc => {
+      const f = fDoc.data();
+      if (f.assignedTo === uid) {
+        followUps.push(f);
+      }
+    });
+
+    const callsMade = calls.length;
+    const connectedCalls = calls.filter(c => ['Connected', 'Interested', 'Admission Confirmed', 'Visit Scheduled'].includes(c.callOutcome)).length;
+    const interestedLeads = assignedLeads.filter(l => l.status === 'Interested' || l.leadStatus === 'Interested').length;
+    const convertedLeads = assignedLeads.filter(l => l.status === 'Converted' || l.leadStatus === 'Converted').length;
+
+    const completedFollowUps = followUps.filter(f => f.status === 'Completed').length;
+    const overdueFollowUps = followUps.filter(f => f.status === 'Overdue' || (f.status !== 'Completed' && Date.parse(f.scheduledAt) < Date.now())).length;
+    const pendingFollowUps = followUps.filter(f => f.status === 'Scheduled' || f.status === 'Due' || f.status === 'Rescheduled').length;
+
+    // Conversion rate: Converted Leads / Eligible Assigned Leads * 100
+    const conversionRate = assignedLeads.length > 0
+      ? Math.round((convertedLeads / assignedLeads.length) * 1000) / 10
+      : 0;
+
+    // Follow-up completion rate: Completed / (Completed + Overdue) * 100
+    const dueTotal = completedFollowUps + overdueFollowUps;
+    const followUpCompletionRate = dueTotal > 0
+      ? Math.round((completedFollowUps / dueTotal) * 1000) / 10
+      : (completedFollowUps > 0 ? 100 : 0);
+
+    performanceList.push({
+      telecallerId: uid,
+      telecallerName: t.fullName || t.displayName || 'Telecaller',
+      email: t.email || '',
+      phone: t.phone || '',
+      status: t.status || 'active',
+      assignedLeadsCount: assignedLeads.length,
+      callsMade,
+      connectedCalls,
+      interestedLeads,
+      convertedLeads,
+      completedFollowUps,
+      pendingFollowUps,
+      overdueFollowUps,
+      conversionRate,
+      followUpCompletionRate
+    });
+  });
+
+  // Sort by convertedLeads DESC, then conversionRate DESC
+  performanceList.sort((a, b) => b.convertedLeads - a.convertedLeads || b.conversionRate - a.conversionRate);
+
+  return {
+    success: true,
+    telecallerCount: performanceList.length,
+    performance: performanceList,
+    generatedAt: new Date().toISOString()
+  };
+});
+
+

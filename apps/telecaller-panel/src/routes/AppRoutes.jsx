@@ -9,6 +9,8 @@ import { TelecallerDashboardPage } from '@shared/pages/telecaller/TelecallerDash
 import { TelecallerLeadsPage } from '@shared/pages/telecaller/TelecallerLeadsPage';
 import { TelecallerLeadDetailsPage } from '@shared/pages/telecaller/TelecallerLeadDetailsPage';
 import { TelecallerFollowUpsPage } from '@shared/pages/telecaller/TelecallerFollowUpsPage';
+import { TelecallerCallsPage } from '@shared/pages/telecaller/TelecallerCallsPage';
+import { TelecallerCalendarPage } from '@shared/pages/telecaller/TelecallerCalendarPage';
 import { TelecallerProfilePage } from '@shared/pages/telecaller/TelecallerProfilePage';
 import { TelecallerChangePasswordPage } from '@shared/pages/telecaller/TelecallerChangePasswordPage';
 
@@ -58,6 +60,8 @@ export const AppRoutes = () => {
         <Route path="/dashboard" element={<TelecallerDashboardPage />} />
         <Route path="/leads" element={<TelecallerLeadsPage />} />
         <Route path="/leads/:leadId" element={<TelecallerLeadDetailsPage />} />
+        <Route path="/calls" element={<TelecallerCallsPage />} />
+        <Route path="/calendar" element={<TelecallerCalendarPage />} />
         <Route path="/follow-ups" element={<TelecallerFollowUpsPage />} />
         <Route path="/history" element={<TelecallerFollowUpsPage />} />
         <Route path="/notifications" element={<TelecallerNotificationsPage />} />

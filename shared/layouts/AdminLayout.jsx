@@ -18,7 +18,9 @@ import {
   ChevronRight,
   ChevronDown,
   Flame,
-  Headset
+  Headset,
+  Trophy,
+  Activity
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useCRM } from '../contexts/CRMContext';
@@ -87,6 +89,18 @@ export const AdminLayout = () => {
       icon: PhoneCall,
       badge: metrics.todayFollowUps > 0 ? `${metrics.todayFollowUps} Today` : null,
       badgeColor: 'amber',
+      roles: ['super_admin', 'superadmin', 'admin']
+    },
+    {
+      title: isMarathi ? 'कॉल मॉनिटरिंग (Call Monitoring)' : 'Call Monitoring',
+      path: '/admin/call-monitoring',
+      icon: Activity,
+      roles: ['super_admin', 'superadmin', 'admin']
+    },
+    {
+      title: isMarathi ? 'समुपदेशक कार्यक्षमता (Performance)' : 'Telecaller Performance',
+      path: '/admin/telecaller-performance',
+      icon: Trophy,
       roles: ['super_admin', 'superadmin', 'admin']
     },
     {

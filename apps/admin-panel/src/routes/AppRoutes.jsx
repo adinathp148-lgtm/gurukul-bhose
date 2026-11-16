@@ -19,6 +19,8 @@ import { FollowUpsPage } from '@shared/pages/admin/FollowUpsPage';
 import { AdmissionsPage } from '@shared/pages/admin/AdmissionsPage';
 import { ParentCommunicationPage } from '@shared/pages/admin/ParentCommunicationPage';
 import { MetaIntegrationPage } from '@shared/pages/admin/MetaIntegrationPage';
+import { CallMonitoringPage } from '@shared/pages/admin/CallMonitoringPage';
+import { TelecallerPerformancePage } from '@shared/pages/admin/TelecallerPerformancePage';
 
 // Complete CMS Modules
 import { CMSDashboardPage } from '@shared/pages/admin/cms/CMSDashboardPage';
@@ -42,6 +44,8 @@ import { TelecallerDashboardPage } from '@shared/pages/telecaller/TelecallerDash
 import { TelecallerLeadsPage } from '@shared/pages/telecaller/TelecallerLeadsPage';
 import { TelecallerLeadDetailsPage } from '@shared/pages/telecaller/TelecallerLeadDetailsPage';
 import { TelecallerFollowUpsPage } from '@shared/pages/telecaller/TelecallerFollowUpsPage';
+import { TelecallerCallsPage } from '@shared/pages/telecaller/TelecallerCallsPage';
+import { TelecallerCalendarPage } from '@shared/pages/telecaller/TelecallerCalendarPage';
 import { TelecallerProfilePage } from '@shared/pages/telecaller/TelecallerProfilePage';
 import { TelecallerChangePasswordPage } from '@shared/pages/telecaller/TelecallerChangePasswordPage';
 import { TelecallerLoginPage } from '@shared/pages/auth/TelecallerLoginPage';
@@ -68,6 +72,8 @@ export const AppRoutes = () => {
         <Route path="dashboard" element={<TelecallerDashboardPage />} />
         <Route path="leads" element={<TelecallerLeadsPage />} />
         <Route path="leads/:leadId" element={<TelecallerLeadDetailsPage />} />
+        <Route path="calls" element={<TelecallerCallsPage />} />
+        <Route path="calendar" element={<TelecallerCalendarPage />} />
         <Route path="follow-ups" element={<TelecallerFollowUpsPage />} />
         <Route path="history" element={<TelecallerFollowUpsPage />} />
         <Route path="profile" element={<TelecallerProfilePage />} />
@@ -98,12 +104,16 @@ export const AppRoutes = () => {
         {/* CRM Pipeline & Admission Register */}
         <Route path="/admin/leads" element={<LeadsPage />} />
         <Route path="/admin/leads/:leadId" element={<LeadDetailsPage />} />
+        <Route path="/admin/call-monitoring" element={<CallMonitoringPage />} />
+        <Route path="/admin/telecaller-performance" element={<TelecallerPerformancePage />} />
         <Route path="/admin/follow-ups" element={<FollowUpsPage />} />
         <Route path="/admin/admissions" element={<AdmissionsPage />} />
         <Route path="/admin/parent-communication" element={<ParentCommunicationPage />} />
         <Route path="/admin/meta-integration" element={<MetaIntegrationPage />} />
         <Route path="/leads" element={<Navigate to="/admin/leads" replace />} />
         <Route path="/leads/:leadId" element={<LeadDetailsPage />} />
+        <Route path="/call-monitoring" element={<Navigate to="/admin/call-monitoring" replace />} />
+        <Route path="/telecaller-performance" element={<Navigate to="/admin/telecaller-performance" replace />} />
         <Route path="/follow-ups" element={<Navigate to="/admin/follow-ups" replace />} />
         <Route path="/admissions" element={<Navigate to="/admin/admissions" replace />} />
         <Route path="/parent-communication" element={<Navigate to="/admin/parent-communication" replace />} />
