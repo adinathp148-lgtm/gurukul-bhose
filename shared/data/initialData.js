@@ -543,6 +543,28 @@ export const demoUsers = [
     role: "admin",
     phone: "9850449800",
     isActive: true
+  },
+  {
+    uid: "tc-sachin-101",
+    email: "telecaller1@gurukulbhose.com",
+    displayName: "सचिन पाटील (कौन्सिलर)",
+    fullName: "Sachin Patil",
+    role: "telecaller",
+    employeeId: "TC-101",
+    phone: "9850123451",
+    status: "active",
+    isActive: true
+  },
+  {
+    uid: "tc-pooja-102",
+    email: "telecaller2@gurukulbhose.com",
+    displayName: "पूजा शिंदे (कौन्सिलर)",
+    fullName: "Pooja Shinde",
+    role: "telecaller",
+    employeeId: "TC-102",
+    phone: "9850123452",
+    status: "active",
+    isActive: true
   }
 ];
 

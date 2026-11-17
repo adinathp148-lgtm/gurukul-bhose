@@ -53,14 +53,6 @@ export const AuthProvider = ({ children }) => {
       } catch (e) {
         console.error('Failed to parse active user from localStorage', e);
       }
-    } else {
-      // Default to superadmin demo for immediate dashboard preview
-      const defaultUser = demoUsers[0];
-      if (isMounted) {
-        setCurrentUser(defaultUser);
-        setUserProfile(defaultUser);
-        localStorage.setItem('gurukul_active_user', JSON.stringify(defaultUser));
-      }
     }
 
     // Subscribe to live Firebase Auth state changes
@@ -221,7 +213,17 @@ export const AuthProvider = ({ children }) => {
     } else if (roleType === 'admin') {
       target = demoUsers.find(u => u.role === 'admin') || demoUsers[1];
     } else if (roleType === 'telecaller') {
-      target = demoUsers.find(u => u.role === 'telecaller') || demoUsers[2];
+      target = demoUsers.find(u => u.role === 'telecaller') || {
+        uid: "tc-sachin-101",
+        email: "telecaller1@gurukulbhose.com",
+        displayName: "सचिन पाटील (कौन्सिलर)",
+        fullName: "Sachin Patil",
+        role: "telecaller",
+        employeeId: "TC-101",
+        phone: "9850123451",
+        status: "active",
+        isActive: true
+      };
     }
     setCurrentUser(target);
     setUserProfile(target);

@@ -176,6 +176,37 @@ export const TelecallerLoginPage = () => {
           </Button>
         </form>
 
+        {/* Quick Demo Counselor Login */}
+        <div className="mt-4 p-3 bg-slate-50 border border-slate-200/80 rounded-2xl text-xs space-y-2">
+          <p className="text-[10px] font-black uppercase tracking-wider text-slate-500">
+            {isMarathi ? 'डेमो समुपदेशक लॉगिन (Quick Login)' : 'Quick Demo Counselor Login'}
+          </p>
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                setEmail('telecaller1@gurukulbhose.com');
+                setPassword('Gurukul#2026');
+              }}
+              className="p-2 text-left rounded-xl border border-emerald-200 bg-emerald-50/70 hover:bg-emerald-100 transition-colors"
+            >
+              <span className="font-bold text-emerald-950 block text-[11px] truncate">सचिन पाटील</span>
+              <span className="text-[10px] text-emerald-700 block font-mono">TC-101</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setEmail('telecaller2@gurukulbhose.com');
+                setPassword('Gurukul#2026');
+              }}
+              className="p-2 text-left rounded-xl border border-teal-200 bg-teal-50/70 hover:bg-teal-100 transition-colors"
+            >
+              <span className="font-bold text-teal-950 block text-[11px] truncate">पूजा शिंदे</span>
+              <span className="text-[10px] text-teal-700 block font-mono">TC-102</span>
+            </button>
+          </div>
+        </div>
+
         {/* New Telecaller Registration Callout */}
         <div className="mt-5 p-3.5 rounded-2xl bg-emerald-50/70 border border-emerald-200/80 flex items-center justify-between gap-3 text-xs">
           <div>

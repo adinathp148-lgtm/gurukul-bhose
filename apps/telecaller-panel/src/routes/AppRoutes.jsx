@@ -51,10 +51,10 @@ export const AppRoutes = () => {
       <Route path="/login" element={<TelecallerLoginPage />} />
       <Route path="/register" element={<TelecallerRegisterPage />} />
 
-      {/* 2. Protected Telecaller Workspace */}
+      {/* 2. Protected Telecaller Workspace (Strictly for Telecallers only) */}
       <Route
         element={
-          <ProtectedRoute allowedRoles={['telecaller', 'super_admin', 'superadmin', 'admin']}>
+          <ProtectedRoute allowedRoles={['telecaller']}>
             <TelecallerLayout />
           </ProtectedRoute>
         }

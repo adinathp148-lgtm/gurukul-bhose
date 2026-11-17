@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { 
   LayoutDashboard, 
@@ -29,12 +29,20 @@ import { NotificationCenter } from '../components/common/NotificationCenter';
 import { getPublicWebsiteUrl } from '../services/navigation/navigationUrls';
 
 export const TelecallerLayout = () => {
-  const { currentUser, userProfile, logout, isAdmin, isSuperAdmin } = useAuth();
+  const { currentUser, userProfile, logout, isAdmin, isSuperAdmin, isTelecaller } = useAuth();
   const { leads, getMetrics } = useCRM();
   const { isMarathi } = useLanguage();
   const location = useLocation();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  // Security Guard: Telecaller Workspace is strictly isolated for Telecallers.
+  // Admins can manage telecallers from the Admin Panel, but cannot occupy the Telecaller workspace.
+  useEffect(() => {
+    if (isAdmin || isSuperAdmin) {
+      navigate('/admin/dashboard', { replace: true });
+    }
+  }, [isAdmin, isSuperAdmin, navigate]);
 
   const isActive = (path) => location.pathname === path;
 
@@ -47,19 +55,24 @@ export const TelecallerLayout = () => {
 
   const prefix = location.pathname.startsWith('/telecaller') ? '/telecaller' : '';
 
+  // Strictly display counselor details (Never display admin/superadmin credentials in telecaller workspace)
+  const counselorName = userProfile?.role === 'telecaller'
+    ? (userProfile.displayName || userProfile.fullName || 'Counselor')
+    : (currentUser?.role === 'telecaller' ? (currentUser.displayName || 'Counselor') : (isMarathi ? 'समुपदेशक (Counselor)' : 'Counselor'));
+
+  const counselorEmail = userProfile?.role === 'telecaller'
+    ? (userProfile.email || currentUser?.email || 'counselor@gurukulbhose.com')
+    : (currentUser?.role === 'telecaller' ? currentUser.email : 'counselor@gurukulbhose.com');
+
+  const employeeId = (userProfile?.role === 'telecaller' ? userProfile.employeeId : currentUser?.employeeId) || '';
+  const counselorInitial = counselorName && counselorName !== 'Counselor' ? counselorName.charAt(0).toUpperCase() : 'C';
+
   const handleLogout = async () => {
     await logout();
     navigate(prefix ? `${prefix}/login` : '/login');
   };
 
   const navItems = [
-    ...((isAdmin || isSuperAdmin) ? [{
-      category: 'admin',
-      title: isMarathi ? '← अ‍ॅडमिन डॅशबोर्ड' : '← Back to Admin Panel',
-      path: '/admin/dashboard',
-      icon: LayoutDashboard,
-      badge: 'Admin'
-    }] : []),
     {
       category: 'calling',
       title: isMarathi ? 'माझे डॅशबोर्ड (Dashboard)' : 'My Dashboard',
@@ -181,20 +194,20 @@ export const TelecallerLayout = () => {
         <div className="px-3.5 py-3 bg-slate-900/60 border-b border-slate-800/70">
           <div className="flex items-center gap-3">
             <div className="w-8.5 h-8.5 rounded-full bg-emerald-950/90 border-2 border-emerald-500/50 flex items-center justify-center font-bold text-xs text-emerald-300 shrink-0">
-              {userProfile?.displayName ? userProfile.displayName.charAt(0).toUpperCase() : 'C'}
+              {counselorInitial}
             </div>
             <div className="overflow-hidden min-w-0">
               <p className="text-xs font-bold text-white truncate">
-                {userProfile?.displayName || userProfile?.fullName || 'Counselor'}
+                {counselorName}
               </p>
               <div className="flex items-center gap-1.5 mt-0.5">
                 <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
                 <span className="text-[10px] uppercase font-bold text-emerald-400 tracking-wider">
                   {isMarathi ? 'सक्रिय समुपदेशक' : 'Active Counselor'}
                 </span>
-                {userProfile?.employeeId && (
+                {employeeId && (
                   <span className="text-[10px] text-slate-400 font-mono">
-                    ({userProfile.employeeId})
+                    ({employeeId})
                   </span>
                 )}
               </div>
@@ -261,7 +274,7 @@ export const TelecallerLayout = () => {
           >
             <div className="relative shrink-0">
               <div className="w-8 h-8 rounded-full bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center font-bold text-xs text-emerald-400">
-                {userProfile?.displayName ? userProfile.displayName.charAt(0).toUpperCase() : 'C'}
+                {counselorInitial}
               </div>
               <span className="absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full border-2 border-slate-900 bg-emerald-400" />
             </div>
@@ -269,12 +282,12 @@ export const TelecallerLayout = () => {
             <div className="flex-1 min-w-0">
               <div className="flex items-center justify-between gap-1">
                 <p className="text-xs font-bold truncate text-white">
-                  {userProfile?.displayName || userProfile?.name || 'Counselor'}
+                  {counselorName}
                 </p>
                 <ChevronRight className="w-3.5 h-3.5 opacity-60 shrink-0" />
               </div>
               <p className="text-[10px] text-slate-400 truncate">
-                {currentUser?.email || 'telecaller@gurukulbhose.com'}
+                {counselorEmail}
               </p>
             </div>
           </Link>
