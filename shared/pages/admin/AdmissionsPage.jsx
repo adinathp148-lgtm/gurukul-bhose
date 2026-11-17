@@ -363,9 +363,9 @@ export const AdmissionsPage = () => {
 
       {/* REGISTER VIEW: Enrolled Students & Receipts */}
       {activeTab === 'REGISTER' && (
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs">
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden w-full max-w-full min-w-0">
+          <div className="overflow-x-auto w-full custom-scrollbar">
+            <table className="w-full min-w-[880px] text-left text-xs">
               <thead className="bg-slate-50 text-slate-500 uppercase text-[10px] tracking-wider border-b border-slate-200">
                 <tr>
                   <th className="py-3.5 px-4">{isMarathi ? 'प्रवेश क्रमांक' : 'Admission No'}</th>
