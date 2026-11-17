@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useCRM } from '../../contexts/CRMContext';
 import { useAuth } from '../../contexts/AuthContext';
@@ -12,7 +12,7 @@ import {
   GraduationCap, 
   Calendar, 
   AlertCircle, 
-  ChevronRight,
+  ChevronRight, 
   ExternalLink,
   PhoneCall,
   Download,
@@ -21,6 +21,7 @@ import {
   Sparkles,
   CheckCircle2,
   XCircle,
+  X,
   HelpCircle,
   Eye,
   FileSpreadsheet,
@@ -200,19 +201,60 @@ export const LeadsPage = () => {
     return sortedLeads.slice(start, start + itemsPerPage);
   }, [sortedLeads, currentPage, itemsPerPage]);
 
+  // Ref for the header checkbox to support indeterminate state and clean DOM syncing
+  const headerCheckboxRef = useRef(null);
+
+  // Helper to get lead ID consistently
+  const getLeadId = (l) => l?.id || l?.leadId || '';
+
+  // Check if all currently paginated leads are selected
+  const allPaginatedSelected = useMemo(() => {
+    if (!paginatedLeads || paginatedLeads.length === 0) return false;
+    return paginatedLeads.every(l => {
+      const lid = getLeadId(l);
+      return lid && selectedLeadIds.includes(lid);
+    });
+  }, [paginatedLeads, selectedLeadIds]);
+
+  // Sync indeterminate state on the header checkbox
+  useEffect(() => {
+    if (headerCheckboxRef.current) {
+      const isSomeSelected = selectedLeadIds.length > 0 && !allPaginatedSelected;
+      headerCheckboxRef.current.indeterminate = isSomeSelected;
+    }
+  }, [selectedLeadIds, allPaginatedSelected]);
+
   // Bulk Selection Handlers
   const handleSelectAll = (e) => {
-    if (e.target.checked) {
-      setSelectedLeadIds(paginatedLeads.map(l => l.id));
+    const isChecked = e.target.checked;
+    if (isChecked) {
+      const currentIds = paginatedLeads.map(l => getLeadId(l)).filter(Boolean);
+      setSelectedLeadIds(prev => Array.from(new Set([...prev, ...currentIds])));
     } else {
-      setSelectedLeadIds([]);
+      const currentIds = new Set(paginatedLeads.map(l => getLeadId(l)));
+      setSelectedLeadIds(prev => prev.filter(id => !currentIds.has(id)));
     }
   };
 
-  const handleSelectOne = (id) => {
+  const handleSelectOne = (leadOrId) => {
+    const id = typeof leadOrId === 'string' ? leadOrId : getLeadId(leadOrId);
+    if (!id) return;
     setSelectedLeadIds(prev => 
       prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]
     );
+  };
+
+  // Dedicated Cancel Selection Handler that guarantees clean deselect across state and DOM
+  const handleCancelSelection = (e) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    setSelectedLeadIds([]);
+    if (headerCheckboxRef.current) {
+      headerCheckboxRef.current.checked = false;
+      headerCheckboxRef.current.indeterminate = false;
+    }
   };
 
   const handleBulkAssignSubmit = async (e) => {
@@ -578,23 +620,30 @@ export const LeadsPage = () => {
 
       {/* 5. Bulk Selection Action Bar */}
       {isAdmin && selectedLeadIds.length > 0 && (
-        <div className="p-3.5 bg-gurukul-navy-900 text-white rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-3 shadow-md text-xs min-w-0">
-          <div className="flex items-center gap-2">
+        <div className="p-3.5 bg-gurukul-navy-900 text-white rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-3 shadow-md text-xs min-w-0 transition-all">
+          <div className="flex items-center gap-2.5">
             <CheckSquare className="w-4 h-4 text-gurukul-saffron-400 shrink-0" />
-            <span><strong>{selectedLeadIds.length}</strong> {isMarathi ? 'लीड्स निवडल्या आहेत' : 'leads selected'}</span>
+            <span className="font-medium">
+              <strong className="text-white font-bold">{selectedLeadIds.length}</strong> {isMarathi ? 'लीड्स निवडल्या आहेत' : 'leads selected'}
+            </span>
           </div>
           <div className="flex items-center gap-2 flex-wrap">
             <button
-              onClick={() => setSelectedLeadIds([])}
-              className="px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white font-bold"
+              type="button"
+              onClick={handleCancelSelection}
+              className="px-3.5 py-1.5 rounded-xl bg-white/15 hover:bg-white/25 active:bg-white/30 active:scale-95 text-white font-bold text-xs flex items-center gap-1.5 transition-all cursor-pointer shadow-xs border border-white/20"
+              title={isMarathi ? 'सर्व निवड रद्द करा' : 'Cancel Selection'}
             >
-              {isMarathi ? 'निवड रद्द करा' : 'Cancel Selection'}
+              <X className="w-3.5 h-3.5 text-white/90" />
+              <span>{isMarathi ? 'निवड रद्द करा' : 'Cancel Selection'}</span>
             </button>
             <button
+              type="button"
               onClick={() => setBulkAssignModalOpen(true)}
-              className="px-3 py-1.5 rounded-lg bg-gurukul-saffron-600 hover:bg-gurukul-saffron-700 text-white font-bold"
+              className="px-3.5 py-1.5 rounded-xl bg-gurukul-saffron-600 hover:bg-gurukul-saffron-700 active:scale-95 text-white font-bold text-xs flex items-center gap-1.5 transition-all cursor-pointer shadow-xs"
             >
-              {isMarathi ? 'समुपदेशक नियुक्त करा (Bulk Assign)' : 'Assign Counselor (Bulk)'}
+              <UserCheck className="w-3.5 h-3.5" />
+              <span>{isMarathi ? 'समुपदेशक नियुक्त करा (Bulk Assign)' : 'Assign Counselor (Bulk)'}</span>
             </button>
           </div>
         </div>
@@ -609,10 +658,12 @@ export const LeadsPage = () => {
                 {isAdmin && (
                   <th className="py-3.5 px-4 w-10">
                     <input
+                      ref={headerCheckboxRef}
                       type="checkbox"
-                      checked={selectedLeadIds.length > 0 && selectedLeadIds.length === paginatedLeads.length}
+                      checked={allPaginatedSelected}
                       onChange={handleSelectAll}
-                      className="rounded text-gurukul-saffron-500"
+                      className="rounded text-gurukul-saffron-500 cursor-pointer w-4 h-4"
+                      aria-label={isMarathi ? 'सर्व निवडा / रद्द करा' : 'Select all / Deselect all'}
                     />
                   </th>
                 )}
@@ -638,10 +689,11 @@ export const LeadsPage = () => {
                 paginatedLeads.map((lead) => {
                   const st = lead.status || lead.leadStatus || 'New';
                   const stConf = statusConfig[st] || { labelMr: st, labelEn: st, bgColor: 'bg-slate-100 text-slate-700' };
-                  const isSelected = selectedLeadIds.includes(lead.id);
+                  const leadKey = getLeadId(lead);
+                  const isSelected = selectedLeadIds.includes(leadKey);
 
                   return (
-                    <tr key={lead.id} className={`hover:bg-slate-50/80 transition-colors ${isSelected ? 'bg-orange-50/30' : ''}`}>
+                    <tr key={leadKey || lead.id} className={`hover:bg-slate-50/80 transition-colors ${isSelected ? 'bg-orange-50/30' : ''}`}>
                       
                       {/* Checkbox */}
                       {isAdmin && (
@@ -649,8 +701,9 @@ export const LeadsPage = () => {
                           <input
                             type="checkbox"
                             checked={isSelected}
-                            onChange={() => handleSelectOne(lead.id)}
-                            className="rounded text-gurukul-saffron-500"
+                            onChange={() => handleSelectOne(leadKey)}
+                            className="rounded text-gurukul-saffron-500 cursor-pointer w-4 h-4"
+                            aria-label={`Select lead ${lead.leadNumber || leadKey}`}
                           />
                         </td>
                       )}

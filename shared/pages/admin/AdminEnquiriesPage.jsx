@@ -274,18 +274,29 @@ export const AdminEnquiriesPage = () => {
 
         <div className="flex items-center gap-2.5">
           {selectedLeadIds.length > 0 && (
-            <Button
-              variant="primary"
-              size="sm"
-              onClick={() => {
-                setActiveLead(null);
-                setAssignModalOpen(true);
-              }}
-              className="bg-purple-600 hover:bg-purple-700"
-            >
-              <UserCheck className="w-4 h-4 mr-1.5" />
-              <span>{isMarathi ? `नेमणूक करा (${selectedLeadIds.length})` : `Assign (${selectedLeadIds.length})`}</span>
-            </Button>
+            <>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setSelectedLeadIds([])}
+                className="border-slate-300 text-slate-700 hover:bg-slate-50 cursor-pointer"
+              >
+                <X className="w-4 h-4 mr-1 text-slate-500" />
+                <span>{isMarathi ? 'निवड रद्द करा' : 'Cancel Selection'}</span>
+              </Button>
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={() => {
+                  setActiveLead(null);
+                  setAssignModalOpen(true);
+                }}
+                className="bg-purple-600 hover:bg-purple-700"
+              >
+                <UserCheck className="w-4 h-4 mr-1.5" />
+                <span>{isMarathi ? `नेमणूक करा (${selectedLeadIds.length})` : `Assign (${selectedLeadIds.length})`}</span>
+              </Button>
+            </>
           )}
 
           <Button
