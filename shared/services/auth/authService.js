@@ -372,6 +372,7 @@ export const sendPasswordReset = async (email) => {
 // 4. Create Telecaller (Admin Functionality)
 export const createTelecallerAccount = async (telecallerData) => {
   const { fullName, email, mobileNumber, whatsappNumber, employeeId, gender, address, initialPassword, assignedDepartment } = telecallerData;
+  const finalEmpId = (employeeId && String(employeeId).trim()) ? String(employeeId).trim() : await getNextTelecallerEmployeeId();
 
   if (isConfigured && db) {
     try {
@@ -379,7 +380,7 @@ export const createTelecallerAccount = async (telecallerData) => {
       const { getFunctions, httpsCallable } = await import('firebase/functions');
       const functions = getFunctions();
       const createFn = httpsCallable(functions, 'createTelecaller');
-      const result = await createFn(telecallerData);
+      const result = await createFn({ ...telecallerData, employeeId: finalEmpId });
       return result.data;
     } catch (fnErr) {
       console.warn('Cloud Function invocation failed, applying direct Firestore transaction fallback:', fnErr);
@@ -395,7 +396,7 @@ export const createTelecallerAccount = async (telecallerData) => {
         phone: mobileNumber,
         role: 'telecaller',
         status: 'active',
-        employeeId,
+        employeeId: finalEmpId,
         profileImage: null,
         createdAt: now,
         updatedAt: now
@@ -403,7 +404,7 @@ export const createTelecallerAccount = async (telecallerData) => {
 
       await setDoc(doc(db, 'telecaller_profiles', uid), {
         userId: uid,
-        employeeId,
+        employeeId: finalEmpId,
         fullName,
         email,
         phone: mobileNumber,
@@ -424,7 +425,7 @@ export const createTelecallerAccount = async (telecallerData) => {
           action: 'TELECALLER_CREATED',
           targetUserId: uid,
           timestamp: now,
-          metadata: { email, employeeId, fullName }
+          metadata: { email, employeeId: finalEmpId, fullName }
         });
       } catch (e) {}
 
@@ -445,7 +446,7 @@ export const createTelecallerAccount = async (telecallerData) => {
     email,
     phone: mobileNumber,
     whatsappNumber: whatsappNumber || mobileNumber,
-    employeeId,
+    employeeId: finalEmpId,
     gender: gender || 'Male',
     address: address || '',
     joiningDate: new Date().toISOString().split('T')[0],
@@ -480,7 +481,7 @@ export const registerTelecaller = async (telecallerData) => {
   } = telecallerData;
 
   const normalizedEmail = (email || '').trim().toLowerCase();
-  const empId = `TC-${Math.floor(100 + Math.random() * 900)}`;
+  const empId = await getNextTelecallerEmployeeId();
   const now = new Date().toISOString();
 
   // If live Firebase auth is configured
@@ -825,6 +826,43 @@ export const fetchTelecallersList = async () => {
   } catch (e) {}
 
   return [];
+};
+
+// 7b. Get Next Telecaller Employee ID (Auto starts from TC-01)
+export const getNextTelecallerEmployeeId = async () => {
+  try {
+    const liveList = await fetchTelecallersList();
+    let rawStored = [];
+    let rawReg = [];
+    try {
+      rawStored = JSON.parse(localStorage.getItem('gurukul_stored_telecallers') || '[]');
+      rawReg = JSON.parse(localStorage.getItem('gurukul_registered_telecallers') || '[]');
+    } catch (e) {}
+
+    const all = [...(liveList || []), ...rawStored, ...rawReg].filter(t => !isDemoTelecaller(t));
+
+    const existingNums = new Set();
+    all.forEach(t => {
+      const empId = String(t.employeeId || '').trim();
+      const match = empId.match(/TC[-_\s]*(\d+)/i) || empId.match(/^(\d+)$/);
+      if (match) {
+        const val = parseInt(match[1], 10);
+        if (!isNaN(val) && val > 0) {
+          existingNums.add(val);
+        }
+      }
+    });
+
+    let nextNum = 1;
+    while (existingNums.has(nextNum)) {
+      nextNum++;
+    }
+
+    return `TC-${String(nextNum).padStart(2, '0')}`;
+  } catch (err) {
+    console.warn('Error calculating next telecaller ID:', err);
+    return 'TC-01';
+  }
 };
 
 // 8. Fetch Audit Logs

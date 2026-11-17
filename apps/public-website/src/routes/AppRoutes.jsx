@@ -19,6 +19,7 @@ import { NoticesPage } from '@shared/pages/NoticesPage';
 import { ContactPage } from '@shared/pages/ContactPage';
 import { AdmissionEnquiryPage } from '@shared/pages/AdmissionEnquiryPage';
 import { CampusVisitPage } from '@shared/pages/CampusVisitPage';
+import { StaffPage } from '@shared/pages/StaffPage';
 
 export const AppRoutes = () => {
   return (
@@ -47,6 +48,7 @@ export const AppRoutes = () => {
 
         {/* Parent Communication & Enquiries */}
         <Route path="/contact" element={<ContactPage />} />
+        <Route path="/staff" element={<StaffPage />} />
         <Route path="/admission-enquiry" element={<AdmissionEnquiryPage />} />
         <Route path="/campus-visit" element={<CampusVisitPage />} />
         <Route path="/schedule-visit" element={<CampusVisitPage />} />

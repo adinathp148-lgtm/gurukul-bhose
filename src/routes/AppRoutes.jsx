@@ -21,6 +21,7 @@ import { VideosPage } from '../pages/VideosPage';
 import { NoticesPage } from '../pages/NoticesPage';
 import { ContactPage } from '../pages/ContactPage';
 import { AdmissionEnquiryPage } from '../pages/AdmissionEnquiryPage';
+import { StaffPage } from '../pages/StaffPage';
 
 // Dedicated Auth Login Pages
 import { SuperAdminLoginPage } from '../pages/auth/SuperAdminLoginPage';
@@ -91,6 +92,7 @@ export const AppRoutes = () => {
         <Route path="/videos" element={<VideosPage />} />
         <Route path="/notices" element={<NoticesPage />} />
         <Route path="/contact" element={<ContactPage />} />
+        <Route path="/staff" element={<StaffPage />} />
         <Route path="/admission-enquiry" element={<AdmissionEnquiryPage />} />
       </Route>
 

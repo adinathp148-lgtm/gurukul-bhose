@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { 
   UserPlus, 
@@ -16,7 +16,7 @@ import {
 } from 'lucide-react';
 import { Button } from '../../components/common/Button';
 import { useLanguage } from '../../contexts/LanguageContext';
-import { createTelecallerAccount } from '../../services/auth/authService';
+import { createTelecallerAccount, getNextTelecallerEmployeeId } from '../../services/auth/authService';
 
 export const CreateTelecallerPage = () => {
   const navigate = useNavigate();
@@ -27,7 +27,7 @@ export const CreateTelecallerPage = () => {
     email: '',
     mobileNumber: '',
     whatsappNumber: '',
-    employeeId: `TC-${Math.floor(100 + Math.random() * 900)}`,
+    employeeId: 'TC-01',
     gender: 'Male',
     address: '',
     joiningDate: new Date().toISOString().split('T')[0],
@@ -40,6 +40,22 @@ export const CreateTelecallerPage = () => {
   const [error, setError] = useState(null);
   const [createdResult, setCreatedResult] = useState(null);
   const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    let isMounted = true;
+    const loadNextId = async () => {
+      try {
+        const nextId = await getNextTelecallerEmployeeId();
+        if (isMounted && nextId) {
+          setFormData(prev => ({ ...prev, employeeId: nextId }));
+        }
+      } catch (e) {
+        console.error('Failed to load next employee ID:', e);
+      }
+    };
+    loadNextId();
+    return () => { isMounted = false; };
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -176,14 +192,18 @@ export const CreateTelecallerPage = () => {
             <Button
               variant="outline"
               size="md"
-              onClick={() => {
+              onClick={async () => {
                 setCreatedResult(null);
+                let nextId = 'TC-01';
+                try {
+                  nextId = await getNextTelecallerEmployeeId();
+                } catch (e) {}
                 setFormData({
                   fullName: '',
                   email: '',
                   mobileNumber: '',
                   whatsappNumber: '',
-                  employeeId: `TC-${Math.floor(100 + Math.random() * 900)}`,
+                  employeeId: nextId,
                   gender: 'Male',
                   address: '',
                   joiningDate: new Date().toISOString().split('T')[0],
@@ -238,11 +258,14 @@ export const CreateTelecallerPage = () => {
                 <input
                   type="text"
                   required
-                  placeholder="TC-101"
+                  placeholder="TC-01"
                   value={formData.employeeId}
                   onChange={(e) => setFormData({ ...formData, employeeId: e.target.value })}
                   className="w-full text-xs px-3.5 py-2.5 border border-slate-300 rounded-xl font-mono focus:ring-2 focus:ring-gurukul-saffron-500 focus:outline-none"
                 />
+                <p className="text-[10px] text-slate-400 mt-1">
+                  {isMarathi ? 'TC-01 पासून स्वयंचलित अनुक्रमांक (Auto-generated)' : 'Auto-generated sequential ID starting from TC-01'}
+                </p>
               </div>
 
               <div>

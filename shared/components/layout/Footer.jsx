@@ -98,6 +98,11 @@ export const Footer = ({ showStaffLink = true }) => {
                 </Link>
               </li>
               <li>
+                <Link to="/staff" className="hover:text-gurukul-saffron-400 transition-colors flex items-center gap-1.5">
+                  <ChevronRight className="w-3 h-3 text-gurukul-saffron-500" /> {isMarathi ? 'शिक्षक व कर्मचारी (Staff)' : 'Faculty & Staff'}
+                </Link>
+              </li>
+              <li>
                 <Link to="/vidyamandir" className="hover:text-gurukul-saffron-400 transition-colors flex items-center gap-1.5">
                   <ChevronRight className="w-3 h-3 text-gurukul-saffron-500" /> {isMarathi ? 'गुरुकुल प्री-प्रायमरी (Nursery, LKG, UKG)' : 'Gurukul Pre-Primary (Nursery, LKG, UKG)'}
                 </Link>

@@ -22,6 +22,7 @@ import { NoticesPage } from '../pages/NoticesPage';
 import { ContactPage } from '../pages/ContactPage';
 import { AdmissionEnquiryPage } from '../pages/AdmissionEnquiryPage';
 import { CampusVisitPage } from '../pages/CampusVisitPage';
+import { StaffPage } from '../pages/StaffPage';
 
 // Dedicated Auth Login Pages
 import { SuperAdminLoginPage } from '../pages/auth/SuperAdminLoginPage';
@@ -104,6 +105,7 @@ export const AppRoutes = () => {
         <Route path="/videos" element={<VideosPage />} />
         <Route path="/notices" element={<NoticesPage />} />
         <Route path="/contact" element={<ContactPage />} />
+        <Route path="/staff" element={<StaffPage />} />
         <Route path="/admission-enquiry" element={<AdmissionEnquiryPage />} />
         <Route path="/campus-visit" element={<CampusVisitPage />} />
         <Route path="/schedule-visit" element={<CampusVisitPage />} />
