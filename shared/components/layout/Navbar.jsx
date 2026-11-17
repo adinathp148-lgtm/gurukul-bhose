@@ -458,26 +458,40 @@ export const Navbar = ({ showAdminLink = true }) => {
                   </a>
 
                   {/* Direct Login & Register Links */}
-                  <div className="mt-1 pt-2 border-t border-slate-100 px-4 py-2 flex items-center justify-between text-xs bg-slate-50/60 rounded-b-xl">
+                  <div className="mt-1 pt-2 border-t border-slate-100 px-4 py-2 flex items-center justify-between text-xs bg-slate-50/60 rounded-b-xl gap-2">
                     <a
                       href={crmUrls.login}
                       target="_blank"
                       rel="noopener noreferrer"
                       onClick={() => setCrmOpen(false)}
-                      className="font-bold text-gurukul-navy-900 hover:text-gurukul-saffron-600 flex items-center gap-1.5 transition-colors"
+                      className="font-bold text-gurukul-navy-900 hover:text-gurukul-saffron-600 flex items-center gap-1.5 transition-colors shrink-0"
                     >
                       <LogIn className="w-3.5 h-3.5 text-gurukul-saffron-500 shrink-0" />
                       <span>{isMarathi ? 'थेट स्टाफ लॉगिन' : 'Direct Staff Login'}</span>
                     </a>
-                    <a
-                      href={`${telecallerBaseUrl}/register`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      onClick={() => setCrmOpen(false)}
-                      className="font-bold text-emerald-700 hover:text-emerald-800 flex items-center gap-1 transition-colors text-[11px]"
-                    >
-                      <span>{isMarathi ? '+ समुपदेशक नोंदणी' : '+ Register'}</span>
-                    </a>
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <a
+                        href={`${telecallerBaseUrl}/register`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={() => setCrmOpen(false)}
+                        className="font-bold text-emerald-700 hover:text-emerald-800 flex items-center gap-0.5 transition-colors text-[11px]"
+                        title={isMarathi ? 'समुपदेशक / टेलिकॉलर नोंदणी' : 'Telecaller Registration'}
+                      >
+                        <span>{isMarathi ? '+ समुपदेशक नोंदणी' : '+ Register'}</span>
+                      </a>
+                      <span className="text-slate-300">|</span>
+                      <a
+                        href={`${adminBaseUrl}/admin/register`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={() => setCrmOpen(false)}
+                        className="font-bold text-blue-700 hover:text-blue-800 flex items-center gap-0.5 transition-colors text-[11px]"
+                        title={isMarathi ? 'अ‍ॅडमिन नोंदणी' : 'Admin Registration'}
+                      >
+                        <span>{isMarathi ? '+ अ‍ॅडमिन' : '+ Admin'}</span>
+                      </a>
+                    </div>
                   </div>
                 </div>
               )}
@@ -718,17 +732,38 @@ export const Navbar = ({ showAdminLink = true }) => {
             <span className="text-center">{isMarathi ? 'ऑनलाईन प्रवेश अर्ज करा (Apply Now)' : 'Apply Online for Admission'}</span>
           </Link>
 
-          <div className="pt-3 border-t border-slate-100 flex items-center justify-center text-xs text-slate-500">
+          <div className="pt-3 border-t border-slate-100 flex flex-col items-center justify-center gap-2 text-xs text-slate-500">
             <a 
-              href={crmUrls.admin} 
+              href={crmUrls.login} 
               target="_blank" 
               rel="noopener noreferrer" 
               onClick={closeMenu} 
               className="font-bold text-gurukul-navy-900 flex items-center gap-1.5 text-left hover:text-gurukul-saffron-600 transition-colors"
             >
               <ShieldCheck className="w-4 h-4 text-gurukul-saffron-500 shrink-0" />
-              <span>Staff / CRM Portal</span>
+              <span>{isMarathi ? 'थेट स्टाफ लॉगिन (Staff Login)' : 'Staff Login'}</span>
             </a>
+            <div className="flex items-center gap-2 text-[11px]">
+              <a 
+                href={`${telecallerBaseUrl}/register`} 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                onClick={closeMenu} 
+                className="font-bold text-emerald-700 hover:text-emerald-800"
+              >
+                {isMarathi ? '+ समुपदेशक नोंदणी' : '+ Telecaller Register'}
+              </a>
+              <span className="text-slate-300">|</span>
+              <a 
+                href={`${adminBaseUrl}/admin/register`} 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                onClick={closeMenu} 
+                className="font-bold text-blue-700 hover:text-blue-800"
+              >
+                {isMarathi ? '+ अ‍ॅडमिन नोंदणी' : '+ Admin Register'}
+              </a>
+            </div>
           </div>
         </div>
       )}

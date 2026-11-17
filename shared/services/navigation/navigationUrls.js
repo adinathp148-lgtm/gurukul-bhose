@@ -3,7 +3,7 @@
  * 
  * Dynamically resolves public website, admin panel, and telecaller panel URLs
  * across Local Development (localhost:3000 / localhost:3001), Firebase Hosting
- * (*.web.app), and Custom Production Domains (gurukulbhose.com).
+ * (*.web.app), Vercel deployments, and Custom Production Domains.
  */
 
 export const getPublicWebsiteUrl = () => {
@@ -28,8 +28,8 @@ export const getPublicWebsiteUrl = () => {
     return import.meta.env.VITE_PUBLIC_WEBSITE_URL;
   }
 
-  // 4. Fallback custom domain
-  return 'https://www.gurukulbhose.com';
+  // 4. Fallback to current origin (Vercel, custom domain, single-origin host)
+  return window.location.origin;
 };
 
 export const getAdminPanelUrl = () => {
@@ -54,8 +54,14 @@ export const getAdminPanelUrl = () => {
     return import.meta.env.VITE_ADMIN_PANEL_URL;
   }
 
-  // 4. Fallback custom domain
-  return 'https://admin.gurukulbhose.com';
+  // 4. If current host is already the dedicated admin subdomain
+  if (hostname.startsWith('admin.')) {
+    return window.location.origin;
+  }
+
+  // 5. Unified single-origin deployment (Vercel, preview domains, custom domains)
+  // On Vercel, admin is served under window.location.origin (e.g. /admin/..., /login, /register)
+  return window.location.origin;
 };
 
 export const getTelecallerPanelUrl = () => {
@@ -63,6 +69,27 @@ export const getTelecallerPanelUrl = () => {
     return import.meta.env?.VITE_TELECALLER_PANEL_URL || 'https://admin.gurukulbhose.com/telecaller';
   }
 
-  const adminUrl = getAdminPanelUrl();
-  return import.meta.env?.VITE_TELECALLER_PANEL_URL || `${adminUrl}/telecaller`;
+  if (import.meta.env?.VITE_TELECALLER_PANEL_URL) {
+    return import.meta.env.VITE_TELECALLER_PANEL_URL;
+  }
+
+  const hostname = window.location.hostname;
+
+  // 1. Localhost development: telecaller panel
+  if (hostname === 'localhost' || hostname === '127.0.0.1') {
+    return 'http://localhost:3001/telecaller';
+  }
+
+  // 2. Firebase hosting: telecaller is hosted under admin hosting target
+  if (hostname.includes('web.app') || hostname.includes('firebaseapp.com')) {
+    return 'https://gurukul-bhose-admin.web.app/telecaller';
+  }
+
+  // 3. If current host is already the dedicated admin subdomain
+  if (hostname.startsWith('admin.')) {
+    return `${window.location.origin}/telecaller`;
+  }
+
+  // 4. Unified single-origin deployment (Vercel, preview domains, custom domains)
+  return `${window.location.origin}/telecaller`;
 };
