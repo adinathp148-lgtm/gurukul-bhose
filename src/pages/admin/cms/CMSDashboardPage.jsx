@@ -210,6 +210,73 @@ export const CMSDashboardPage = () => {
         </div>
       </div>
 
+      {/* Vercel & Website Real-time Sync Status Card */}
+      <div className="bg-gradient-to-br from-slate-900 to-gurukul-navy-950 text-white rounded-2xl p-6 border border-slate-800 shadow-sm">
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+              <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                <span>{isMarathi ? 'वेबसाईट व Vercel रिअल-टाईम सिंक' : 'Live Website & Vercel Sync'}</span>
+              </h3>
+            </div>
+            <p className="text-xs text-slate-300 max-w-3xl leading-relaxed">
+              {isMarathi 
+                ? 'ॲडमिन पॅनेलमधून फोटो, व्हिडिओ आणि सूचना अपडेट केल्यावर त्या लगेच मुख्य वेबसाईटवर (/gallery, /videos, /notices) अपडेट होतात. हे बदल Vercel वर कायमस्वरूपी पुश करण्यासाठी खालील १-कमांड सिंक वापरा.'
+                : 'Updates made by Admin for photos, videos, and notices immediately reflect on the live website. To permanently keep them on Vercel deployments, run the 1-command sync below.'}
+            </p>
+          </div>
+
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              onClick={() => {
+                const data = {
+                  gallery,
+                  videos,
+                  notices,
+                  exportedAt: new Date().toISOString()
+                };
+                const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `gurukul-bhose-cms-backup-${new Date().toISOString().split('T')[0]}.json`;
+                a.click();
+                URL.revokeObjectURL(url);
+              }}
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-bold text-slate-200 border border-slate-700 transition-colors"
+              title="सध्याचा CMS डेटा JSON फॉरमॅटमध्ये डाऊनलोड करा"
+            >
+              <span>{isMarathi ? 'डेटा बॅकअप (JSON)' : 'Backup (JSON)'}</span>
+            </button>
+            <a
+              href="/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-gurukul-saffron-500 hover:bg-gurukul-saffron-600 text-xs font-bold text-white shadow-md transition-all"
+            >
+              <ExternalLink className="w-3.5 h-3.5" />
+              <span>{isMarathi ? 'लाईव्ह वेबसाईट पहा' : 'View Live Site'}</span>
+            </a>
+          </div>
+        </div>
+
+        <div className="mt-4 pt-4 border-t border-slate-800/80 grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+          <div className="bg-slate-800/50 p-3 rounded-xl border border-slate-700/50">
+            <span className="text-slate-400 font-bold block mb-0.5">{isMarathi ? '१. फोटो गॅलरी (Photos)' : '1. Photo Gallery'}</span>
+            <span className="text-emerald-400 font-medium">{isMarathi ? 'बदल आपोआप रिअल-टाईम दिसेल' : 'Auto Real-time update'}</span>
+          </div>
+          <div className="bg-slate-800/50 p-3 rounded-xl border border-slate-700/50">
+            <span className="text-slate-400 font-bold block mb-0.5">{isMarathi ? '२. व्हिडिओ दालन (Videos)' : '2. Video Gallery'}</span>
+            <span className="text-emerald-400 font-medium">{isMarathi ? 'YouTube सुरक्षित चालू होईल' : 'Embed safe player'}</span>
+          </div>
+          <div className="bg-slate-800/50 p-3 rounded-xl border border-slate-700/50">
+            <span className="text-slate-400 font-bold block mb-0.5">{isMarathi ? '३. Vercel १-कमांड डिप्लॉय' : '3. Vercel Deploy'}</span>
+            <span className="text-gurukul-saffron-300 font-mono text-[11px]">npm run deploy</span>
+          </div>
+        </div>
+      </div>
+
       {/* 13 CMS Modules Grid */}
       <div>
         <h2 className="text-base font-bold text-slate-800 mb-4 flex items-center gap-2">

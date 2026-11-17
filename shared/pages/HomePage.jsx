@@ -94,19 +94,22 @@ export const HomePage = () => {
           let filteredNots = rawNots;
           if (homepageData?.featuredNotices?.length > 0) {
             const matches = rawNots.filter(n => homepageData.featuredNotices.includes(n.noticeId || n.id));
-            if (matches.length > 0) filteredNots = matches;
+            const others = rawNots.filter(n => !homepageData.featuredNotices.includes(n.noticeId || n.id));
+            filteredNots = [...matches, ...others];
           }
 
           let filteredGals = rawGals;
           if (homepageData?.galleryPreview?.length > 0) {
             const matches = rawGals.filter(g => homepageData.galleryPreview.includes(g.imageId || g.id));
-            if (matches.length > 0) filteredGals = matches;
+            const others = rawGals.filter(g => !homepageData.galleryPreview.includes(g.imageId || g.id));
+            filteredGals = [...matches, ...others];
           }
 
           let filteredVids = rawVids;
           if (homepageData?.videoPreview?.length > 0) {
             const matches = rawVids.filter(v => homepageData.videoPreview.includes(v.videoId || v.id));
-            if (matches.length > 0) filteredVids = matches;
+            const others = rawVids.filter(v => !homepageData.videoPreview.includes(v.videoId || v.id));
+            filteredVids = [...matches, ...others];
           }
 
           setPrograms(filteredProgs);
@@ -122,6 +125,28 @@ export const HomePage = () => {
     fetchHomeData();
     return () => { isMounted = false; };
   }, [cmsGallery, cmsVideos, homepageData]);
+
+  // Real-time listener for CMS updates on homepage
+  useEffect(() => {
+    const handleUpdate = () => {
+      Promise.all([
+        getNotices(6),
+        getGalleryImages('all'),
+        getVideos()
+      ]).then(([notRes, galRes, vidRes]) => {
+        if (notRes?.data) setNotices(notRes.data.slice(0, 3));
+        if (galRes?.data) setGallery(galRes.data.slice(0, 6));
+        if (vidRes?.data) setVideos(vidRes.data.slice(0, 3));
+      }).catch(console.warn);
+    };
+
+    window.addEventListener('gurukul_content_updated', handleUpdate);
+    window.addEventListener('storage', handleUpdate);
+    return () => {
+      window.removeEventListener('gurukul_content_updated', handleUpdate);
+      window.removeEventListener('storage', handleUpdate);
+    };
+  }, []);
 
   const handleQuickSubmit = async (e) => {
     e.preventDefault();

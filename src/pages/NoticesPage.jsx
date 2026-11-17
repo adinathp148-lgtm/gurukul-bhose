@@ -38,6 +38,22 @@ export const NoticesPage = () => {
     return () => { isMounted = false; };
   }, []);
 
+  // Real-time listener for CMS updates across tabs/origins
+  useEffect(() => {
+    const handleUpdate = () => {
+      getNotices(20).then(res => {
+        if (res?.data) setNotices(res.data);
+      }).catch(console.warn);
+    };
+
+    window.addEventListener('gurukul_content_updated', handleUpdate);
+    window.addEventListener('storage', handleUpdate);
+    return () => {
+      window.removeEventListener('gurukul_content_updated', handleUpdate);
+      window.removeEventListener('storage', handleUpdate);
+    };
+  }, []);
+
   return (
     <div className="space-y-16 pb-16">
       <SEO

@@ -462,7 +462,7 @@ export const galleryList = [
     category: "sports",
     title: "रायफल शूटिंग व धनुरविद्या प्रशिक्षण",
     caption: "निशाणेबाजी व स्वसंरक्षण प्रात्यक्षिके",
-    imageUrl: "https://images.unsplash.com/photo-1715843453107-81f53c93d942?auto=format&fit=crop&w=800&q=80"
+    imageUrl: "/images/gallery/sports-training.jpg"
   },
   {
     id: "gal-7",

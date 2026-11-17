@@ -202,14 +202,26 @@ export const CMSNoticesPage = () => {
           </div>
         </div>
 
-        <button
-          type="button"
-          onClick={handleOpenAdd}
-          className="inline-flex items-center gap-2 px-4 py-2.5 bg-gurukul-saffron-600 hover:bg-gurukul-saffron-700 text-white rounded-xl font-bold text-sm shadow hover:shadow-md transition-all"
-        >
-          <Plus className="w-4 h-4" />
-          <span>नवीन सूचना जोडा (Add Notice)</span>
-        </button>
+        <div className="flex items-center gap-2">
+          <a
+            href="/notices"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold text-xs border border-slate-300 transition-all"
+            title="लाईव्ह वेबसाईटवर सूचना पहा"
+          >
+            <Eye className="w-4 h-4 text-gurukul-saffron-600" />
+            <span className="hidden sm:inline">लाईव्ह सूचना पत्रक पहा</span>
+          </a>
+          <button
+            type="button"
+            onClick={handleOpenAdd}
+            className="inline-flex items-center gap-2 px-4 py-2.5 bg-gurukul-saffron-600 hover:bg-gurukul-saffron-700 text-white rounded-xl font-bold text-sm shadow hover:shadow-md transition-all"
+          >
+            <Plus className="w-4 h-4" />
+            <span>नवीन सूचना जोडा (Add Notice)</span>
+          </button>
+        </div>
       </div>
 
       {/* Alert Messages */}

@@ -36,13 +36,43 @@ export const GalleryPage = () => {
     return () => { isMounted = false; };
   }, [activeCategory]);
 
-  const categories = [
+  // Real-time listener for CMS updates across tabs/origins
+  useEffect(() => {
+    const handleUpdate = () => {
+      getGalleryImages(activeCategory).then(res => {
+        if (res?.data) setGallery(res.data);
+      }).catch(console.warn);
+    };
+
+    window.addEventListener('gurukul_content_updated', handleUpdate);
+    window.addEventListener('storage', handleUpdate);
+    return () => {
+      window.removeEventListener('gurukul_content_updated', handleUpdate);
+      window.removeEventListener('storage', handleUpdate);
+    };
+  }, [activeCategory]);
+
+  const baseCategories = [
     { id: 'all', label: 'सर्व छायाचित्रे (All)' },
+    { id: 'campus', label: 'कॅम्पस (Campus)' },
     { id: 'activities', label: 'उपक्रम (Activities)' },
     { id: 'sports', label: 'क्रीडा व ग्राऊंड (Sports)' },
     { id: 'gathering', label: 'स्नेहसंमेलन (Gathering)' },
     { id: 'result', label: 'गुणवंत विद्यार्थी निकाल (Result)' }
   ];
+
+  const extraCategories = Array.from(new Set(
+    gallery.map(g => g.category).filter(Boolean)
+  )).filter(cat => {
+    const lower = cat.toLowerCase();
+    return !baseCategories.some(b => 
+      b.id === lower || 
+      b.label.toLowerCase().includes(lower) || 
+      lower.includes(b.id)
+    );
+  }).map(cat => ({ id: cat, label: cat }));
+
+  const categories = [...baseCategories, ...extraCategories];
 
   return (
     <div className="space-y-16 pb-16">
@@ -140,7 +170,7 @@ export const GalleryPage = () => {
             <img
               src={selectedImage.imageUrl}
               alt={selectedImage.title}
-              onError={(e) => { e.currentTarget.src = 'https://images.unsplash.com/photo-1715843453107-81f53c93d942?auto=format&fit=crop&w=800&q=80'; }}
+              onError={(e) => { e.currentTarget.src = '/images/gallery/sports-training.jpg'; }}
               className="max-h-[75vh] w-auto max-w-full object-contain mx-auto"
             />
             <div className="p-4 text-white bg-slate-950/80">

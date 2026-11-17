@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { ZoomIn } from 'lucide-react';
 
-const FALLBACK_IMAGE = 'https://images.unsplash.com/photo-1715843453107-81f53c93d942?auto=format&fit=crop&w=800&q=80';
+const FALLBACK_IMAGE = '/images/gallery/sports-training.jpg';
 
 export const GalleryCard = ({ item, onSelect }) => {
   const [imgError, setImgError] = useState(false);
@@ -12,8 +12,8 @@ export const GalleryCard = ({ item, onSelect }) => {
       className="group relative rounded-2xl overflow-hidden shadow-sm aspect-square bg-slate-900 cursor-pointer border border-slate-200"
     >
       <img
-        src={imgError ? FALLBACK_IMAGE : (item.imageUrl || FALLBACK_IMAGE)}
-        alt={item.title}
+        src={imgError ? FALLBACK_IMAGE : (item.imageUrl || item.url || FALLBACK_IMAGE)}
+        alt={item.title || 'गुरुकुल भोसे छायाचित्र'}
         loading="lazy"
         onError={() => setImgError(true)}
         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"

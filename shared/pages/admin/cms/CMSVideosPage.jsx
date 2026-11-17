@@ -211,14 +211,26 @@ export const CMSVideosPage = () => {
           </div>
         </div>
 
-        <button
-          type="button"
-          onClick={handleOpenAdd}
-          className="inline-flex items-center gap-2 px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-xl font-bold text-sm shadow hover:shadow-md transition-all"
-        >
-          <Plus className="w-4 h-4" />
-          <span>नवीन व्हिडिओ जोडा (Add Video)</span>
-        </button>
+        <div className="flex items-center gap-2">
+          <a
+            href="/videos"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold text-xs border border-slate-300 transition-all"
+            title="लाईव्ह वेबसाईटवर व्हिडिओ पहा"
+          >
+            <Eye className="w-4 h-4 text-red-600" />
+            <span className="hidden sm:inline">लाईव्ह व्हिडिओ पहा</span>
+          </a>
+          <button
+            type="button"
+            onClick={handleOpenAdd}
+            className="inline-flex items-center gap-2 px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-xl font-bold text-sm shadow hover:shadow-md transition-all"
+          >
+            <Plus className="w-4 h-4" />
+            <span>नवीन व्हिडिओ जोडा (Add Video)</span>
+          </button>
+        </div>
       </div>
 
       {/* Alert Messages */}

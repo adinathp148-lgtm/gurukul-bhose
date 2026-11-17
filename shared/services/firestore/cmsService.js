@@ -619,9 +619,12 @@ export const getCMSGallery = async () => {
 export const saveCMSGalleryItem = async (itemData, user) => {
   const current = await getCMSGallery();
   const imageId = itemData.imageId || `gal-${Date.now()}`;
+  const finalUrl = itemData.imageUrl || itemData.url || '';
   const updatedItem = {
     ...itemData,
     imageId,
+    imageUrl: finalUrl,
+    url: finalUrl,
     status: itemData.status || 'published',
     displayOrder: Number(itemData.displayOrder) || 1,
     updatedAt: new Date().toISOString()
@@ -642,6 +645,14 @@ export const saveCMSGalleryItem = async (itemData, user) => {
     } catch (e) {
       console.warn('[CMSService] saveGallery error:', e);
     }
+  }
+
+  if (typeof window !== 'undefined') {
+    try {
+      window.dispatchEvent(new CustomEvent('gurukul_content_updated', {
+        detail: { module: 'gallery', action: 'SAVE', item: updatedItem }
+      }));
+    } catch (_) {}
   }
 
   await logCMSActivity({
@@ -666,6 +677,14 @@ export const deleteCMSGalleryItem = async (imageId, user) => {
     } catch (e) {
       console.warn('[CMSService] deleteGallery error:', e);
     }
+  }
+
+  if (typeof window !== 'undefined') {
+    try {
+      window.dispatchEvent(new CustomEvent('gurukul_content_updated', {
+        detail: { module: 'gallery', action: 'DELETE', imageId }
+      }));
+    } catch (_) {}
   }
 
   await logCMSActivity({
@@ -716,12 +735,17 @@ export const saveCMSVideo = async (videoData, user) => {
     else if (url.includes('embed/')) ytId = url.split('embed/')[1]?.split('?')[0];
     else ytId = url;
   }
+  const embedUrl = ytId ? `https://www.youtube.com/embed/${ytId}` : (videoData.embedUrl || videoData.youtubeUrl || '');
 
   const updatedVideo = {
     ...videoData,
     videoId,
     youtubeVideoId: ytId,
+    embedId: ytId,
+    embedUrl,
+    youtubeUrl: videoData.youtubeUrl || (ytId ? `https://www.youtube.com/watch?v=${ytId}` : ''),
     thumbnailUrl: videoData.thumbnailUrl || (ytId ? `https://img.youtube.com/vi/${ytId}/hqdefault.jpg` : ''),
+    thumbnail: videoData.thumbnail || videoData.thumbnailUrl || (ytId ? `https://img.youtube.com/vi/${ytId}/hqdefault.jpg` : ''),
     status: videoData.status || 'published',
     displayOrder: Number(videoData.displayOrder) || 1,
     updatedAt: new Date().toISOString()
@@ -742,6 +766,14 @@ export const saveCMSVideo = async (videoData, user) => {
     } catch (e) {
       console.warn('[CMSService] saveVideo error:', e);
     }
+  }
+
+  if (typeof window !== 'undefined') {
+    try {
+      window.dispatchEvent(new CustomEvent('gurukul_content_updated', {
+        detail: { module: 'videos', action: 'SAVE', item: updatedVideo }
+      }));
+    } catch (_) {}
   }
 
   await logCMSActivity({
@@ -766,6 +798,14 @@ export const deleteCMSVideo = async (videoId, user) => {
     } catch (e) {
       console.warn('[CMSService] deleteVideo error:', e);
     }
+  }
+
+  if (typeof window !== 'undefined') {
+    try {
+      window.dispatchEvent(new CustomEvent('gurukul_content_updated', {
+        detail: { module: 'videos', action: 'DELETE', videoId }
+      }));
+    } catch (_) {}
   }
 
   await logCMSActivity({
@@ -806,11 +846,18 @@ export const getCMSNotices = async () => {
 export const saveCMSNotice = async (noticeData, user) => {
   const current = await getCMSNotices();
   const noticeId = noticeData.noticeId || `not-${Date.now()}`;
+  const fileLink = noticeData.downloadLink || noticeData.attachmentUrl || noticeData.fileUrl || '';
+  const dateStr = noticeData.publishedAt || noticeData.date || new Date().toISOString().split('T')[0];
+
   const updatedNotice = {
     ...noticeData,
     noticeId,
+    date: dateStr,
+    publishedAt: dateStr,
+    downloadLink: fileLink,
+    attachmentUrl: fileLink,
+    fileUrl: fileLink,
     status: noticeData.status || 'published',
-    publishedAt: noticeData.publishedAt || new Date().toISOString().split('T')[0],
     updatedAt: new Date().toISOString()
   };
 
@@ -829,6 +876,14 @@ export const saveCMSNotice = async (noticeData, user) => {
     } catch (e) {
       console.warn('[CMSService] saveNotice error:', e);
     }
+  }
+
+  if (typeof window !== 'undefined') {
+    try {
+      window.dispatchEvent(new CustomEvent('gurukul_content_updated', {
+        detail: { module: 'notices', action: 'SAVE', item: updatedNotice }
+      }));
+    } catch (_) {}
   }
 
   await logCMSActivity({
@@ -853,6 +908,14 @@ export const deleteCMSNotice = async (noticeId, user) => {
     } catch (e) {
       console.warn('[CMSService] deleteNotice error:', e);
     }
+  }
+
+  if (typeof window !== 'undefined') {
+    try {
+      window.dispatchEvent(new CustomEvent('gurukul_content_updated', {
+        detail: { module: 'notices', action: 'DELETE', noticeId }
+      }));
+    } catch (_) {}
   }
 
   await logCMSActivity({

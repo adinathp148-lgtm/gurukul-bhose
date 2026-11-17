@@ -72,24 +72,35 @@ export const StatCard = ({
   return (
     <div 
       onClick={onClick}
-      className={`bg-white rounded-2xl border border-slate-200/80 p-4 sm:p-5 shadow-xs transition-all duration-200 hover:shadow-md hover:border-orange-200/90 group ${
+      className={`bg-white rounded-2xl border border-slate-200/80 p-3.5 sm:p-4 xl:p-5 shadow-xs transition-all duration-200 hover:shadow-md hover:border-orange-200/90 group ${
         onClick ? 'cursor-pointer hover:border-slate-300' : ''
       }`}
     >
-      <div className="flex items-center justify-between gap-3">
+      <div className="flex items-center justify-between gap-2.5 sm:gap-3">
         <div className="min-w-0 flex-1">
-          <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider truncate">{title}</p>
-          <h4 className="text-2xl sm:text-3xl font-black text-gurukul-navy-950 mt-1 tracking-tight">{value}</h4>
-          {subtitle && <p className="text-xs text-slate-500 mt-0.5 font-medium truncate">{subtitle}</p>}
+          <p 
+            className="text-[11px] sm:text-xs font-bold text-slate-500 tracking-normal leading-snug line-clamp-2 min-h-[2.2rem] flex items-center" 
+            title={title}
+          >
+            {title}
+          </p>
+          <h4 className="text-xl sm:text-2xl xl:text-3xl font-black text-gurukul-navy-950 mt-0.5 tracking-tight truncate">
+            {value}
+          </h4>
+          {subtitle && (
+            <p className="text-[10px] sm:text-[11px] text-slate-400 mt-0.5 font-medium truncate" title={subtitle}>
+              {subtitle}
+            </p>
+          )}
         </div>
         {Icon && (
-          <div className={`p-3 rounded-2xl ${scheme.bg} ${scheme.text} border ${scheme.border} group-hover:scale-105 transition-transform shrink-0`}>
-            <Icon className="w-5 h-5 sm:w-6 sm:h-6" />
+          <div className={`p-2 sm:p-2.5 xl:p-3 rounded-xl sm:rounded-2xl ${scheme.bg} ${scheme.text} border ${scheme.border} group-hover:scale-105 transition-transform shrink-0`}>
+            <Icon className="w-4 h-4 sm:w-5 sm:h-5 xl:w-6 xl:h-6" />
           </div>
         )}
       </div>
       {trend && (
-        <div className="mt-3 pt-2.5 border-t border-slate-100 flex items-center text-xs">
+        <div className="mt-2.5 pt-2 border-t border-slate-100 flex items-center text-xs">
           <span className={trend.isPositive ? 'text-emerald-600 font-semibold' : 'text-slate-500'}>
             {trend.text}
           </span>

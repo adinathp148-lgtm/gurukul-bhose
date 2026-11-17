@@ -52,15 +52,15 @@ export const NoticeCard = ({ notice, onOpenModal }) => {
           <div></div>
         )}
 
-        {notice.downloadLink && (
+        {(notice.downloadLink || notice.attachmentUrl || notice.fileUrl) && (
           <a
-            href={notice.downloadLink}
+            href={notice.downloadLink || notice.attachmentUrl || notice.fileUrl}
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-1.5 text-xs font-bold text-gurukul-saffron-600 hover:text-gurukul-saffron-700 hover:underline"
           >
             <Download className="w-3.5 h-3.5" />
-            <span>{notice.pdfName || (isMarathi ? 'परिपत्रक डाऊनलोड करा (PDF)' : 'Download Circular (PDF)')}</span>
+            <span>{notice.pdfName || notice.fileName || (isMarathi ? 'परिपत्रक डाऊनलोड करा (PDF)' : 'Download Circular (PDF)')}</span>
           </a>
         )}
       </div>

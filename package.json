@@ -17,6 +17,7 @@
     "preview:telecaller": "vite preview --config apps/telecaller-panel/vite.config.js apps/telecaller-panel",
     "seed:firestore": "node scripts/seed-firestore.mjs",
     "test": "node --test tests/auth-and-roles.test.js tests/app-separation.test.js tests/cms-phase4.test.js tests/lead-crm-phase5.test.js tests/call-followup-phase6.test.js tests/admin-crm-phase9.test.js",
+    "sync:cms": "node scripts/sync-cms-to-codebase.mjs",
     "deploy": "node scripts/deploy-git.mjs",
     "deploy:vercel": "node scripts/deploy-git.mjs"
   },

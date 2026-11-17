@@ -153,29 +153,50 @@ export const getCourseBySlug = async (slug) => {
   return found || null;
 };
 
+// Helper: Match categories across Marathi and English labels
+export const matchesCategory = (itemCategory = '', filter = 'all') => {
+  if (!filter || filter === 'all') return true;
+  const cat = String(itemCategory || '').toLowerCase();
+  const f = String(filter).toLowerCase();
+  if (cat === f) return true;
+  if (cat.includes(f) || f.includes(cat)) return true;
+  if ((f === 'activities' || f === 'उपक्रम') && (cat.includes('उपक्रम') || cat.includes('activities') || cat.includes('कार्यक्रम') || cat.includes('events'))) return true;
+  if ((f === 'sports' || f === 'क्रीडा') && (cat.includes('क्रीडा') || cat.includes('sports') || cat.includes('ग्राउंड') || cat.includes('मैदान'))) return true;
+  if ((f === 'campus' || f === 'कॅम्पस') && (cat.includes('कॅम्पस') || cat.includes('campus') || cat.includes('परिसर'))) return true;
+  if ((f === 'gathering' || f === 'स्नेहसंमेलन') && (cat.includes('स्नेहसंमेलन') || cat.includes('gathering') || cat.includes('महोत्सव'))) return true;
+  if ((f === 'result' || f === 'निकाल') && (cat.includes('निकाल') || cat.includes('result') || cat.includes('गुणवंत'))) return true;
+  if ((f === 'academic' || f === 'शैक्षणिक') && (cat.includes('शैक्षणिक') || cat.includes('academic') || cat.includes('अभ्यास'))) return true;
+  return false;
+};
+
 // 4. Photo Gallery
 export const getGalleryImages = async (categoryFilter = 'all') => {
   if (isConfigured && db) {
     try {
-      let q = query(
-        collection(db, 'gallery'),
-        where('status', '==', 'published'),
-        orderBy('displayOrder', 'asc')
-      );
-      if (categoryFilter && categoryFilter !== 'all') {
-        q = query(
-          collection(db, 'gallery'),
-          where('status', '==', 'published'),
-          where('category', '==', categoryFilter),
-          orderBy('displayOrder', 'asc')
-        );
-      }
-      const snapshot = await getDocs(q);
+      // Query collection directly to avoid composite index requirements
+      const snapshot = await getDocs(collection(db, 'gallery'));
       if (!snapshot.empty) {
-        return {
-          data: snapshot.docs.map(d => ({ id: d.id, ...d.data() })),
-          fromFirestore: true
-        };
+        let items = snapshot.docs.map(d => {
+          const data = d.data();
+          const imgUrl = data.imageUrl || data.url || '';
+          return {
+            id: d.id,
+            imageId: d.id,
+            ...data,
+            imageUrl: imgUrl,
+            url: imgUrl,
+            category: data.category || 'कॅम्पस (Campus)',
+            displayOrder: Number(data.displayOrder) || 999
+          };
+        }).filter(g => g.status === 'published' || (!g.status || g.status !== 'draft'));
+
+        items.sort((a, b) => (a.displayOrder || 999) - (b.displayOrder || 999));
+
+        if (categoryFilter && categoryFilter !== 'all') {
+          items = items.filter(g => matchesCategory(g.category, categoryFilter));
+        }
+
+        return { data: items, fromFirestore: true };
       }
     } catch (err) {
       console.warn('[ContentService] Error fetching gallery collection:', err);
@@ -195,27 +216,47 @@ export const getGalleryImages = async (categoryFilter = 'all') => {
     console.warn('[ContentService] Error parsing cached gallery:', e);
   }
 
+  let normalizedList = list.map((g, idx) => {
+    const imgUrl = g.imageUrl || g.url || '';
+    return {
+      id: g.id || g.imageId || `gal-${idx}`,
+      imageId: g.imageId || g.id || `gal-${idx}`,
+      ...g,
+      imageUrl: imgUrl,
+      url: imgUrl,
+      displayOrder: Number(g.displayOrder) || idx + 1
+    };
+  });
+
   if (categoryFilter && categoryFilter !== 'all') {
-    list = list.filter(g => (g.category || '').toLowerCase().includes(categoryFilter.toLowerCase()));
+    normalizedList = normalizedList.filter(g => matchesCategory(g.category, categoryFilter));
   }
-  return { data: list, fromFirestore: false };
+  return { data: normalizedList, fromFirestore: false };
 };
 
 // 5. Videos
 export const getVideos = async () => {
   if (isConfigured && db) {
     try {
-      const q = query(
-        collection(db, 'videos'),
-        where('status', '==', 'published'),
-        orderBy('displayOrder', 'asc')
-      );
-      const snapshot = await getDocs(q);
+      const snapshot = await getDocs(collection(db, 'videos'));
       if (!snapshot.empty) {
-        return {
-          data: snapshot.docs.map(d => ({ id: d.id, ...d.data() })),
-          fromFirestore: true
-        };
+        let items = snapshot.docs.map(d => {
+          const data = d.data();
+          const ytId = data.youtubeVideoId || data.embedId || data.youtubeId || '';
+          const embedUrl = data.embedUrl || (ytId ? `https://www.youtube.com/embed/${ytId}` : (data.youtubeUrl ? data.youtubeUrl.replace('watch?v=', 'embed/') : ''));
+          return {
+            id: d.id,
+            videoId: d.id,
+            ...data,
+            youtubeVideoId: ytId,
+            embedId: ytId,
+            embedUrl,
+            displayOrder: Number(data.displayOrder) || 999
+          };
+        }).filter(v => v.status === 'published' || (!v.status || v.status !== 'draft'));
+
+        items.sort((a, b) => (a.displayOrder || 999) - (b.displayOrder || 999));
+        return { data: items, fromFirestore: true };
       }
     } catch (err) {
       console.warn('[ContentService] Error fetching videos collection:', err);
@@ -235,25 +276,48 @@ export const getVideos = async () => {
     console.warn('[ContentService] Error parsing cached videos:', e);
   }
 
-  return { data: list, fromFirestore: false };
+  let normalizedList = list.map((v, idx) => {
+    const ytId = v.youtubeVideoId || v.embedId || v.youtubeId || '';
+    const embedUrl = v.embedUrl || (ytId ? `https://www.youtube.com/embed/${ytId}` : (v.youtubeUrl ? v.youtubeUrl.replace('watch?v=', 'embed/') : ''));
+    return {
+      id: v.id || v.videoId || `vid-${idx}`,
+      videoId: v.videoId || v.id || `vid-${idx}`,
+      ...v,
+      youtubeVideoId: ytId,
+      embedId: ytId,
+      embedUrl,
+      displayOrder: Number(v.displayOrder) || idx + 1
+    };
+  });
+
+  normalizedList.sort((a, b) => (a.displayOrder || 999) - (b.displayOrder || 999));
+  return { data: normalizedList, fromFirestore: false };
 };
 
 // 6. School Notices & Bulletins
 export const getNotices = async (count = 10) => {
   if (isConfigured && db) {
     try {
-      const q = query(
-        collection(db, 'notices'),
-        where('status', '==', 'published'),
-        orderBy('publishedAt', 'desc'),
-        firestoreLimit(count)
-      );
-      const snapshot = await getDocs(q);
+      const snapshot = await getDocs(collection(db, 'notices'));
       if (!snapshot.empty) {
-        return {
-          data: snapshot.docs.map(d => ({ id: d.id, ...d.data() })),
-          fromFirestore: true
-        };
+        let items = snapshot.docs.map(d => {
+          const data = d.data();
+          const fileLink = data.downloadLink || data.attachmentUrl || data.fileUrl || '';
+          const dateStr = data.publishedAt || data.date || '';
+          return {
+            id: d.id,
+            noticeId: d.id,
+            ...data,
+            date: dateStr,
+            publishedAt: dateStr,
+            downloadLink: fileLink,
+            attachmentUrl: fileLink,
+            fileUrl: fileLink
+          };
+        }).filter(n => n.status === 'published' || (!n.status || n.status !== 'draft'));
+
+        items.sort((a, b) => new Date(b.publishedAt || b.date || 0) - new Date(a.publishedAt || a.date || 0));
+        return { data: items.slice(0, count), fromFirestore: true };
       }
     } catch (err) {
       console.warn('[ContentService] Error fetching notices collection:', err);
@@ -274,7 +338,23 @@ export const getNotices = async (count = 10) => {
     console.warn('[ContentService] Error parsing cached notices:', e);
   }
 
-  return { data: list.slice(0, count), fromFirestore: false };
+  let normalizedList = list.map((n, idx) => {
+    const fileLink = n.downloadLink || n.attachmentUrl || n.fileUrl || '';
+    const dateStr = n.publishedAt || n.date || '';
+    return {
+      id: n.id || n.noticeId || `not-${idx}`,
+      noticeId: n.noticeId || n.id || `not-${idx}`,
+      ...n,
+      date: dateStr,
+      publishedAt: dateStr,
+      downloadLink: fileLink,
+      attachmentUrl: fileLink,
+      fileUrl: fileLink
+    };
+  });
+
+  normalizedList.sort((a, b) => new Date(b.publishedAt || b.date || 0) - new Date(a.publishedAt || a.date || 0));
+  return { data: normalizedList.slice(0, count), fromFirestore: false };
 };
 
 // 7. Facilities

@@ -2,17 +2,26 @@ import React from 'react';
 import { Play, Calendar } from 'lucide-react';
 
 export const VideoCard = ({ video }) => {
+  const ytId = video.youtubeVideoId || video.embedId || video.youtubeId || '';
+  const embedUrl = video.embedUrl || (ytId ? `https://www.youtube.com/embed/${ytId}` : (video.youtubeUrl ? video.youtubeUrl.replace('watch?v=', 'embed/') : ''));
+
   return (
     <div className="bg-white rounded-2xl overflow-hidden border border-slate-200 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col group">
       <div className="aspect-video w-full bg-slate-900 relative">
-        <iframe
-          src={video.embedUrl}
-          title={video.title}
-          loading="lazy"
-          className="w-full h-full border-0"
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-          allowFullScreen
-        />
+        {embedUrl ? (
+          <iframe
+            src={embedUrl}
+            title={video.title}
+            loading="lazy"
+            className="w-full h-full border-0"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowFullScreen
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center text-slate-400 text-xs font-semibold">
+            व्हिडिओ पूर्वावलोकन (Video Preview)
+          </div>
+        )}
       </div>
 
       <div className="p-5 flex-1 flex flex-col justify-between space-y-2">

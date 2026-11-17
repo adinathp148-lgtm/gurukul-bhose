@@ -268,6 +268,16 @@ export const CMSGalleryPage = () => {
         </div>
 
         <div className="flex items-center gap-2">
+          <a
+            href="/gallery"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold text-xs border border-slate-300 transition-all"
+            title="लाईव्ह वेबसाईटवर फोटो गॅलरी पहा"
+          >
+            <Eye className="w-4 h-4 text-gurukul-navy-900" />
+            <span className="hidden sm:inline">लाईव्ह गॅलरी पहा</span>
+          </a>
           <button
             type="button"
             onClick={() => setShowBatchModal(true)}
