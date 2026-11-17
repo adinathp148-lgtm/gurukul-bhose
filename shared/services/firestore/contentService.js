@@ -296,6 +296,12 @@ export const getVideos = async () => {
 
 // 6. School Notices & Bulletins
 export const getNotices = async (count = 10) => {
+  let deletedIds = [];
+  try {
+    const storedDeleted = localStorage.getItem('gurukul_cms_notices_deleted');
+    if (storedDeleted) deletedIds = JSON.parse(storedDeleted);
+  } catch (e) {}
+
   if (isConfigured && db) {
     try {
       const snapshot = await getDocs(collection(db, 'notices'));
@@ -314,7 +320,11 @@ export const getNotices = async (count = 10) => {
             attachmentUrl: fileLink,
             fileUrl: fileLink
           };
-        }).filter(n => n.status === 'published' || (!n.status || n.status !== 'draft'));
+        }).filter(n => {
+          const id = n.noticeId || n.id;
+          if (deletedIds.includes(id)) return false;
+          return n.status === 'published' || (!n.status || n.status !== 'draft');
+        });
 
         items.sort((a, b) => new Date(b.publishedAt || b.date || 0) - new Date(a.publishedAt || a.date || 0));
         return { data: items.slice(0, count), fromFirestore: true };
@@ -329,29 +339,37 @@ export const getNotices = async (count = 10) => {
     const saved = localStorage.getItem('gurukul_cms_notices_items');
     if (saved) {
       const parsed = JSON.parse(saved);
-      if (Array.isArray(parsed) && parsed.length > 0) {
+      if (Array.isArray(parsed)) {
         const now = new Date().toISOString();
-        list = parsed.filter(n => n.status === 'published' || (n.status !== 'draft' && (!n.publishAt || n.publishAt <= now)));
+        list = parsed.filter(n => {
+          const id = n.noticeId || n.id;
+          if (deletedIds.includes(id)) return false;
+          return n.status === 'published' || (n.status !== 'draft' && (!n.publishAt || n.publishAt <= now));
+        });
+        list.sort((a, b) => new Date(b.publishedAt || b.date || 0) - new Date(a.publishedAt || a.date || 0));
+        return { data: list.slice(0, count), fromFirestore: false };
       }
     }
   } catch (e) {
     console.warn('[ContentService] Error parsing cached notices:', e);
   }
 
-  let normalizedList = list.map((n, idx) => {
-    const fileLink = n.downloadLink || n.attachmentUrl || n.fileUrl || '';
-    const dateStr = n.publishedAt || n.date || '';
-    return {
-      id: n.id || n.noticeId || `not-${idx}`,
-      noticeId: n.noticeId || n.id || `not-${idx}`,
-      ...n,
-      date: dateStr,
-      publishedAt: dateStr,
-      downloadLink: fileLink,
-      attachmentUrl: fileLink,
-      fileUrl: fileLink
-    };
-  });
+  let normalizedList = list
+    .filter(n => !deletedIds.includes(n.id) && !deletedIds.includes(n.noticeId))
+    .map((n, idx) => {
+      const fileLink = n.downloadLink || n.attachmentUrl || n.fileUrl || '';
+      const dateStr = n.publishedAt || n.date || '';
+      return {
+        id: n.id || n.noticeId || `not-${idx}`,
+        noticeId: n.noticeId || n.id || `not-${idx}`,
+        ...n,
+        date: dateStr,
+        publishedAt: dateStr,
+        downloadLink: fileLink,
+        attachmentUrl: fileLink,
+        fileUrl: fileLink
+      };
+    });
 
   normalizedList.sort((a, b) => new Date(b.publishedAt || b.date || 0) - new Date(a.publishedAt || a.date || 0));
   return { data: normalizedList.slice(0, count), fromFirestore: false };

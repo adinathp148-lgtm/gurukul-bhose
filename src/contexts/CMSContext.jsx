@@ -248,7 +248,7 @@ export const CMSProvider = ({ children }) => {
 
   const deleteNotice = async (noticeId) => {
     await deleteCMSNotice(noticeId, currentUser);
-    setNotices(prev => prev.filter(n => n.noticeId !== noticeId));
+    setNotices(prev => prev.filter(n => n.noticeId !== noticeId && n.id !== noticeId));
     return true;
   };
 

@@ -16,7 +16,9 @@ import {
   CheckCheck,
   Megaphone,
   X,
-  Radio
+  Radio,
+  Trash2,
+  ExternalLink
 } from 'lucide-react';
 import { Button } from '../../components/common/Button';
 import { Modal } from '../../components/common/Modal';
@@ -29,6 +31,7 @@ export const AdminNotificationsPage = () => {
     notifications,
     markNotificationAsRead,
     markAllNotificationsAsRead,
+    deleteNotification,
     sendAnnouncement,
     triggerRemindersCheck
   } = useCRM();
@@ -39,7 +42,8 @@ export const AdminNotificationsPage = () => {
     title: '',
     message: '',
     targetAudience: 'ALL',
-    priority: 'NORMAL'
+    priority: 'NORMAL',
+    publishToWebsite: true
   });
   const [submitting, setSubmitting] = useState(false);
   const [feedbackMsg, setFeedbackMsg] = useState(null);
@@ -63,15 +67,31 @@ export const AdminNotificationsPage = () => {
       title: announcementForm.title,
       message: announcementForm.message,
       targetAudience: announcementForm.targetAudience,
-      priority: announcementForm.priority
+      priority: announcementForm.priority,
+      publishToWebsite: announcementForm.publishToWebsite
     });
     setSubmitting(false);
 
-    if (res.success) {
-      setFeedbackMsg(`घोषणा "${announcementForm.title}" यशस्वीपणे पाठवली गेली!`);
-      setAnnouncementForm({ title: '', message: '', targetAudience: 'ALL', priority: 'NORMAL' });
+    if (res?.success) {
+      setFeedbackMsg(isMarathi ? `घोषणा "${announcementForm.title}" यशस्वीपणे पाठवली गेली (वेबसाईटवरही प्रकाशित झाली)!` : `Announcement "${announcementForm.title}" published successfully!`);
+      setAnnouncementForm({ title: '', message: '', targetAudience: 'ALL', priority: 'NORMAL', publishToWebsite: true });
       setModalOpen(false);
       setTimeout(() => setFeedbackMsg(null), 5000);
+    }
+  };
+
+  const handleDeleteNotification = async (notif) => {
+    const title = notif.title || 'सूचना';
+    if (!window.confirm(isMarathi ? `तुम्हाला खात्री आहे की "${title}" ही सूचना हटवायची आहे? (ती वेबसाईटच्या सूचना पत्रकातूनही कायमची काढली जाईल)` : `Are you sure you want to delete "${title}"? It will also be deleted from the website notice board.`)) {
+      return;
+    }
+
+    try {
+      await deleteNotification(notif.id);
+      setFeedbackMsg(isMarathi ? `सूचना "${title}" यशस्वीपणे हटवली गेली!` : `Notification "${title}" deleted successfully.`);
+      setTimeout(() => setFeedbackMsg(null), 4000);
+    } catch (err) {
+      setFeedbackMsg(`त्रुटी: ${err.message}`);
     }
   };
 
@@ -221,7 +241,7 @@ export const AdminNotificationsPage = () => {
             <div
               key={notif.id}
               onClick={() => markNotificationAsRead(notif.id)}
-              className={`p-4 rounded-2xl border transition-all cursor-pointer flex items-start gap-3.5 ${
+              className={`p-4 rounded-2xl border transition-all cursor-pointer flex items-start gap-3.5 group ${
                 notif.read
                   ? 'bg-white border-slate-200 hover:border-slate-300'
                   : 'bg-orange-50/20 border-gurukul-saffron-200 shadow-sm hover:border-gurukul-saffron-300'
@@ -231,17 +251,47 @@ export const AdminNotificationsPage = () => {
                 {getCategoryIcon(notif.category)}
               </div>
 
-              <div className="flex-1 overflow-hidden">
+              <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between gap-2">
-                  <h4 className="text-xs font-bold text-slate-900 flex items-center gap-2">
-                    <span>{notif.title}</span>
-                    {!notif.read && (
-                      <span className="w-2 h-2 rounded-full bg-gurukul-saffron-500 shrink-0" />
+                  <div className="flex items-center gap-2 flex-wrap min-w-0">
+                    <h4 className="text-xs font-bold text-slate-900 flex items-center gap-2">
+                      <span>{notif.title}</span>
+                      {!notif.read && (
+                        <span className="w-2 h-2 rounded-full bg-gurukul-saffron-500 shrink-0" />
+                      )}
+                    </h4>
+                    {notif.websiteNoticeId && (
+                      <a
+                        href="/notices"
+                        target="_blank"
+                        rel="noreferrer"
+                        onClick={(e) => e.stopPropagation()}
+                        className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-gurukul-saffron-50 text-gurukul-saffron-700 border border-gurukul-saffron-200 hover:bg-gurukul-saffron-100 transition-colors"
+                        title={isMarathi ? 'वेबसाईटवर सूचना पत्रक उघडा' : 'View on website notices'}
+                      >
+                        <span>{isMarathi ? 'वेबसाईटवर लाईव्ह' : 'Live on Website'}</span>
+                        <ExternalLink className="w-2.5 h-2.5" />
+                      </a>
                     )}
-                  </h4>
-                  <span className="text-[10px] text-slate-400 font-mono shrink-0">
-                    {notif.createdAt ? new Date(notif.createdAt).toLocaleString('en-IN') : ''}
-                  </span>
+                  </div>
+
+                  <div className="flex items-center gap-2 shrink-0">
+                    <span className="text-[10px] text-slate-400 font-mono">
+                      {notif.createdAt ? new Date(notif.createdAt).toLocaleString('en-IN') : ''}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDeleteNotification(notif);
+                      }}
+                      className="p-1.5 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors"
+                      title={isMarathi ? 'काढून टाका (Delete from admin & website)' : 'Delete notification'}
+                      aria-label={isMarathi ? 'सूचना काढून टाका' : 'Delete notification'}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
                 </div>
 
                 <p className="text-xs text-slate-600 mt-1 leading-relaxed">
@@ -325,6 +375,26 @@ export const AdminNotificationsPage = () => {
                 placeholder="सर्व समुपदेशकांनी आज संध्याकाळी 5 वाजेपर्यंत आपले आजचे सर्व प्रलंबित फॉलो-अप्स पूर्ण करावेत..."
                 className="w-full text-xs p-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-gurukul-saffron-500"
               />
+            </div>
+
+            <div className="p-3 rounded-xl bg-amber-50/70 border border-amber-200 flex items-start gap-2.5">
+              <input
+                type="checkbox"
+                id="publishToWebsite"
+                checked={Boolean(announcementForm.publishToWebsite)}
+                onChange={(e) => setAnnouncementForm({ ...announcementForm, publishToWebsite: e.target.checked })}
+                className="mt-0.5 w-4 h-4 rounded border-slate-300 text-gurukul-saffron-600 focus:ring-gurukul-saffron-500 cursor-pointer"
+              />
+              <label htmlFor="publishToWebsite" className="text-xs text-slate-700 leading-snug cursor-pointer select-none">
+                <span className="font-bold text-slate-900 block">
+                  {isMarathi ? 'मुख्य वेबसाईटच्या "सूचना पत्रक" (Notices) वर सुद्धा थेट प्रकाशित करा' : 'Publish directly to main website Notices page as well'}
+                </span>
+                <span className="text-[11px] text-slate-500">
+                  {isMarathi
+                    ? 'पालक व विद्यार्थ्यांना वेबसाईटवरील सूचना पत्रकावर (School Notices & Bulletins) ही सूचना तात्काळ दिसेल.'
+                    : 'Parents & students will immediately see this notice on the public website notice board.'}
+                </span>
+              </label>
             </div>
 
             <div className="flex justify-end gap-2 pt-3 border-t border-slate-100">

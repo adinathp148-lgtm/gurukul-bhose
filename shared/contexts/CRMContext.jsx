@@ -7,6 +7,7 @@ import {
   addDoc, 
   setDoc, 
   updateDoc, 
+  deleteDoc,
   onSnapshot, 
   isConfigured,
   query,
@@ -97,6 +98,7 @@ import {
   generateCRMReports,
   exportReportToCSV
 } from '../services/firestore/systemService';
+import { saveCMSNotice, deleteCMSNotice } from '../services/firestore/cmsService';
 
 const CRMContext = createContext(null);
 
@@ -913,6 +915,40 @@ export const CRMProvider = ({ children }) => {
     setNotifications(prev => prev.map(n => ({ ...n, read: true })));
   };
 
+  const deleteNotification = async (notifId) => {
+    const notifToDelete = notifications.find(n => n.id === notifId);
+    setNotifications(prev => prev.filter(n => n.id !== notifId));
+
+    // Also remove from website notice board if it was linked or was an announcement
+    const websiteNoticeId = notifToDelete?.websiteNoticeId || notifToDelete?.noticeId;
+    if (websiteNoticeId || notifToDelete?.category === 'announcement') {
+      try {
+        const targetId = websiteNoticeId || notifId;
+        await deleteCMSNotice(targetId, userProfile || currentUser);
+      } catch (e) {
+        console.warn('Failed to delete linked website notice:', e);
+      }
+    }
+
+    if (isConfigured && db) {
+      try {
+        await deleteDoc(doc(db, 'notifications', notifId));
+      } catch (e) {
+        console.warn('Firestore notification delete error:', e);
+      }
+    }
+
+    if (typeof window !== 'undefined') {
+      try {
+        window.dispatchEvent(new CustomEvent('gurukul_content_updated', {
+          detail: { module: 'notices', action: 'DELETE', id: notifId }
+        }));
+      } catch (_) {}
+    }
+
+    return true;
+  };
+
   const unreadCount = useMemo(() => {
     return notifications.filter(n => !n.read).length;
   }, [notifications]);
@@ -1411,8 +1447,57 @@ export const CRMProvider = ({ children }) => {
 
   const sendAnnouncementAction = async (announcementData) => {
     const sender = userProfile || currentUser || { uid: 'ADMIN', role: 'admin', displayName: 'Admin' };
-    const res = await serviceBroadcastAnnouncement({ ...announcementData, sender });
-    return res;
+    const noticeId = `not-${Date.now()}`;
+    
+    // If publishToWebsite is true, or targetAudience is ALL or WEBSITE, publish directly to website notices too
+    let websiteNoticeId = null;
+    if (announcementData.publishToWebsite || announcementData.targetAudience === 'ALL' || announcementData.targetAudience === 'WEBSITE') {
+      try {
+        await saveCMSNotice({
+          noticeId,
+          title: announcementData.title,
+          description: announcementData.message,
+          category: 'घोषणा (Announcement)',
+          isImportant: announcementData.priority === 'HIGH' || announcementData.priority === 'URGENT',
+          isUrgent: announcementData.priority === 'URGENT',
+          publishedAt: new Date().toISOString().split('T')[0],
+          status: 'published'
+        }, sender);
+        websiteNoticeId = noticeId;
+      } catch (err) {
+        console.warn('Failed to publish announcement to website notice board:', err);
+      }
+    }
+
+    const res = await serviceBroadcastAnnouncement({
+      ...announcementData,
+      websiteNoticeId,
+      sender
+    });
+
+    const newNotif = {
+      id: res?.announcementId || `notif-${Date.now()}`,
+      title: announcementData.title,
+      message: announcementData.message,
+      targetAudience: announcementData.targetAudience || 'ALL',
+      priority: announcementData.priority || 'NORMAL',
+      senderName: sender.displayName || sender.name || 'Admin',
+      category: 'announcement',
+      websiteNoticeId,
+      read: false,
+      createdAt: new Date().toISOString()
+    };
+    setNotifications(prev => [newNotif, ...prev]);
+
+    if (typeof window !== 'undefined') {
+      try {
+        window.dispatchEvent(new CustomEvent('gurukul_content_updated', {
+          detail: { module: 'notices', action: 'CREATE', item: newNotif }
+        }));
+      } catch (_) {}
+    }
+
+    return { ...res, websiteNoticeId };
   };
 
   const getSystemReports = () => {
@@ -1514,6 +1599,7 @@ export const CRMProvider = ({ children }) => {
     exportCRMLeads,
     markNotificationAsRead,
     markAllNotificationsAsRead,
+    deleteNotification,
 
     // Phase 6 Actions
     recordCall: recordCallAction,

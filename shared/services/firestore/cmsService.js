@@ -898,9 +898,17 @@ export const saveCMSNotice = async (noticeData, user) => {
 
 export const deleteCMSNotice = async (noticeId, user) => {
   const current = await getCMSNotices();
-  const noticeToDelete = current.find(n => n.noticeId === noticeId);
-  const updatedList = current.filter(n => n.noticeId !== noticeId);
+  const noticeToDelete = current.find(n => (n.noticeId === noticeId || n.id === noticeId));
+  const updatedList = current.filter(n => (n.noticeId !== noticeId && n.id !== noticeId));
   setLocal('notices_items', updatedList);
+
+  // Store deleted notice IDs so they are never resurrected from initialData
+  try {
+    const deleted = getLocal('notices_deleted', []);
+    if (!deleted.includes(noticeId)) {
+      setLocal('notices_deleted', [...deleted, noticeId]);
+    }
+  } catch (e) {}
 
   if (isConfigured && db) {
     try {
