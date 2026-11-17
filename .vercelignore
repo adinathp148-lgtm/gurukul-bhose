@@ -1,0 +1,9 @@
+.git
+node_modules
+tests
+functions
+firebase-debug.log
+.firebaserc
+firestore.rules
+firestore.indexes.json
+storage.rules

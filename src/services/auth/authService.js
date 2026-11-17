@@ -31,7 +31,12 @@ export const determineUserRole = ({ customRole, profileData, email, portalHint =
     const cr = String(customRole).toLowerCase();
     if (cr === 'superadmin' || cr === 'super_admin') return 'super_admin';
     if (cr === 'admin') return 'admin';
-    if (cr === 'telecaller') return 'telecaller';
+    if (cr === 'telecaller') {
+      if (profileData?.status === 'pending' || profileData?.status === 'pending_approval' || profileData?.status === 'inactive' || profileData?.role === 'pending_applicant') {
+        return 'pending_applicant';
+      }
+      return 'telecaller';
+    }
   }
 
   // 2. Profile role from Firestore or cached object
@@ -39,7 +44,14 @@ export const determineUserRole = ({ customRole, profileData, email, portalHint =
     const pr = String(profileData.role).toLowerCase();
     if (pr === 'superadmin' || pr === 'super_admin') return 'super_admin';
     if (pr === 'admin') return 'admin';
-    if (pr === 'telecaller') return 'telecaller';
+    if (pr === 'telecaller') {
+      // Role can ONLY be telecaller if approved by admin
+      if (profileData.status === 'pending' || profileData.status === 'pending_approval' || profileData.status === 'inactive' || profileData.role === 'pending_applicant') {
+        return 'pending_applicant';
+      }
+      return 'telecaller';
+    }
+    if (pr === 'pending_applicant') return 'pending_applicant';
   }
 
   // 3. Known demo accounts (exact match)
@@ -77,8 +89,25 @@ export const determineUserRole = ({ customRole, profileData, email, portalHint =
   if (portalHint !== 'admin' && portalHint !== 'super_admin') {
     try {
       const registeredTCs = JSON.parse(localStorage.getItem('gurukul_registered_telecallers') || '[]');
-      const isTC = registeredTCs.some(tc => (tc.email || '').toLowerCase() === normEmail);
-      if (isTC) return 'telecaller';
+      const tc = registeredTCs.find(t => (t.email || '').toLowerCase() === normEmail);
+      if (tc) {
+        if (tc.status === 'pending' || tc.status === 'pending_approval' || tc.role === 'pending_applicant') {
+          return 'pending_applicant';
+        }
+        if (tc.status === 'active') {
+          return 'telecaller';
+        }
+      }
+      const storedTCs = JSON.parse(localStorage.getItem('gurukul_stored_telecallers') || '[]');
+      const storedTc = storedTCs.find(t => (t.email || '').toLowerCase() === normEmail);
+      if (storedTc) {
+        if (storedTc.status === 'pending' || storedTc.status === 'pending_approval' || storedTc.role === 'pending_applicant') {
+          return 'pending_applicant';
+        }
+        if (storedTc.status === 'active') {
+          return 'telecaller';
+        }
+      }
     } catch (e) {}
   }
 
@@ -178,10 +207,10 @@ export const loginWithEmail = async (email, password, portalHint = null) => {
         };
       }
 
-      if (profile?.status === 'pending' || profile?.status === 'pending_approval') {
+      if (profile?.status === 'pending' || profile?.status === 'pending_approval' || role === 'pending_applicant' || profile?.role === 'pending_applicant') {
         return {
           success: false,
-          error: 'आपली नोंदणी प्राप्त झाली आहे, परंतु खाते अद्याप प्रशासकाच्या (Admin) मंजुरीच्या प्रतीक्षेत आहे. प्रशासकाने मंजुरी दिल्यानंतरच आपण लॉगिन करू शकाल.'
+          error: 'आपली नोंदणी प्राप्त झाली आहे, परंतु संस्था ॲडमिनने (Admin) अद्याप आपले खाते मंजूर केलेले नाही. ॲडमिनने मंजुरी (Approve) दिल्यानंतरच तुम्हाला टेलिकॉलर रोल व लॉगिन प्रवेश मिळेल.'
         };
       }
 
@@ -250,7 +279,9 @@ export const loginWithEmail = async (email, password, portalHint = null) => {
   if (portalHint !== 'admin' && portalHint !== 'super_admin') {
     try {
       const registered = JSON.parse(localStorage.getItem('gurukul_registered_telecallers') || '[]');
-      const matchReg = registered.find(u => (u.email || '').toLowerCase() === normalizedEmail);
+      const storedTCs = JSON.parse(localStorage.getItem('gurukul_stored_telecallers') || '[]');
+      const allTCs = [...registered, ...storedTCs];
+      const matchReg = allTCs.find(u => (u.email || '').toLowerCase() === normalizedEmail);
       if (matchReg) {
         if (matchReg.password && matchReg.password !== password) {
           return { success: false, error: 'पासवर्ड चुकीचा आहे. कृपया पुन्हा प्रयत्न करा.' };
@@ -258,10 +289,10 @@ export const loginWithEmail = async (email, password, portalHint = null) => {
         if (matchReg.status === 'inactive' || matchReg.status === 'deactivated') {
           return { success: false, error: 'हे खाते निष्क्रिय (Deactivated) करण्यात आले आहे. कृपया प्रशासकाशी संपर्क साधा.' };
         }
-        if (matchReg.status === 'pending' || matchReg.status === 'pending_approval') {
+        if (matchReg.status === 'pending' || matchReg.status === 'pending_approval' || matchReg.role === 'pending_applicant') {
           return {
             success: false,
-            error: 'आपली नोंदणी प्राप्त झाली आहे, परंतु खाते अद्याप प्रशासकाच्या (Admin) मंजुरीच्या प्रतीक्षेत आहे. प्रशासकाने मंजुरी दिल्यानंतरच आपण लॉगिन करू शकाल.'
+            error: 'आपली नोंदणी प्राप्त झाली आहे, परंतु संस्था ॲडमिनने (Admin) अद्याप आपले खाते मंजूर केलेले नाही. ॲडमिनने मंजुरी (Approve) दिल्यानंतरच तुम्हाला टेलिकॉलर रोल व लॉगिन प्रवेश मिळेल.'
           };
         }
         const userObj = {
@@ -271,8 +302,8 @@ export const loginWithEmail = async (email, password, portalHint = null) => {
           role: 'telecaller',
           employeeId: matchReg.employeeId || 'TC-REG',
           phone: matchReg.phone || matchReg.mobileNumber || '',
-          status: matchReg.status || 'active',
-          isActive: matchReg.status !== 'inactive'
+          status: 'active',
+          isActive: true
         };
         localStorage.setItem('gurukul_active_user', JSON.stringify(userObj));
         return { success: true, user: userObj };
@@ -282,7 +313,15 @@ export const loginWithEmail = async (email, password, portalHint = null) => {
     }
   }
 
-  // 4. For developer convenience / test accounts
+  // 4. Block unauthorized telecaller login attempts
+  if (portalHint === 'telecaller') {
+    return {
+      success: false,
+      error: 'या ईमेलसाठी मंजूर टेलिकॉलर खाते आढळले नाही किंवा ॲडमिन मंजुरी प्रलंबित आहे. ॲडमिनने मंजूर केल्यानंतरच लॉगिन करता येईल.'
+    };
+  }
+
+  // For developer convenience / test accounts (Admin portal only)
   const resolvedRole = determineUserRole({ email: normalizedEmail, portalHint });
   const generic = {
     uid: `user-${Date.now()}`,
@@ -451,14 +490,15 @@ export const registerTelecaller = async (telecallerData) => {
       const uid = userCredential.user.uid;
 
       if (db) {
-        // 1. Create User Document with pending status
+        // 1. Create User Document with pending status & pending_applicant role
         await setDoc(doc(db, 'users', uid), {
           uid,
           fullName,
           email: normalizedEmail,
           phone: mobileNumber,
-          role: 'telecaller',
+          role: 'pending_applicant',
           status: 'pending',
+          approvedByAdmin: false,
           employeeId: empId,
           profileImage: null,
           createdAt: now,
@@ -477,7 +517,9 @@ export const registerTelecaller = async (telecallerData) => {
           address: address || '',
           joiningDate: now.split('T')[0],
           assignedDepartment: department || 'General Admissions',
+          role: 'pending_applicant',
           status: 'pending',
+          approvedByAdmin: false,
           profileImage: null,
           createdAt: now,
           updatedAt: now
@@ -593,8 +635,9 @@ export const registerTelecaller = async (telecallerData) => {
     address: address || '',
     joiningDate: now.split('T')[0],
     assignedDepartment: department || 'General Admissions',
-    role: 'telecaller',
+    role: 'pending_applicant',
     status: 'pending',
+    approvedByAdmin: false,
     createdAt: now
   };
 
@@ -631,24 +674,37 @@ export const registerTelecaller = async (telecallerData) => {
     success: true,
     uid: mockId,
     email: normalizedEmail,
-    message: 'नोंदणी यशस्वी झाली! आपले खाते प्रशासकाच्या (Admin) मंजुरीच्या प्रतीक्षेत आहे. प्रशासकाने मंजूर केल्यानंतर आपण लॉगिन करू शकाल.'
+    message: 'नोंदणी यशस्वी झाली! आपले खाते प्रशासकीय मंजुरीसाठी प्रलंबित आहे. ॲडमिनने मंजूर केल्यानंतरच टेलिकॉलर रोल व लॉगिन प्रवेश मिळेल.'
   };
 };
 
-// 5. Update Telecaller Account Status (Activate / Deactivate)
+// 5. Update Telecaller Account Status (Activate / Deactivate / Approve)
 export const updateTelecallerStatus = async (userId, newStatus) => {
+  const isApproved = newStatus === 'active';
+  const role = isApproved ? 'telecaller' : (newStatus === 'pending' ? 'pending_applicant' : 'telecaller');
+
   if (isConfigured && db) {
     try {
       const { getFunctions, httpsCallable } = await import('firebase/functions');
       const functions = getFunctions();
       const statusFn = httpsCallable(functions, 'updateTelecallerStatus');
-      const res = await statusFn({ userId, status: newStatus });
+      const res = await statusFn({ userId, status: newStatus, role, approvedByAdmin: isApproved });
       return res.data;
     } catch (err) {
       console.warn('Cloud Function status update fallback:', err);
-      await updateDoc(doc(db, 'users', userId), { status: newStatus, updatedAt: serverTimestamp() });
+      await updateDoc(doc(db, 'users', userId), { 
+        status: newStatus, 
+        role,
+        approvedByAdmin: isApproved,
+        updatedAt: serverTimestamp() 
+      });
       try {
-        await updateDoc(doc(db, 'telecaller_profiles', userId), { status: newStatus, updatedAt: serverTimestamp() });
+        await updateDoc(doc(db, 'telecaller_profiles', userId), { 
+          status: newStatus, 
+          role,
+          approvedByAdmin: isApproved,
+          updatedAt: serverTimestamp() 
+        });
       } catch (e) {}
       return { success: true };
     }
@@ -656,12 +712,22 @@ export const updateTelecallerStatus = async (userId, newStatus) => {
 
   // Local fallback
   const stored = JSON.parse(localStorage.getItem('gurukul_stored_telecallers') || '[]');
-  const updated = stored.map(t => (t.uid === userId || t.userId === userId || t.id === userId) ? { ...t, status: newStatus } : t);
+  const updated = stored.map(t => (t.uid === userId || t.userId === userId || t.id === userId) ? { 
+    ...t, 
+    status: newStatus,
+    role,
+    approvedByAdmin: isApproved
+  } : t);
   localStorage.setItem('gurukul_stored_telecallers', JSON.stringify(updated));
 
   try {
     const registered = JSON.parse(localStorage.getItem('gurukul_registered_telecallers') || '[]');
-    const regUpdated = registered.map(t => (t.uid === userId || t.userId === userId || t.id === userId) ? { ...t, status: newStatus } : t);
+    const regUpdated = registered.map(t => (t.uid === userId || t.userId === userId || t.id === userId) ? { 
+      ...t, 
+      status: newStatus,
+      role,
+      approvedByAdmin: isApproved
+    } : t);
     localStorage.setItem('gurukul_registered_telecallers', JSON.stringify(regUpdated));
   } catch (e) {}
 
@@ -704,60 +770,61 @@ export const updateTelecallerProfile = async (userId, updates) => {
   return { success: true };
 };
 
-// 7. Get Telecallers List
+// Helper: Identify demo telecallers to exclude
+export const isDemoTelecaller = (t) => {
+  if (!t) return false;
+  const id = String(t.id || t.uid || t.userId || '');
+  const email = String(t.email || '').toLowerCase().trim();
+  const name = String(t.fullName || t.displayName || t.name || '');
+  const empId = String(t.employeeId || '');
+
+  return id === 'telecaller-001' ||
+         id === 'telecaller-002' ||
+         email === 'telecaller1@gurukulbhose.com' ||
+         email === 'telecaller2@gurukulbhose.com' ||
+         empId === 'TC-101' ||
+         empId === 'TC-102' ||
+         name.includes('Sachin Patil') ||
+         name.includes('Pooja Shinde');
+};
+
+// 7. Get Telecallers List (Only real-time telecallers, no demo mock data)
 export const fetchTelecallersList = async () => {
   if (isConfigured && db) {
     try {
       const q = query(collection(db, 'telecaller_profiles'), orderBy('createdAt', 'desc'));
       const snap = await getDocs(q);
       if (!snap.empty) {
-        return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        const liveList = snap.docs.map(d => ({ id: d.id, ...d.data() })).filter(t => !isDemoTelecaller(t));
+        if (liveList.length > 0) return liveList;
       }
       // Fallback check users collection with role == telecaller
       const uq = query(collection(db, 'users'), where('role', '==', 'telecaller'));
       const usnap = await getDocs(uq);
       if (!usnap.empty) {
-        return usnap.docs.map(d => ({ id: d.id, ...d.data() }));
+        const liveList = usnap.docs.map(d => ({ id: d.id, ...d.data() })).filter(t => !isDemoTelecaller(t));
+        if (liveList.length > 0) return liveList;
       }
     } catch (err) {
       console.warn('Error fetching telecallers from Firestore:', err);
     }
   }
 
-  // Local fallback
-  const stored = JSON.parse(localStorage.getItem('gurukul_stored_telecallers') || '[]');
-  if (stored.length > 0) return stored;
-
-  return [
-    {
-      uid: 'telecaller-001',
-      userId: 'telecaller-001',
-      employeeId: 'TC-101',
-      fullName: 'Sachin Patil (Counselor)',
-      email: 'telecaller1@gurukulbhose.com',
-      phone: '7020260968',
-      whatsappNumber: '7020260968',
-      gender: 'Male',
-      address: 'मिरज, सांगली',
-      joiningDate: '2024-06-01',
-      status: 'active',
-      assignedDepartment: 'शालेय प्रवेश (5th - 10th)'
-    },
-    {
-      uid: 'telecaller-002',
-      userId: 'telecaller-002',
-      employeeId: 'TC-102',
-      fullName: 'Pooja Shinde (Counselor)',
-      email: 'telecaller2@gurukulbhose.com',
-      phone: '9850112233',
-      whatsappNumber: '9850112233',
-      gender: 'Female',
-      address: 'सांगली',
-      joiningDate: '2024-07-15',
-      status: 'active',
-      assignedDepartment: 'कॉलेज प्रवेश (11th - 12th Science & Arts)'
+  // Local storage fallback (Sanitize out demo telecallers)
+  try {
+    const rawStored = JSON.parse(localStorage.getItem('gurukul_stored_telecallers') || '[]');
+    const cleanedStored = rawStored.filter(t => !isDemoTelecaller(t));
+    if (cleanedStored.length !== rawStored.length) {
+      localStorage.setItem('gurukul_stored_telecallers', JSON.stringify(cleanedStored));
     }
-  ];
+    if (cleanedStored.length > 0) return cleanedStored;
+
+    const rawReg = JSON.parse(localStorage.getItem('gurukul_registered_telecallers') || '[]');
+    const cleanedReg = rawReg.filter(t => !isDemoTelecaller(t));
+    if (cleanedReg.length > 0) return cleanedReg;
+  } catch (e) {}
+
+  return [];
 };
 
 // 8. Fetch Audit Logs

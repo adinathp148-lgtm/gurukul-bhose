@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { 
   Menu, 
   X, 
   ChevronDown, 
   ShieldCheck, 
+  Baby,
   BookOpen,
   GraduationCap,
   Award,
@@ -62,6 +63,16 @@ export const Navbar = ({ showAdminLink = true }) => {
     setCrmOpen(false);
   };
 
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') closeMenu();
+    };
+    if (mobileMenuOpen) {
+      window.addEventListener('keydown', handleKeyDown);
+    }
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [mobileMenuOpen]);
+
   return (
     <header className="sticky top-0 z-40 w-full bg-white shadow-sm transition-all">
       {/* 0. Dynamic Website Announcement Bar */}
@@ -91,7 +102,7 @@ export const Navbar = ({ showAdminLink = true }) => {
               className="w-9 h-9 sm:w-10 sm:h-10 lg:w-11 lg:h-11 object-contain group-hover:scale-105 transition-transform shrink-0 drop-shadow-xs" 
             />
             <div className="shrink-0 flex flex-col justify-center text-left">
-              <span className="block font-black text-base sm:text-[17px] lg:text-lg text-gurukul-navy-950 leading-tight tracking-tight whitespace-nowrap text-left">
+              <span className="block font-black text-sm sm:text-[17px] lg:text-lg text-gurukul-navy-950 leading-tight tracking-tight whitespace-nowrap text-left">
                 {isMarathi ? 'गुरुकुल भोसे' : 'Gurukul Bhose'}
               </span>
               <span className="hidden sm:block text-[10px] xl:text-[11px] font-semibold text-gurukul-saffron-600 whitespace-nowrap leading-tight mt-0.5 text-left">
@@ -158,13 +169,29 @@ export const Navbar = ({ showAdminLink = true }) => {
                     onClick={closeMenu}
                     className="flex items-start gap-3.5 px-4 py-2.5 hover:bg-orange-50/70 transition-colors text-left group"
                   >
+                    <Baby className="w-5 h-5 text-rose-500 shrink-0 mt-0.5 group-hover:scale-110 transition-transform" />
+                    <div className="text-left flex-1 min-w-0">
+                      <span className="block font-bold text-sm text-slate-900 group-hover:text-gurukul-saffron-600 transition-colors whitespace-nowrap">
+                        {isMarathi ? 'गुरुकुल प्री-प्रायमरी' : 'Gurukul Pre-Primary'}
+                      </span>
+                      <span className="block text-xs text-slate-500 font-medium mt-0.5 whitespace-nowrap">
+                        Nursery, LKG, UKG
+                      </span>
+                    </div>
+                  </Link>
+
+                  <Link
+                    to="/vidyamandir"
+                    onClick={closeMenu}
+                    className="flex items-start gap-3.5 px-4 py-2.5 hover:bg-orange-50/70 border-t border-slate-100/60 transition-colors text-left group"
+                  >
                     <BookOpen className="w-5 h-5 text-gurukul-saffron-500 shrink-0 mt-0.5 group-hover:scale-110 transition-transform" />
                     <div className="text-left flex-1 min-w-0">
                       <span className="block font-bold text-sm text-slate-900 group-hover:text-gurukul-saffron-600 transition-colors whitespace-nowrap">
                         {isMarathi ? 'गुरुकुल विद्यामंदिर' : 'Gurukul Vidyamandir'}
                       </span>
                       <span className="block text-xs text-slate-500 font-medium mt-0.5 whitespace-nowrap">
-                        {isMarathi ? 'इ. ५ वी ते १० वी (मराठी व सेमी)' : '5th to 10th (Marathi & Semi)'}
+                        {isMarathi ? 'इ. १ ली ते १० वी (मराठी व सेमी)' : '1st to 10th (Marathi & Semi)'}
                       </span>
                     </div>
                   </Link>
@@ -471,17 +498,17 @@ export const Navbar = ({ showAdminLink = true }) => {
           </div>
 
           {/* Mobile menu toggle button */}
-          <div className="flex xl:hidden items-center gap-2 shrink-0">
+          <div className="flex xl:hidden items-center gap-1.5 sm:gap-2 shrink-0">
             <LanguageSwitcher compact />
             <Link 
               to="/admission-enquiry" 
-              className="h-10 inline-flex items-center justify-center px-3.5 text-xs sm:text-sm font-bold text-white bg-gurukul-saffron-500 hover:bg-gurukul-saffron-600 rounded-lg whitespace-nowrap shrink-0 shadow-sm"
+              className="hidden sm:inline-flex h-8.5 sm:h-9 items-center justify-center px-2.5 sm:px-3 text-xs sm:text-sm font-bold text-white bg-gurukul-saffron-500 hover:bg-gurukul-saffron-600 rounded-lg whitespace-nowrap shrink-0 shadow-sm"
             >
               <span>{isMarathi ? 'प्रवेश अर्ज' : 'Apply'}</span>
             </Link>
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="h-9 w-9 sm:h-10 sm:w-10 inline-flex items-center justify-center rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 focus:outline-none shrink-0"
+              className="h-9 w-9 sm:h-10 sm:w-10 inline-flex items-center justify-center rounded-lg text-slate-700 hover:text-slate-900 hover:bg-slate-100 focus:outline-none shrink-0"
               aria-label="Toggle Navigation"
             >
               {mobileMenuOpen ? <X className="w-5 h-5 sm:w-6 sm:h-6" /> : <Menu className="w-5 h-5 sm:w-6 sm:h-6" />}
@@ -491,9 +518,23 @@ export const Navbar = ({ showAdminLink = true }) => {
         </div>
       </div>
 
+      {/* Mobile Backdrop Overlay */}
+      {mobileMenuOpen && (
+        <div 
+          className="fixed inset-0 bg-slate-950/60 backdrop-blur-xs z-40 xl:hidden animate-fadeIn"
+          onClick={closeMenu}
+          aria-hidden="true"
+        />
+      )}
+
       {/* Mobile Drawer Navigation */}
       {mobileMenuOpen && (
-        <div className="xl:hidden bg-white border-b border-slate-200 px-4 pt-3 pb-6 space-y-2 max-h-[85vh] overflow-y-auto shadow-xl text-left">
+        <div 
+          className="relative z-50 xl:hidden bg-white border-b border-slate-200 px-4 pt-3 pb-8 space-y-2 max-h-[85vh] overflow-y-auto shadow-2xl text-left"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Mobile Navigation Menu"
+        >
           {/* Mobile Language Switcher Bar */}
           <div className="flex items-center justify-between pb-2 mb-2 border-b border-slate-100">
             <span className="text-sm font-bold text-slate-700 text-left">भाषा निवडा / Select Language:</span>
@@ -528,8 +569,16 @@ export const Navbar = ({ showAdminLink = true }) => {
             onClick={closeMenu}
             className="flex items-center gap-2.5 pl-6 pr-3 py-2 text-sm font-semibold text-slate-700 hover:text-gurukul-saffron-600 hover:bg-orange-50/50 rounded-lg transition-colors text-left"
           >
+            <span className="w-1.5 h-1.5 rounded-full bg-rose-500 shrink-0" />
+            <span className="text-left">{isMarathi ? 'गुरुकुल प्री-प्रायमरी (Nursery, LKG, UKG)' : 'Gurukul Pre-Primary (Nursery, LKG, UKG)'}</span>
+          </Link>
+          <Link 
+            to="/vidyamandir" 
+            onClick={closeMenu}
+            className="flex items-center gap-2.5 pl-6 pr-3 py-2 text-sm font-semibold text-slate-700 hover:text-gurukul-saffron-600 hover:bg-orange-50/50 rounded-lg transition-colors text-left"
+          >
             <span className="w-1.5 h-1.5 rounded-full bg-gurukul-saffron-500 shrink-0" />
-            <span className="text-left">{isMarathi ? 'गुरुकुल विद्यामंदिर (५ वी ते १० वी)' : 'Gurukul Vidyamandir (5th to 10th)'}</span>
+            <span className="text-left">{isMarathi ? 'गुरुकुल विद्यामंदिर (१ ली ते १० वी)' : 'Gurukul Vidyamandir (1st to 10th)'}</span>
           </Link>
           <Link 
             to="/junior-college" 

@@ -266,7 +266,7 @@ export const AdmissionEnquiryPage = () => {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           
           {/* Left Column: Guidelines & Contact Helpline */}
-          <div className="lg:col-span-4 space-y-6">
+          <div className="lg:col-span-4 space-y-6 order-2 lg:order-1">
             
             <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4">
               <div className="flex items-center gap-3">
@@ -373,7 +373,7 @@ export const AdmissionEnquiryPage = () => {
           </div>
 
           {/* Right Column: Admission Enquiry Form */}
-          <div className="lg:col-span-8">
+          <div className="lg:col-span-8 order-1 lg:order-2">
             <div className="bg-white p-6 sm:p-10 rounded-3xl border border-slate-200 shadow-sm">
               
               {/* SUCCESS CONFIRMATION STATE */}
@@ -682,6 +682,11 @@ export const AdmissionEnquiryPage = () => {
                           onChange={(e) => setFormData({ ...formData, currentClass: e.target.value })}
                           className="w-full text-xs px-3.5 py-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-gurukul-saffron-500 focus:outline-none bg-white font-medium"
                         >
+                          <option value="Playgroup / Nursery">Playgroup / Nursery</option>
+                          <option value="LKG / UKG">LKG / UKG</option>
+                          <option value="इ. 1 ली (1st Std)">इ. 1 ली (1st Std)</option>
+                          <option value="इ. 2 री (2nd Std)">इ. 2 री (2nd Std)</option>
+                          <option value="इ. 3 री (3rd Std)">इ. 3 री (3rd Std)</option>
                           <option value="इ. 4 वी (4th Std)">इ. 4 वी (4th Std)</option>
                           <option value="इ. 5 वी (5th Std)">इ. 5 वी (5th Std)</option>
                           <option value="इ. 6 वी (6th Std)">इ. 6 वी (6th Std)</option>
@@ -703,6 +708,13 @@ export const AdmissionEnquiryPage = () => {
                           onChange={(e) => setFormData({ ...formData, admissionClass: e.target.value })}
                           className="w-full text-xs px-3.5 py-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-gurukul-saffron-500 focus:outline-none bg-white font-bold text-gurukul-saffron-700"
                         >
+                          <option value="Nursery">Nursery (नर्सरी)</option>
+                          <option value="LKG">LKG (एल.के.जी.)</option>
+                          <option value="UKG">UKG (यु.के.जी.)</option>
+                          <option value="इ. 1 ली (1st Std)">इ. 1 ली (1st Std)</option>
+                          <option value="इ. 2 री (2nd Std)">इ. 2 री (2nd Std)</option>
+                          <option value="इ. 3 री (3rd Std)">इ. 3 री (3rd Std)</option>
+                          <option value="इ. 4 थी (4th Std)">इ. 4 थी (4th Std)</option>
                           <option value="इ. 5 वी (5th Std)">इ. 5 वी (5th Std) - सैनिक पॅटर्न निवासी</option>
                           <option value="इ. 6 वी (6th Std)">इ. 6 वी (6th Std) - सैनिक पॅटर्न निवासी</option>
                           <option value="इ. 7 वी (7th Std)">इ. 7 वी (7th Std) - सैनिक पॅटर्न निवासी</option>

@@ -102,18 +102,14 @@ export const TalentSearchPage = () => {
             </p>
 
             <div className="pt-2 flex flex-wrap gap-4">
-              <Link to="/admission-enquiry">
-                <Button variant="primary" size="md">
-                  <span>प्रवेशासाठी नाव नोंदवा</span>
-                  <ArrowRight className="w-4 h-4 ml-1.5" />
-                </Button>
-              </Link>
-              <a href={institution.brochureUrl} target="_blank" rel="noopener noreferrer">
-                <Button variant="outline" size="md">
-                  <Download className="w-4 h-4 mr-1.5" />
-                  <span>Brochure</span>
-                </Button>
-              </a>
+              <Button to="/admission-enquiry" variant="primary" size="md">
+                <span>प्रवेशासाठी नाव नोंदवा</span>
+                <ArrowRight className="w-4 h-4 ml-1.5" />
+              </Button>
+              <Button href={institution.brochureUrl || "https://bit.ly/3mUeaH6"} target="_blank" rel="noopener noreferrer" variant="outline" size="md">
+                <Download className="w-4 h-4 mr-1.5" />
+                <span>Brochure</span>
+              </Button>
             </div>
           </div>
 

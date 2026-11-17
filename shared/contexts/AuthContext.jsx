@@ -230,13 +230,16 @@ export const AuthProvider = ({ children }) => {
 
   // Normalized Role Computations
   const rawRole = (userProfile?.role || currentUser?.role || 'guest').toLowerCase();
+  const rawStatus = (userProfile?.status || currentUser?.status || 'active').toLowerCase();
   const isSuperAdmin = rawRole === 'super_admin' || rawRole === 'superadmin';
   const isAdmin = isSuperAdmin || rawRole === 'admin';
-  const isTelecaller = rawRole === 'telecaller';
+  // Telecaller role is strictly active ONLY when approved by admin
+  const isPendingApproval = rawStatus === 'pending' || rawStatus === 'pending_approval' || rawRole === 'pending_applicant';
+  const isTelecaller = rawRole === 'telecaller' && !isPendingApproval && rawStatus === 'active';
   const canManageUsers = isSuperAdmin || rawRole === 'admin';
   const canAccessAllLeads = isSuperAdmin || rawRole === 'admin';
 
-  const role = isSuperAdmin ? 'super_admin' : rawRole;
+  const role = isSuperAdmin ? 'super_admin' : (isPendingApproval ? 'pending_applicant' : rawRole);
 
   const value = {
     currentUser,
@@ -245,6 +248,7 @@ export const AuthProvider = ({ children }) => {
     isSuperAdmin,
     isAdmin,
     isTelecaller,
+    isPendingApproval,
     canManageUsers,
     canAccessAllLeads,
     login,

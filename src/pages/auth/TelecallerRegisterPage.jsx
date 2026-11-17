@@ -91,17 +91,6 @@ export const TelecallerRegisterPage = () => {
 
       if (res.success) {
         setSuccess(true);
-        // Automatically redirect to login page with prefilled email after 1.8 seconds
-        setTimeout(() => {
-          navigate(loginPath, { 
-            state: { 
-              registeredEmail: formData.email.trim(),
-              successMessage: isMarathi 
-                ? 'नोंदणी यशस्वी झाली! कृपया आता आपल्या ईमेल आणि पासवर्डने लॉगिन करा.' 
-                : 'Registration successful! Please sign in with your email and password.'
-            } 
-          });
-        }, 1800);
       } else {
         setError(res.error || (isMarathi ? 'नोंदणी करताना त्रुटी आली.' : 'Error during registration.'));
       }
@@ -147,22 +136,34 @@ export const TelecallerRegisterPage = () => {
 
         {/* Success Alert */}
         {success && (
-          <div className="mb-5 p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs space-y-2 text-center animate-in fade-in">
-            <div className="flex items-center justify-center gap-2 font-bold text-sm text-emerald-900">
+          <div className="mb-5 p-5 rounded-2xl bg-amber-50/90 border border-amber-200 text-amber-900 text-xs space-y-3 text-center animate-in fade-in">
+            <div className="flex items-center justify-center gap-2 font-black text-base text-amber-950">
               <CheckCircle2 className="w-5 h-5 text-emerald-600" />
-              <span>{isMarathi ? 'नोंदणी यशस्वी झाली!' : 'Registration Successful!'}</span>
+              <span>{isMarathi ? 'नोंदणी यशस्वी • ॲडमिन मंजुरी प्रलंबित' : 'Registration Submitted • Pending Admin Approval'}</span>
             </div>
-            <p>
-              {isMarathi 
-                ? 'आपले खाते तयार झाले आहे. आपल्याला लॉगिन पृष्ठावर पाठवले जात आहे...' 
-                : 'Your account is created. Redirecting to login page...'}
-            </p>
-            <div className="pt-2">
-              <Link to={loginPath} state={{ registeredEmail: formData.email }}>
-                <Button variant="primary" size="sm" className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold">
-                  <span>{isMarathi ? 'थेट लॉगिन करा →' : 'Proceed to Sign In →'}</span>
+            <div className="p-3 bg-white/80 rounded-xl border border-amber-200 text-left space-y-1.5 text-xs text-slate-700">
+              <p className="font-semibold text-amber-900">
+                {isMarathi 
+                  ? 'आपली नोंदणी संस्था प्रशासनाकडे (School Admin) मंजुरीसाठी पाठवण्यात आली आहे.'
+                  : 'Your application has been submitted to School Administration for review.'}
+              </p>
+              <p className="text-slate-600">
+                {isMarathi
+                  ? 'महत्त्वाची सूचना: जोपर्यंत शाळा ॲडमिन आपले खाते तपासून मंजूर (Approve) करत नाहीत आणि रोल असाइन करत नाहीत, तोपर्यंत तुम्हाला टेलिकॉलर रोल किंवा पोर्टल प्रवेश मिळणार नाही.'
+                  : 'Important Notice: You will NOT be assigned the Telecaller role or granted portal access until a School Admin explicitly approves your account in the Admin Panel.'}
+              </p>
+            </div>
+            <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-2">
+              <Link to={loginPath} state={{ registeredEmail: formData.email, pendingNotice: true }}>
+                <Button variant="outline" size="sm" className="w-full sm:w-auto font-bold border-slate-300 text-slate-700">
+                  <span>{isMarathi ? 'लॉगिन पृष्ठावर जा' : 'Go to Sign In Page'}</span>
                 </Button>
               </Link>
+              <a href="/" className="w-full sm:w-auto">
+                <Button variant="primary" size="sm" className="w-full sm:w-auto bg-gurukul-navy-900 hover:bg-gurukul-navy-950 text-white font-bold">
+                  <span>{isMarathi ? 'शाळा मुख्य वेबसाईट' : 'School Main Website'}</span>
+                </Button>
+              </a>
             </div>
           </div>
         )}

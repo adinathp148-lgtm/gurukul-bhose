@@ -1138,3 +1138,181 @@ export const updateCMSSEOSettings = async (updates, user) => {
 
   return merged;
 };
+
+// ----------------------------------------------------
+// 11. Complete Database Seeder / Syncer
+// ----------------------------------------------------
+export const pushInitialDataToFirestore = async (user) => {
+  if (!db) {
+    throw new Error('Firebase Firestore is not initialized.');
+  }
+
+  const results = {
+    homepage: false,
+    about: false,
+    contact: false,
+    settings: false,
+    systemSettings: false,
+    programs: 0,
+    courses: 0,
+    facilities: 0,
+    gallery: 0,
+    videos: 0,
+    notices: 0
+  };
+
+  // 1. Homepage
+  await updateHomepageCMSData({}, user);
+  results.homepage = true;
+
+  // 2. About
+  await updateAboutCMSData({}, user);
+  results.about = true;
+
+  // 3. Contact & Institution
+  await updateCMSContact({}, user);
+  results.contact = true;
+
+  // 4. Settings
+  await updateCMSWebsiteSettings({}, user);
+  results.settings = true;
+
+  // 5. System settings
+  try {
+    await setDoc(doc(db, 'system_settings', 'global_config'), {
+      schoolNameMr: 'गुरुकुल विद्यामंदिर व ज्युनिअर कॉलेज, भोसे',
+      schoolNameEn: 'Gurukul Vidyamandir & Junior College, Bhose',
+      activeAcademicYear: '2026-2027',
+      upcomingAcademicYear: '2027-2028',
+      admissionsStatus: 'open',
+      primaryPhone: '9850449800',
+      officialEmail: 'contact@gurukulbhose.com',
+      lastUpdated: serverTimestamp()
+    }, { merge: true });
+    results.systemSettings = true;
+  } catch (e) {
+    console.warn('[CMSService] system_settings write skipped:', e);
+  }
+
+  // 6. Programs
+  for (let idx = 0; idx < programsList.length; idx++) {
+    const p = programsList[idx];
+    await saveCMSProgram({
+      programId: p.id,
+      id: p.id,
+      title: p.title,
+      subtitle: p.shortDesc || '',
+      shortDesc: p.shortDesc || '',
+      description: p.fullDesc || '',
+      fullDesc: p.fullDesc || '',
+      slug: p.slug,
+      category: p.category || '',
+      features: p.highlights || [],
+      highlights: p.highlights || [],
+      imageUrl: p.image || '',
+      image: p.image || '',
+      displayOrder: idx + 1,
+      status: 'published'
+    }, user);
+    results.programs++;
+  }
+
+  // 7. Courses
+  for (let idx = 0; idx < coursesList.length; idx++) {
+    const c = coursesList[idx];
+    await saveCMSCourse({
+      courseId: c.id,
+      id: c.id,
+      name: c.title,
+      title: c.title,
+      programId: c.programId || 'vidyamandir',
+      category: c.category || '',
+      duration: c.duration || '',
+      eligibility: c.eligibility || '',
+      intake: c.intake || '३० जागा / वर्ग',
+      description: c.description || '',
+      features: c.highlights || [],
+      highlights: c.highlights || [],
+      curriculum: c.curriculum || [],
+      imageUrl: c.image || '',
+      image: c.image || '',
+      displayOrder: idx + 1,
+      status: 'published'
+    }, user);
+    results.courses++;
+  }
+
+  // 8. Facilities
+  for (let idx = 0; idx < facilitiesList.length; idx++) {
+    const f = facilitiesList[idx];
+    await saveCMSFacility({
+      facilityId: f.id,
+      id: f.id,
+      name: f.title,
+      title: f.title,
+      category: f.category || 'कॅम्पस सुविधा',
+      description: f.description || '',
+      features: f.features || [],
+      imageUrl: f.image || '',
+      image: f.image || '',
+      displayOrder: idx + 1,
+      status: 'published'
+    }, user);
+    results.facilities++;
+  }
+
+  // 9. Gallery
+  for (let idx = 0; idx < galleryList.length; idx++) {
+    const g = galleryList[idx];
+    await saveCMSGalleryItem({
+      imageId: g.id,
+      id: g.id,
+      title: g.title,
+      category: g.category || 'कॅम्पस',
+      imageUrl: g.image,
+      image: g.image,
+      caption: g.title,
+      displayOrder: idx + 1,
+      status: 'published'
+    }, user);
+    results.gallery++;
+  }
+
+  // 10. Videos
+  for (let idx = 0; idx < videosList.length; idx++) {
+    const v = videosList[idx];
+    await saveCMSVideo({
+      videoId: v.id,
+      id: v.id,
+      title: v.title,
+      category: v.category || 'शैक्षणिक',
+      youtubeUrl: v.youtubeUrl || '',
+      youtubeId: v.youtubeId || '',
+      thumbnailUrl: v.thumbnail || '',
+      duration: v.duration || '',
+      displayOrder: idx + 1,
+      status: 'published'
+    }, user);
+    results.videos++;
+  }
+
+  // 11. Notices
+  for (let idx = 0; idx < noticesList.length; idx++) {
+    const n = noticesList[idx];
+    await saveCMSNotice({
+      noticeId: n.id,
+      id: n.id,
+      title: n.title,
+      content: n.description || n.title,
+      description: n.description || '',
+      publishedAt: n.date || new Date().toISOString().split('T')[0],
+      date: n.date || new Date().toISOString().split('T')[0],
+      badge: n.badge || (n.isNew ? 'नवीन' : 'सूचना'),
+      isImportant: Boolean(n.isImportant),
+      status: 'published'
+    }, user);
+    results.notices++;
+  }
+
+  return results;
+};

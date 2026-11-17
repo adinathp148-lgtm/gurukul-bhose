@@ -96,11 +96,9 @@ export const ProgramCard = ({ program }) => {
             <ArrowRight className="w-3.5 h-3.5" />
           </Link>
 
-          <Link to="/admission-enquiry">
-            <Button variant="primary" size="sm">
-              {isMarathi ? 'प्रवेश चौकशी' : 'Apply'}
-            </Button>
-          </Link>
+          <Button to="/admission-enquiry" variant="primary" size="sm">
+            {isMarathi ? 'प्रवेश चौकशी' : 'Apply'}
+          </Button>
         </div>
       </div>
     </div>

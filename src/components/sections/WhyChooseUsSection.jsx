@@ -43,8 +43,8 @@ export const WhyChooseUsSection = ({ features = [], brochureUrl = 'https://bit.l
           <span>{isMarathi ? '१५ वर्षांची गौरवशाली शैक्षणिक व क्रीडा परंपरा' : '15 Years of Glorious Academic & Sports Heritage'}</span>
         </div>
 
-        <a href={brochureUrl} target="_blank" rel="noopener noreferrer">
-          <Button variant="primary" size="md" className="shadow-lg">
+        <a href={brochureUrl} target="_blank" rel="noopener noreferrer" className="w-full sm:w-auto">
+          <Button variant="primary" size="md" className="w-full sm:w-auto shadow-lg text-center">
             <Download className="w-4 h-4 mr-2" />
             <span>{isMarathi ? 'अधिकृत माहिती पत्रक डाऊनलोड करा (PDF)' : 'Download Official Information Brochure (PDF)'}</span>
           </Button>

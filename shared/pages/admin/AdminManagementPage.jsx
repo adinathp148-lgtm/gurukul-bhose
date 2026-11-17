@@ -22,7 +22,8 @@ import { fetchAdminsList, createAdminAccount, updateUserStatus } from '../../ser
 
 export const AdminManagementPage = () => {
   const { isMarathi } = useLanguage();
-  const { isSuperAdmin, role } = useAuth();
+  const { isSuperAdmin, isAdmin, role } = useAuth();
+  const canManageAdmins = isSuperAdmin || isAdmin;
 
   const [admins, setAdmins] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -118,7 +119,7 @@ export const AdminManagementPage = () => {
           </p>
         </div>
 
-        {isSuperAdmin && (
+        {canManageAdmins && (
           <Button variant="primary" size="sm" onClick={() => setModalOpen(true)}>
             <Plus className="w-4 h-4 mr-1.5" />
             <span>{isMarathi ? 'नवीन प्रशासक जोडा' : 'Add Admin'}</span>
@@ -163,7 +164,7 @@ export const AdminManagementPage = () => {
                 <th className="py-3 px-4">{isMarathi ? 'पद / हुद्दा' : 'Designation'}</th>
                 <th className="py-3 px-4">{isMarathi ? 'भूमिका' : 'Role'}</th>
                 <th className="py-3 px-4 text-center">{isMarathi ? 'खाते स्थिती' : 'Status'}</th>
-                {isSuperAdmin && (
+                {canManageAdmins && (
                   <th className="py-3 px-4 text-center">{isMarathi ? 'कृती' : 'Action'}</th>
                 )}
               </tr>
@@ -179,12 +180,8 @@ export const AdminManagementPage = () => {
                   <td className="py-3.5 px-4 font-mono text-slate-600">{adm.phone || '-'}</td>
                   <td className="py-3.5 px-4 font-medium text-slate-700">{adm.designation || 'Administrator'}</td>
                   <td className="py-3.5 px-4">
-                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                      adm.role === 'super_admin' || adm.role === 'superadmin'
-                        ? 'bg-rose-50 text-rose-700 border border-rose-200'
-                        : 'bg-blue-50 text-blue-700 border border-blue-200'
-                    }`}>
-                      {adm.role?.toUpperCase()}
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200">
+                      ADMIN
                     </span>
                   </td>
                   <td className="py-3.5 px-4 text-center">
@@ -196,22 +193,18 @@ export const AdminManagementPage = () => {
                       {adm.status === 'inactive' ? 'निष्क्रिय (Inactive)' : 'सक्रिय (Active)'}
                     </span>
                   </td>
-                  {isSuperAdmin && (
+                  {canManageAdmins && (
                     <td className="py-3.5 px-4 text-center">
-                      {adm.role !== 'super_admin' && adm.role !== 'superadmin' ? (
-                        <button
-                          onClick={() => handleToggleStatus(adm.uid, adm.status || 'active')}
-                          className={`text-xs font-bold px-2 py-1 rounded-lg transition-colors ${
-                            adm.status === 'inactive'
-                              ? 'text-emerald-600 hover:bg-emerald-50'
-                              : 'text-rose-600 hover:bg-rose-50'
-                          }`}
-                        >
-                          {adm.status === 'inactive' ? 'सक्रिय करा' : 'निष्क्रिय करा'}
-                        </button>
-                      ) : (
-                        <span className="text-[10px] text-slate-400 font-bold">संरक्षित खाते</span>
-                      )}
+                      <button
+                        onClick={() => handleToggleStatus(adm.uid, adm.status || 'active')}
+                        className={`text-xs font-bold px-2 py-1 rounded-lg transition-colors ${
+                          adm.status === 'inactive'
+                            ? 'text-emerald-600 hover:bg-emerald-50'
+                            : 'text-rose-600 hover:bg-rose-50'
+                        }`}
+                      >
+                        {adm.status === 'inactive' ? 'सक्रिय करा' : 'निष्क्रिय करा'}
+                      </button>
                     </td>
                   )}
                 </tr>

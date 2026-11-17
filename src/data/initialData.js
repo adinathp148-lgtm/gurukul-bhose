@@ -60,13 +60,14 @@ export const heroSlides = [
 export const programsList = [
   {
     id: "vidyamandir",
-    title: "गुरुकुल विद्यामंदिर (इ. 5 वी ते 10 वी)",
+    title: "गुरुकुल विद्यामंदिर (इ. 1 ली ते 10 वी)",
     shortDesc: "सैनिक पॅटर्न निवासी मराठी व सेमी माध्यम स्कूल",
-    fullDesc: "इ. 5 वी ते 10 वी सैनिक पॅटर्न निवासी मराठी व सेमी माध्यम स्कूल. प्रत्येक विद्यार्थ्याच्या शिक्षणाचा व जीवनाचा पाया भक्कम करणारी निवासी शाळा.",
+    fullDesc: "इ. 1 ली ते 10 वी सैनिक पॅटर्न निवासी मराठी व सेमी माध्यम स्कूल (तसेच Nursery, LKG, UKG प्री-प्रायमरी). प्रत्येक विद्यार्थ्याच्या शिक्षणाचा व जीवनाचा पाया भक्कम करणारी निवासी शाळा.",
     slug: "/vidyamandir",
     category: "शालेय शिक्षण",
     highlights: [
-      "इ. 5 वी ते 10 वी सैनिक पॅटर्न निवासी मराठी व सेमी माध्यम",
+      "इ. 1 ली ते 10 वी सैनिक पॅटर्न निवासी मराठी व सेमी माध्यम",
+      "पूर्व प्राथमिक (Nursery, LKG, UKG) इंग्रजी माध्यम वर्ग",
       "प्रत्येक विद्यार्थ्याच्या शिक्षणाचा व जीवनाचा पाया भक्कम करणारी शाळा",
       "शैक्षणिक, शारीरिक, मानसिक, आर्थिक व आध्यात्मिक सर्वांगीण ज्ञान",
       "उत्कृष्ट सैनिक, देशसेवक, खेळाडू, अधिकारी, डॉक्टर, इंजिनिअर घडवणारी शाळा",
@@ -535,22 +536,6 @@ export const demoUsers = [
     role: "admin",
     phone: "9850449800",
     isActive: true
-  },
-  {
-    uid: "telecaller-001",
-    email: "telecaller1@gurukulbhose.com",
-    displayName: "Sachin Patil (Counselor)",
-    role: "telecaller",
-    phone: "7020260968",
-    isActive: true
-  },
-  {
-    uid: "telecaller-002",
-    email: "telecaller2@gurukulbhose.com",
-    displayName: "Pooja Shinde (Counselor)",
-    role: "telecaller",
-    phone: "9850112233",
-    isActive: true
   }
 ];
 
@@ -565,8 +550,8 @@ export const demoLeads = [
     admissionClass: "इ. 8 वी (8th Standard)",
     course: "गुरुकुल विद्यामंदिर (सैनिक पॅटर्न निवासी)",
     leadSource: "Website",
-    assignedTelecallerId: "telecaller-001",
-    assignedTelecallerName: "Sachin Patil (Counselor)",
+    assignedTelecallerId: null,
+    assignedTelecallerName: null,
     leadStatus: "New",
     lastFollowUp: "2026-11-12",
     nextFollowUp: "2026-11-15",
@@ -585,8 +570,8 @@ export const demoLeads = [
     admissionClass: "इ. 11 वी सायन्स (11th Science)",
     course: "गुरुकुल जुनियर कॉलेज (सायन्स + NDA बॅच)",
     leadSource: "Facebook Ads",
-    assignedTelecallerId: "telecaller-001",
-    assignedTelecallerName: "Sachin Patil (Counselor)",
+    assignedTelecallerId: null,
+    assignedTelecallerName: null,
     leadStatus: "Follow-up Scheduled",
     lastFollowUp: "2026-11-13",
     nextFollowUp: "2026-11-14",
@@ -605,8 +590,8 @@ export const demoLeads = [
     admissionClass: "इ. 5 वी (5th Standard)",
     course: "गुरुकुल टॅलेंट सर्च अकॅडमी (नवोदय / स्कॉलरशिप)",
     leadSource: "WhatsApp",
-    assignedTelecallerId: "telecaller-002",
-    assignedTelecallerName: "Pooja Shinde (Counselor)",
+    assignedTelecallerId: null,
+    assignedTelecallerName: null,
     leadStatus: "School Visit Planned",
     lastFollowUp: "2026-11-10",
     nextFollowUp: "2026-11-16",
@@ -625,8 +610,8 @@ export const demoLeads = [
     admissionClass: "इ. 12 वी आर्टस् (12th Arts)",
     course: "गुरुकुल जुनियर कॉलेज (पोलीस / आर्मी भरती पूर्वतयारी)",
     leadSource: "Manual Entry",
-    assignedTelecallerId: "telecaller-002",
-    assignedTelecallerName: "Pooja Shinde (Counselor)",
+    assignedTelecallerId: null,
+    assignedTelecallerName: null,
     leadStatus: "Admitted",
     lastFollowUp: "2026-11-08",
     nextFollowUp: "",
@@ -637,32 +622,7 @@ export const demoLeads = [
   }
 ];
 
-export const demoFollowUps = [
-  {
-    id: "fol-001",
-    leadId: "lead-101",
-    telecallerId: "telecaller-001",
-    telecallerName: "Sachin Patil (Counselor)",
-    contactedAt: "2026-11-12T11:00:00.000Z",
-    callType: "Outgoing Call",
-    parentResponse: "पालकांशी सकारात्मक चर्चा झाली. इयत्ता ८ वी च्या निवासी शुल्काची माहिती दिली. WhatsApp वर ब्रोशर पाठवले.",
-    scheduledNextDate: "2026-11-15",
-    statusOutcome: "Interested",
-    suggestedAction: "Call to confirm campus visit date"
-  },
-  {
-    id: "fol-002",
-    leadId: "lead-102",
-    telecallerId: "telecaller-001",
-    telecallerName: "Sachin Patil (Counselor)",
-    contactedAt: "2026-11-13T15:30:00.000Z",
-    callType: "Outgoing Call",
-    parentResponse: "NDA च्या ग्राउंड सरावाबद्दल पालकांनी विचारले. आज संध्याकाळी मुलाशी बोलून निर्णय सांगणार आहेत.",
-    scheduledNextDate: "2026-11-14",
-    statusOutcome: "Follow-up Scheduled",
-    suggestedAction: "Follow up for final confirmation"
-  }
-];
+export const demoFollowUps = [];
 
 export const demoAdmissions = [
   {

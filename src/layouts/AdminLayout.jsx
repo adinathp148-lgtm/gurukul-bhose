@@ -128,7 +128,7 @@ export const AdminLayout = () => {
       title: isMarathi ? 'प्रशासक व्यवस्थापन' : 'Admin Management',
       path: '/admin/admins',
       icon: Shield,
-      roles: ['super_admin', 'superadmin']
+      roles: ['admin', 'super_admin', 'superadmin']
     },
     {
       category: 'management',
@@ -210,7 +210,7 @@ export const AdminLayout = () => {
       >
         {/* Brand header */}
         <div className="h-17 px-4 border-b border-slate-800/90 flex items-center justify-between bg-gurukul-navy-950/70">
-          <Link to="/" className="flex items-center gap-2.5 group">
+          <Link to="/admin/dashboard" className="flex items-center gap-2.5 group">
             <img 
               src="/gurukul-logo.png" 
               alt="गुरुकुल भोसे" 
@@ -221,12 +221,12 @@ export const AdminLayout = () => {
                 <h2 className="font-black text-white text-sm tracking-tight">
                   {isMarathi ? 'गुरुकुल भोसे' : 'Gurukul Bhose'}
                 </h2>
-                <span className="text-[9px] font-bold px-1.5 py-0.2 rounded-sm bg-gurukul-saffron-500 text-white uppercase tracking-wider">
-                  CRM
+                <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-sm bg-gurukul-saffron-500 text-white uppercase tracking-wider">
+                  ADMIN CRM
                 </span>
               </div>
               <p className="text-[10px] text-gurukul-saffron-400 font-semibold leading-tight mt-0.5">
-                {isMarathi ? 'प्रवेश व लीड व्यवस्थापन' : 'Admission & Lead System'}
+                {isMarathi ? 'प्रशासकीय नियंत्रण कक्ष' : 'School Admin Portal'}
               </p>
             </div>
           </Link>
@@ -236,24 +236,6 @@ export const AdminLayout = () => {
           >
             <X className="w-5 h-5" />
           </button>
-        </div>
-
-        {/* User Card */}
-        <div className="px-3.5 py-3 bg-slate-900/60 border-b border-slate-800/70">
-          <div className="flex items-center gap-3">
-            <div className="w-8.5 h-8.5 rounded-full bg-slate-800 border-2 border-gurukul-saffron-500/40 flex items-center justify-center font-bold text-xs text-yellow-400 shrink-0">
-              {userProfile?.displayName ? userProfile.displayName.charAt(0).toUpperCase() : 'A'}
-            </div>
-            <div className="overflow-hidden min-w-0">
-              <p className="text-xs font-bold text-white truncate">{userProfile?.displayName || userProfile?.fullName || 'Administrator'}</p>
-              <div className="flex items-center gap-1.5 mt-0.5">
-                <span className="w-2 h-2 rounded-full bg-gurukul-saffron-400 animate-pulse"></span>
-                <span className="text-[10px] uppercase font-bold text-gurukul-saffron-400 tracking-wider">
-                  {isSuperAdmin ? 'Super Admin' : (role || 'Admin')}
-                </span>
-              </div>
-            </div>
-          </div>
         </div>
 
         {/* Navigation list */}
@@ -456,103 +438,6 @@ export const AdminLayout = () => {
             );
           })}
         </nav>
-
-        {/* Role Switcher for instant developer testing */}
-        <div className="p-3 bg-slate-950/70 border-t border-slate-800/80 text-[11px]">
-          <p className="text-[10px] uppercase font-bold text-slate-400 tracking-wider mb-1.5">
-            {isMarathi ? 'रोल बदला (डेमो मोड):' : 'Switch Role (Demo):'}
-          </p>
-          <div className="grid grid-cols-3 gap-1">
-            <button
-              onClick={() => switchDemoAccount('superadmin')}
-              className={`py-1 px-1 rounded-lg text-center font-bold text-[10px] transition-colors ${
-                isSuperAdmin ? 'bg-rose-600 text-white' : 'bg-slate-800/90 text-slate-300 hover:bg-slate-700'
-              }`}
-            >
-              SuperAdmin
-            </button>
-            <button
-              onClick={() => switchDemoAccount('admin')}
-              className={`py-1 px-1 rounded-lg text-center font-bold text-[10px] transition-colors ${
-                role === 'admin' ? 'bg-blue-600 text-white' : 'bg-slate-800/90 text-slate-300 hover:bg-slate-700'
-              }`}
-            >
-              Admin
-            </button>
-            <button
-              onClick={() => switchDemoAccount('telecaller')}
-              className={`py-1 px-1 rounded-lg text-center font-bold text-[10px] transition-colors ${
-                isTelecaller ? 'bg-emerald-600 text-white' : 'bg-slate-800/90 text-slate-300 hover:bg-slate-700'
-              }`}
-            >
-              Telecaller
-            </button>
-          </div>
-        </div>
-
-        {/* Admin Profile in Sidebar Footer */}
-        <div className="p-3 bg-slate-950/90 border-t border-slate-800/80">
-          <Link
-            to="/admin/profile"
-            onClick={() => setSidebarOpen(false)}
-            className={`flex items-center gap-2.5 p-2 rounded-xl transition-all ${
-              isActive('/admin/profile')
-                ? 'bg-gurukul-saffron-500 text-white shadow-md'
-                : 'bg-white/4 hover:bg-white/8 text-slate-200 border border-white/6'
-            }`}
-          >
-            <div className="relative shrink-0">
-              {userProfile?.profileImage ? (
-                <img 
-                  src={userProfile.profileImage} 
-                  alt={userProfile?.displayName || 'Admin'} 
-                  className="w-8 h-8 rounded-full object-cover border border-slate-600" 
-                />
-              ) : (
-                <div className="w-8 h-8 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center font-bold text-xs text-yellow-400">
-                  {userProfile?.displayName ? userProfile.displayName.charAt(0).toUpperCase() : 'A'}
-                </div>
-              )}
-              <span className={`absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full border-2 border-slate-900 ${
-                isSuperAdmin ? 'bg-rose-500' : 'bg-emerald-400'
-              }`} />
-            </div>
-
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center justify-between gap-1">
-                <p className="text-xs font-bold truncate text-white">
-                  {userProfile?.displayName || userProfile?.fullName || 'Administrator'}
-                </p>
-                <ChevronRight className="w-3.5 h-3.5 opacity-60 shrink-0" />
-              </div>
-              <p className="text-[10px] text-slate-400 truncate">
-                {currentUser?.email || 'admin@gurukulbhose.com'}
-              </p>
-            </div>
-          </Link>
-        </div>
-
-        {/* Footer actions */}
-        <div className="p-3 border-t border-slate-800/80 space-y-1 bg-gurukul-navy-950/80">
-          <a
-            href={getPublicWebsiteUrl()}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center justify-between w-full px-3 py-2 text-xs font-semibold text-slate-300 hover:bg-white/5 hover:text-white rounded-xl transition-colors"
-          >
-            <span className="flex items-center gap-2">
-              <ExternalLink className="w-4 h-4 text-gurukul-saffron-400" />
-              <span>{isMarathi ? 'शाळा वेबसाईट उघडा' : 'Open School Website'}</span>
-            </span>
-          </a>
-          <button
-            onClick={handleLogout}
-            className="flex items-center gap-2 w-full px-3 py-2 text-xs font-semibold text-red-400 hover:bg-red-500/10 hover:text-red-300 rounded-xl transition-colors"
-          >
-            <LogOut className="w-4 h-4" />
-            <span>{isMarathi ? 'लॉगआउट (Sign Out)' : 'Sign Out'}</span>
-          </button>
-        </div>
       </aside>
 
       {/* Main Content Area */}
@@ -609,8 +494,8 @@ export const AdminLayout = () => {
             <NotificationCenter />
 
             {/* Role indicator */}
-            <Badge variant={role === 'superadmin' ? 'Super Admin' : role === 'admin' ? 'Admin' : 'Telecaller'}>
-              {role.toUpperCase()}
+            <Badge variant={role === 'telecaller' ? 'Telecaller' : 'Admin'}>
+              {role === 'telecaller' ? 'TELECALLER' : 'ADMIN'}
             </Badge>
 
             {/* Website CTA button styled matching website navbar CTA */}
@@ -630,36 +515,6 @@ export const AdminLayout = () => {
         <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto space-y-6 sm:space-y-8">
           <Outlet />
         </main>
-
-        {/* Admin CRM Workspace Footer */}
-        <footer className="bg-white/90 border-t border-slate-200/90 py-4 px-4 sm:px-6 lg:px-8 mt-auto">
-          <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500">
-            <div className="flex items-center gap-2">
-              <span className="font-bold text-gurukul-navy-950">गुरुकुल भोसे CRM & Admin Hub</span>
-              <span className="text-slate-300">•</span>
-              <span className="text-slate-500">प्रवेश व संस्था व्यवस्थापन प्रणाली</span>
-            </div>
-            <div className="flex items-center gap-4">
-              <Link 
-                to="/admin/profile" 
-                className="hover:text-gurukul-saffron-600 transition-colors font-bold flex items-center gap-1.5 text-slate-700 bg-slate-100/80 hover:bg-slate-200/80 px-2.5 py-1 rounded-lg"
-              >
-                <User className="w-3.5 h-3.5 text-gurukul-saffron-600" />
-                <span>{isMarathi ? 'माझी प्रोफाइल' : 'Admin Profile'}</span>
-              </Link>
-              <span className="text-slate-300">•</span>
-              <a 
-                href={getPublicWebsiteUrl()} 
-                target="_blank" 
-                rel="noopener noreferrer" 
-                className="hover:text-gurukul-saffron-600 transition-colors flex items-center gap-1 text-slate-600 font-medium"
-              >
-                <span>{isMarathi ? 'शाळा मुख्य वेबसाईट' : 'School Main Website'}</span>
-                <ExternalLink className="w-3 h-3 text-slate-400" />
-              </a>
-            </div>
-          </div>
-        </footer>
       </div>
     </div>
   );

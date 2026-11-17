@@ -213,12 +213,10 @@ export const CourseDetailsPage = () => {
                 </div>
               </div>
 
-              <Link to="/admission-enquiry" className="block w-full">
-                <Button variant="primary" size="lg" className="w-full font-bold uppercase tracking-wider shadow-md">
-                  <span>प्रवेश अर्ज सादर करा / Apply</span>
-                  <ArrowRight className="w-4 h-4 ml-1.5" />
-                </Button>
-              </Link>
+              <Button to="/admission-enquiry" variant="primary" size="lg" className="w-full font-bold uppercase tracking-wider shadow-md">
+                <span>प्रवेश अर्ज सादर करा / Apply</span>
+                <ArrowRight className="w-4 h-4 ml-1.5" />
+              </Button>
 
               <a
                 href={institution.brochureUrl}

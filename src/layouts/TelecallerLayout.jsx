@@ -384,36 +384,6 @@ export const TelecallerLayout = () => {
         <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto space-y-6 sm:space-y-8">
           <Outlet />
         </main>
-
-        {/* Telecaller Workspace Footer */}
-        <footer className="bg-white/90 border-t border-slate-200/90 py-4 px-4 sm:px-6 lg:px-8 mt-auto">
-          <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500">
-            <div className="flex items-center gap-2">
-              <span className="font-bold text-gurukul-navy-950">गुरुकुल भोसे • समुपदेशक कॉलिंग पोर्टल</span>
-              <span className="text-slate-300">•</span>
-              <span className="text-slate-500">Telecaller Admission CRM</span>
-            </div>
-            <div className="flex items-center gap-4">
-              <Link 
-                to={`${prefix}/profile`}
-                className="hover:text-emerald-700 transition-colors font-bold flex items-center gap-1.5 text-slate-700 bg-slate-100/80 hover:bg-slate-200/80 px-2.5 py-1 rounded-lg"
-              >
-                <User className="w-3.5 h-3.5 text-emerald-600" />
-                <span>{isMarathi ? 'माझी प्रोफाइल' : 'My Profile'}</span>
-              </Link>
-              <span className="text-slate-300">•</span>
-              <a 
-                href={getPublicWebsiteUrl()} 
-                target="_blank" 
-                rel="noopener noreferrer" 
-                className="hover:text-gurukul-saffron-600 transition-colors flex items-center gap-1 text-slate-600 font-medium"
-              >
-                <span>{isMarathi ? 'शाळा मुख्य वेबसाईट' : 'School Main Website'}</span>
-                <ExternalLink className="w-3 h-3 text-slate-400" />
-              </a>
-            </div>
-          </div>
-        </footer>
       </div>
     </div>
   );

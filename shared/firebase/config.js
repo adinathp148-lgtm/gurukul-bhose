@@ -47,9 +47,9 @@ const getEnv = (key, fallback = '') => {
 // Read Firebase config from environment variables
 const firebaseConfig = {
   apiKey: getEnv('VITE_FIREBASE_API_KEY', "AIzaSyDummyDevKeyForGurukulBhose2026"),
-  authDomain: getEnv('VITE_FIREBASE_AUTH_DOMAIN', "gurukul-bhose.firebaseapp.com"),
-  projectId: getEnv('VITE_FIREBASE_PROJECT_ID', "gurukul-bhose"),
-  storageBucket: getEnv('VITE_FIREBASE_STORAGE_BUCKET', "gurukul-bhose.appspot.com"),
+  authDomain: getEnv('VITE_FIREBASE_AUTH_DOMAIN', "gurukulbhose.firebaseapp.com"),
+  projectId: getEnv('VITE_FIREBASE_PROJECT_ID', "gurukulbhose"),
+  storageBucket: getEnv('VITE_FIREBASE_STORAGE_BUCKET', "gurukulbhose.appspot.com"),
   messagingSenderId: getEnv('VITE_FIREBASE_MESSAGING_SENDER_ID', "102938475612"),
   appId: getEnv('VITE_FIREBASE_APP_ID', "1:102938475612:web:abcdef987654321"),
   measurementId: getEnv('VITE_FIREBASE_MEASUREMENT_ID', "G-GURUKULBHOSE")

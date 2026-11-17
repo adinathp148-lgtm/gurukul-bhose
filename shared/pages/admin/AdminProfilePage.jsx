@@ -144,53 +144,65 @@ export const AdminProfilePage = () => {
         </div>
       )}
 
-      {/* 3. Profile Card */}
-      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-        {/* Banner */}
-        <div className="h-28 bg-gradient-to-r from-gurukul-navy-950 via-slate-900 to-gurukul-navy-900 relative">
-          <div className="absolute top-3 right-4">
-            <Badge variant={isSuperAdmin ? 'Super Admin' : 'Admin'}>
-              {role.toUpperCase()}
-            </Badge>
-          </div>
-        </div>
-
-        {/* User Info Bar */}
-        <div className="px-6 pb-6 pt-0 relative flex flex-col sm:flex-row items-start sm:items-end justify-between gap-4 -mt-12">
-          <div className="flex items-end gap-4">
-            <div className="relative">
+      {/* 3. Profile Card (Single Clean Card) */}
+      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 sm:p-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-5">
+          
+          {/* Left: Avatar + Identity Details */}
+          <div className="flex items-center gap-4 min-w-0">
+            {/* Avatar */}
+            <div className="relative shrink-0">
               {formData.profileImage ? (
                 <img
                   src={formData.profileImage}
                   alt={formData.fullName}
-                  className="w-20 h-20 rounded-2xl object-cover border-4 border-white shadow-md bg-slate-100"
+                  className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl object-cover ring-2 ring-slate-100 shadow-md bg-slate-100"
                 />
               ) : (
-                <div className="w-20 h-20 rounded-2xl bg-gurukul-navy-900 text-yellow-400 font-black text-2xl flex items-center justify-center border-4 border-white shadow-md">
+                <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-br from-gurukul-navy-950 to-slate-800 text-gurukul-saffron-400 font-black text-2xl sm:text-3xl flex items-center justify-center shadow-md">
                   {formData.fullName.charAt(0).toUpperCase()}
                 </div>
               )}
             </div>
 
-            <div>
-              <div className="flex items-center gap-2">
-                <h3 className="text-lg font-black text-slate-900">{formData.fullName}</h3>
-                <BadgeCheck className="w-4 h-4 text-gurukul-saffron-500" />
+            {/* Text Info */}
+            <div className="min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <h3 className="text-lg sm:text-xl font-black text-slate-900 leading-tight">
+                  {formData.fullName}
+                </h3>
+                <BadgeCheck className="w-5 h-5 text-gurukul-saffron-500 shrink-0" />
+                <Badge variant={isSuperAdmin ? 'Super Admin' : 'Admin'}>
+                  {role.toUpperCase()}
+                </Badge>
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+                  Active
+                </span>
               </div>
-              <p className="text-xs text-slate-500 font-medium">{formData.designation}</p>
+              <p className="text-xs sm:text-sm text-slate-500 font-medium mt-1">
+                {formData.designation}
+              </p>
+              {formData.email && (
+                <p className="text-xs text-slate-400 font-mono mt-0.5">
+                  {formData.email}
+                </p>
+              )}
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" onClick={() => setPasswordModalOpen(true)}>
-              <KeyRound className="w-3.5 h-3.5 mr-1.5" />
+          {/* Right: Actions */}
+          <div className="flex items-center gap-2 pt-2 sm:pt-0 w-full sm:w-auto shrink-0">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setPasswordModalOpen(true)}
+              className="flex-1 sm:flex-none justify-center shadow-xs"
+            >
+              <KeyRound className="w-3.5 h-3.5 mr-1.5 text-slate-600" />
               <span>{isMarathi ? 'पासवर्ड बदला' : 'Change Password'}</span>
             </Button>
-            <Button variant="outline" size="sm" onClick={handleLogout} className="text-rose-600 border-rose-200 hover:bg-rose-50">
-              <LogOut className="w-3.5 h-3.5 mr-1" />
-              <span>{isMarathi ? 'लॉगआउट' : 'Logout'}</span>
-            </Button>
           </div>
+
         </div>
       </div>
 
@@ -312,6 +324,26 @@ export const AdminProfilePage = () => {
             <p className="text-slate-400 font-bold uppercase text-[10px]">प्रमाणीकरण (Authentication)</p>
             <p className="font-bold text-slate-800 mt-1">Firebase Auth Secure</p>
           </div>
+        </div>
+
+        <div className="pt-3 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <p className="text-xs font-bold text-slate-800">
+              {isMarathi ? 'खाते सत्र व्यवस्थापन (Session Control)' : 'Active Session Control'}
+            </p>
+            <p className="text-[11px] text-slate-500">
+              {isMarathi ? 'काम पूर्ण झाल्यानंतर प्रशासक खात्यातून सुरक्षितपणे बाहेर पडा.' : 'Safely sign out from your administrative session when done.'}
+            </p>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleLogout}
+            className="text-rose-600 border-rose-300 hover:bg-rose-50 hover:text-rose-700 font-bold shrink-0"
+          >
+            <LogOut className="w-3.5 h-3.5 mr-1.5" />
+            <span>{isMarathi ? 'साइन आउट (Sign Out)' : 'Sign Out'}</span>
+          </Button>
         </div>
       </div>
 

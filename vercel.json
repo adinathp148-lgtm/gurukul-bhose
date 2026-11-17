@@ -1,0 +1,31 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
+  "rewrites": [
+    {
+      "source": "/telecaller/:match*",
+      "destination": "/telecaller/index.html"
+    },
+    {
+      "source": "/admin/:match*",
+      "destination": "/admin/index.html"
+    },
+    {
+      "source": "/login",
+      "destination": "/admin/index.html"
+    },
+    {
+      "source": "/register",
+      "destination": "/admin/index.html"
+    },
+    {
+      "source": "/super-admin/login",
+      "destination": "/admin/index.html"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
+}

@@ -164,14 +164,14 @@ export const HomePage = () => {
 
       {/* 4. Welcome to Gurukul Bhose Banner & Key Highlights */}
       {homepageData?.enabledSections?.welcome !== false && (
-        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="bg-gradient-to-r from-orange-500/10 via-amber-500/5 to-transparent border-l-4 border-gurukul-saffron-500 rounded-2xl p-6 sm:p-8">
-            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-              <div className="space-y-2 max-w-3xl">
-                <span className="text-xs font-bold uppercase tracking-wider text-gurukul-saffron-600 block">
+        <section className="max-w-7xl mx-auto px-3.5 sm:px-6 lg:px-8">
+          <div className="bg-gradient-to-br from-orange-50 via-amber-50/50 to-orange-50/30 border border-orange-200/90 border-l-4 border-l-gurukul-saffron-500 rounded-2xl p-4.5 sm:p-7 lg:p-8 shadow-xs">
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-5 sm:gap-6">
+              <div className="space-y-2 max-w-3xl min-w-0 flex-1">
+                <span className="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-gurukul-saffron-600 block">
                   {isMarathi ? 'स्वागतम् • गुरुकुल शिक्षण संकुल, भोसे (ता. मिरज, जि. सांगली)' : 'Welcome • Gurukul Educational Campus, Bhose (Miraj, Sangli)'}
                 </span>
-                <h2 className="text-2xl sm:text-3xl font-black text-gurukul-navy-900 leading-tight">
+                <h2 className="text-xl sm:text-2xl md:text-3xl font-black text-gurukul-navy-900 leading-tight">
                   {isMarathi 
                     ? (homepageData?.welcomeSection?.heading || 'सैनिक शिस्त, दर्जेदार शिक्षण आणि हमखास करिअर यश!') 
                     : 'Military Discipline, Quality Education & Assured Career Success!'}
@@ -182,18 +182,24 @@ export const HomePage = () => {
                     : 'Lush 4-acre scenic campus nestled at the foothills of Dandoba hills. Classes 5th to 10th (Marathi & Semi-English) and 11th & 12th (Arts & Science PCMB). School, college, hostel, mess, coaching, competitive exam training, and sports grounds all in one secure campus.'}
                 </p>
               </div>
-              <div className="shrink-0 flex flex-wrap gap-3">
-                <Link to={homepageData?.welcomeSection?.ctaLink || "/about"}>
-                  <Button variant="secondary" size="md">
-                    <span>{isMarathi ? (homepageData?.welcomeSection?.ctaText || 'संस्थेचा परिचय') : 'About Institution'}</span>
-                    <ArrowRight className="w-4 h-4 ml-1" />
-                  </Button>
-                </Link>
-                <Link to="/admission-enquiry">
-                  <Button variant="primary" size="md">
-                    <span>{isMarathi ? 'प्रवेश अर्ज करा' : 'Apply Now'}</span>
-                  </Button>
-                </Link>
+              <div className="shrink-0 flex flex-col sm:flex-row gap-2.5 sm:gap-3 w-full sm:w-auto pt-1 sm:pt-0">
+                <Button 
+                  to={homepageData?.welcomeSection?.ctaLink || "/about"} 
+                  variant="secondary" 
+                  size="md" 
+                  className="w-full sm:w-auto text-center justify-center"
+                >
+                  <span>{isMarathi ? (homepageData?.welcomeSection?.ctaText || 'संस्थेचा परिचय') : 'About Institution'}</span>
+                  <ArrowRight className="w-4 h-4 ml-1.5 shrink-0" />
+                </Button>
+                <Button 
+                  to="/admission-enquiry" 
+                  variant="primary" 
+                  size="md" 
+                  className="w-full sm:w-auto text-center justify-center shadow-md shadow-orange-500/20"
+                >
+                  <span>{isMarathi ? 'प्रवेश अर्ज करा' : 'Apply Now'}</span>
+                </Button>
               </div>
             </div>
           </div>
@@ -313,7 +319,7 @@ export const HomePage = () => {
                         value={quickForm.parentName}
                         onChange={(e) => setQuickForm({ ...quickForm, parentName: e.target.value })}
                         placeholder={isMarathi ? "उदा. श्री. रमेश पाटील" : "e.g. Mr. Ramesh Patil"}
-                        className="w-full text-xs px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-gurukul-saffron-500 focus:outline-none"
+                        className="w-full text-sm sm:text-xs px-3.5 py-3 sm:py-2.5 bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-gurukul-saffron-500 focus:outline-none"
                       />
                     </div>
 
@@ -327,7 +333,7 @@ export const HomePage = () => {
                         value={quickForm.studentName}
                         onChange={(e) => setQuickForm({ ...quickForm, studentName: e.target.value })}
                         placeholder={isMarathi ? "उदा. रोहन पाटील" : "e.g. Rohan Patil"}
-                        className="w-full text-xs px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-gurukul-saffron-500 focus:outline-none"
+                        className="w-full text-sm sm:text-xs px-3.5 py-3 sm:py-2.5 bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-gurukul-saffron-500 focus:outline-none"
                       />
                     </div>
 
@@ -342,7 +348,7 @@ export const HomePage = () => {
                           value={quickForm.mobileNumber}
                           onChange={(e) => setQuickForm({ ...quickForm, mobileNumber: e.target.value })}
                           placeholder={isMarathi ? "१० अंकी मोबाईल" : "10-digit mobile"}
-                          className="w-full text-xs px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-gurukul-saffron-500 focus:outline-none"
+                          className="w-full text-sm sm:text-xs px-3.5 py-3 sm:py-2.5 bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-gurukul-saffron-500 focus:outline-none"
                         />
                       </div>
 
@@ -353,7 +359,7 @@ export const HomePage = () => {
                         <select
                           value={quickForm.admissionClass}
                           onChange={(e) => setQuickForm({ ...quickForm, admissionClass: e.target.value })}
-                          className="w-full text-xs px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-gurukul-saffron-500 focus:outline-none"
+                          className="w-full text-sm sm:text-xs px-3.5 py-3 sm:py-2.5 bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-gurukul-saffron-500 focus:outline-none"
                         >
                           <option value="इ. 5 वी">{isMarathi ? 'इ. 5 वी (5th Std)' : 'Class 5th'}</option>
                           <option value="इ. 6 वी">{isMarathi ? 'इ. 6 वी (6th Std)' : 'Class 6th'}</option>
@@ -378,7 +384,7 @@ export const HomePage = () => {
                         value={quickForm.message}
                         onChange={(e) => setQuickForm({ ...quickForm, message: e.target.value })}
                         placeholder={isMarathi ? "उदा. मिरज, सांगली" : "e.g. Miraj, Sangli"}
-                        className="w-full text-xs px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-gurukul-saffron-500 focus:outline-none"
+                        className="w-full text-sm sm:text-xs px-3.5 py-3 sm:py-2.5 bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-gurukul-saffron-500 focus:outline-none"
                       />
                     </div>
 

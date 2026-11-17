@@ -40,28 +40,28 @@ export const CTASection = ({
           {displaySubtitle}
         </p>
 
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-2">
-          <Link to="/admission-enquiry">
-            <Button
-              variant="secondary"
-              size="lg"
-              className="w-full sm:w-auto bg-gurukul-navy-950 hover:bg-black text-white shadow-xl"
-            >
-              <span>{isMarathi ? 'ऑनलाईन प्रवेश नोंदणी / Apply Online' : 'Apply Online for Admission'}</span>
-              <ArrowRight className="w-4 h-4 ml-1.5" />
-            </Button>
-          </Link>
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 pt-2">
+          <Button
+            to="/admission-enquiry"
+            variant="secondary"
+            size="lg"
+            className="w-full sm:w-auto bg-gurukul-navy-950 hover:bg-black text-white shadow-xl"
+          >
+            <span>{isMarathi ? 'ऑनलाईन प्रवेश नोंदणी / Apply Online' : 'Apply Online for Admission'}</span>
+            <ArrowRight className="w-4 h-4 ml-1.5" />
+          </Button>
 
-          <a href={brochureUrl} target="_blank" rel="noopener noreferrer">
-            <Button
-              variant="outline"
-              size="lg"
-              className="w-full sm:w-auto bg-white text-slate-900 border-white hover:bg-slate-100"
-            >
-              <Download className="w-4 h-4 mr-1.5 text-gurukul-saffron-600" />
-              <span>{isMarathi ? 'माहिती पत्रक (Brochure)' : 'Download Brochure'}</span>
-            </Button>
-          </a>
+          <Button
+            href={brochureUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            variant="outline"
+            size="lg"
+            className="w-full sm:w-auto bg-white text-slate-900 border-white hover:bg-slate-100"
+          >
+            <Download className="w-4 h-4 mr-1.5 text-gurukul-saffron-600" />
+            <span>{isMarathi ? 'माहिती पत्रक (Brochure)' : 'Download Brochure'}</span>
+          </Button>
 
           <a
             href={`tel:${phone}`}

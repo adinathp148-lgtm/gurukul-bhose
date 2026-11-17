@@ -22,6 +22,7 @@ import {
   demoCampusVisits,
   demoAdmissionApplications 
 } from '../data/initialData';
+import { isDemoTelecaller } from '../services/auth/authService';
 import { useAuth } from './AuthContext';
 import {
   VISIT_PURPOSES,
@@ -142,8 +143,24 @@ export const CRMProvider = ({ children }) => {
   });
 
   const [telecallers, setTelecallers] = useState(() => {
-    const saved = localStorage.getItem('gurukul_crm_telecallers');
-    return saved ? JSON.parse(saved) : demoUsers.filter(u => u.role === 'telecaller');
+    try {
+      const saved = localStorage.getItem('gurukul_crm_telecallers');
+      if (saved) {
+        const parsed = JSON.parse(saved).filter(t => t.status === 'active' && !isDemoTelecaller(t));
+        if (parsed.length > 0) return parsed;
+      }
+      const stored = localStorage.getItem('gurukul_stored_telecallers');
+      if (stored) {
+        const parsed = JSON.parse(stored).filter(t => t.status === 'active' && !isDemoTelecaller(t));
+        if (parsed.length > 0) return parsed;
+      }
+      const registered = localStorage.getItem('gurukul_registered_telecallers');
+      if (registered) {
+        const parsed = JSON.parse(registered).filter(t => t.status === 'active' && !isDemoTelecaller(t));
+        if (parsed.length > 0) return parsed;
+      }
+    } catch (e) {}
+    return [];
   });
 
   const [activities, setActivities] = useState(() => {
@@ -258,18 +275,51 @@ export const CRMProvider = ({ children }) => {
       console.warn("Firestore live enquiries sync notice:", err.message);
     });
 
-    // B. Telecallers subscription (from users collection)
+    // B. Telecallers subscription (from users collection - ONLY approved active telecallers)
     const qTele = query(collection(db, 'users'), where('role', '==', 'telecaller'));
     const unsubTelecallers = onSnapshot(qTele, (snapshot) => {
       if (!snapshot.empty) {
-        const teleList = snapshot.docs.map(d => ({
-          uid: d.id,
-          id: d.id,
-          displayName: d.data().fullName,
-          fullName: d.data().fullName,
-          ...d.data()
-        }));
-        setTelecallers(teleList);
+        const teleList = snapshot.docs
+          .map(d => ({
+            uid: d.id,
+            id: d.id,
+            displayName: d.data().fullName,
+            fullName: d.data().fullName,
+            ...d.data()
+          }))
+          .filter(t => t.status === 'active' && !isDemoTelecaller(t));
+        if (teleList.length > 0) {
+          setTelecallers(prev => {
+            const map = new Map();
+            prev.filter(t => t.status === 'active' && !isDemoTelecaller(t)).forEach(p => map.set(p.uid || p.id, p));
+            teleList.forEach(p => map.set(p.uid || p.id, p));
+            return Array.from(map.values());
+          });
+        }
+      }
+    }, () => {});
+
+    // Live subscription for telecaller_profiles collection (ONLY approved active telecallers)
+    const unsubTeleProfiles = onSnapshot(collection(db, 'telecaller_profiles'), (snapshot) => {
+      if (!snapshot.empty) {
+        const profileList = snapshot.docs
+          .map(d => ({
+            uid: d.id,
+            id: d.id,
+            displayName: d.data().fullName,
+            fullName: d.data().fullName,
+            ...d.data()
+          }))
+          .filter(t => t.status === 'active' && !isDemoTelecaller(t));
+
+        if (profileList.length > 0) {
+          setTelecallers(prev => {
+            const map = new Map();
+            prev.filter(t => t.status === 'active' && !isDemoTelecaller(t)).forEach(p => map.set(p.uid || p.id, p));
+            profileList.forEach(p => map.set(p.uid || p.id, p));
+            return Array.from(map.values());
+          });
+        }
       }
     }, () => {});
 
@@ -360,6 +410,7 @@ export const CRMProvider = ({ children }) => {
     return () => {
       unsubEnquiries();
       unsubTelecallers();
+      unsubTeleProfiles();
       unsubNotifs();
       unsubActivities();
       unsubAssignments();

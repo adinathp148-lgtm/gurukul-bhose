@@ -14,7 +14,8 @@ export const TelecallerLoginPage = () => {
 
   const [email, setEmail] = useState(location.state?.registeredEmail || '');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState(null);
+  const [error, setError] = useState(location.state?.errorMessage || null);
+  const [pendingNotice, setPendingNotice] = useState(location.state?.pendingNotice || false);
   const [successBanner, setSuccessBanner] = useState(location.state?.successMessage || null);
   const [loading, setLoading] = useState(false);
 
@@ -86,6 +87,23 @@ export const TelecallerLoginPage = () => {
             {isMarathi ? 'गुरुकुल भोसे कॉलिंग व फॉलो-अप मॅनेजमेंट' : 'Gurukul Bhose Calling & Follow-up Management'}
           </p>
         </div>
+
+        {/* Pending Approval Notice */}
+        {pendingNotice && (
+          <div className="mb-5 p-3.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-xs flex items-start gap-2.5 animate-in fade-in">
+            <AlertCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+            <div>
+              <span className="font-bold block">
+                {isMarathi ? 'खाते मंजुरी प्रलंबित (Pending Admin Approval)' : 'Account Pending Admin Approval'}
+              </span>
+              <span className="text-[11px] text-amber-800">
+                {isMarathi 
+                  ? 'शाळा ॲडमिनने आपले खाते मंजूर (Approve) केल्याशिवाय टेलिकॉलर रोल व लॉगिन उपलब्ध होणार नाही.' 
+                  : 'You will only be able to sign in after a School Admin explicitly approves your registration.'}
+              </span>
+            </div>
+          </div>
+        )}
 
         {/* Success Banner (e.g. redirected after registration) */}
         {successBanner && (

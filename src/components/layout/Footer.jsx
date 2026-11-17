@@ -9,7 +9,6 @@ import {
   ChevronRight, 
   ArrowUp, 
   Shield,
-  User,
   LogIn,
   ExternalLink
 } from 'lucide-react';
@@ -99,8 +98,13 @@ export const Footer = ({ showStaffLink = true }) => {
                 </Link>
               </li>
               <li>
+                <Link to="/vidyamandir" className="hover:text-gurukul-saffron-400 transition-colors flex items-center gap-1.5">
+                  <ChevronRight className="w-3 h-3 text-gurukul-saffron-500" /> {isMarathi ? 'गुरुकुल प्री-प्रायमरी (Nursery, LKG, UKG)' : 'Gurukul Pre-Primary (Nursery, LKG, UKG)'}
+                </Link>
+              </li>
+              <li>
                 <Link to="/gurukul-vidyamandir" className="hover:text-gurukul-saffron-400 transition-colors flex items-center gap-1.5">
-                  <ChevronRight className="w-3 h-3 text-gurukul-saffron-500" /> {isMarathi ? 'गुरुकुल विद्यामंदिर (5 वी ते 10 वी)' : 'Gurukul Vidyamandir (5th–10th)'}
+                  <ChevronRight className="w-3 h-3 text-gurukul-saffron-500" /> {isMarathi ? 'गुरुकुल विद्यामंदिर (1 ली ते 10 वी)' : 'Gurukul Vidyamandir (1st–10th)'}
                 </Link>
               </li>
               <li>
@@ -127,17 +131,6 @@ export const Footer = ({ showStaffLink = true }) => {
                 <Link to="/notices" className="hover:text-gurukul-saffron-400 transition-colors flex items-center gap-1.5">
                   <ChevronRight className="w-3 h-3 text-gurukul-saffron-500" /> {isMarathi ? 'सूचना पत्रक (Notices)' : 'Notices & Bulletins'}
                 </Link>
-              </li>
-              <li className="pt-2 border-t border-slate-800">
-                <a 
-                  href={`${adminBaseUrl}/admin/profile`}
-                  target="_blank" 
-                  rel="noopener noreferrer" 
-                  className="hover:text-yellow-400 transition-colors flex items-center gap-1.5 text-yellow-400 font-semibold"
-                >
-                  <Shield className="w-3.5 h-3.5 text-yellow-400" />
-                  <span>{isMarathi ? 'अ‍ॅडमिन पॅनेल प्रोफाइल (Admin Profile)' : 'Admin Panel Profile'}</span>
-                </a>
               </li>
             </ul>
           </div>
@@ -198,58 +191,14 @@ export const Footer = ({ showStaffLink = true }) => {
             >
               <span>{isMarathi ? 'ऑनलाईन प्रवेश अर्ज / Enquiry' : 'Online Admission Enquiry'}</span>
             </Link>
-
-            {/* Admin Panel Profile Card */}
-            <div className="pt-2">
-              <div className="p-3 rounded-xl bg-slate-900/90 border border-slate-800 shadow-inner">
-                <div className="flex items-center justify-between mb-1.5">
-                  <div className="flex items-center gap-2">
-                    <div className="w-6 h-6 rounded-md bg-yellow-500/10 border border-yellow-500/20 flex items-center justify-center text-yellow-400">
-                      <Shield className="w-3.5 h-3.5" />
-                    </div>
-                    <span className="text-xs font-bold text-white">
-                      {isMarathi ? 'अ‍ॅडमिन पॅनेल' : 'Admin Panel'}
-                    </span>
-                  </div>
-                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-gurukul-saffron-500/20 text-gurukul-saffron-400">
-                    CRM Portal
-                  </span>
-                </div>
-                <p className="text-[11px] text-slate-400 leading-snug mb-2.5">
-                  {isMarathi 
-                    ? 'शासकीय व अंतर्गत नियंत्रणासाठी अ‍ॅडमिन प्रोफाइल व CRM व्यवस्थापन.' 
-                    : 'Administrative control, staff profile and admissions CRM workspace.'}
-                </p>
-                <div className="grid grid-cols-2 gap-2">
-                  <a
-                    href={`${adminBaseUrl}/admin/profile`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-yellow-500 hover:bg-yellow-600 text-slate-950 text-[11px] font-bold transition-colors shadow-sm"
-                  >
-                    <User className="w-3 h-3" />
-                    <span>{isMarathi ? 'प्रोफाइल' : 'Profile'}</span>
-                  </a>
-                  <a
-                    href={`${adminBaseUrl}/login`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center justify-center gap-1 px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-[11px] font-medium border border-slate-700 transition-colors"
-                  >
-                    <LogIn className="w-3 h-3 text-gurukul-saffron-400" />
-                    <span>{isMarathi ? 'लॉगिन' : 'Login'}</span>
-                  </a>
-                </div>
-              </div>
-            </div>
           </div>
 
         </div>
 
         {/* Bottom copyright & back to top */}
-        <div className="mt-12 pt-6 border-t border-slate-800/80 flex flex-col md:flex-row items-center justify-between text-xs text-slate-400 gap-4">
+        <div className="mt-12 pt-6 border-t border-slate-800/80 flex flex-col md:flex-row items-center justify-between text-xs text-slate-400 gap-4 text-center md:text-left">
           <p>{copyrightText}</p>
-          <div className="flex flex-wrap items-center gap-3 sm:gap-4">
+          <div className="flex flex-wrap items-center justify-center md:justify-end gap-3 sm:gap-4">
             <a
               href={`${adminBaseUrl}/admin/profile`}
               target="_blank"

@@ -41,7 +41,8 @@ import {
   getCMSSEOSettings,
   updateCMSSEOSettings,
   getCMSActivityLogs,
-  logCMSActivity
+  logCMSActivity,
+  pushInitialDataToFirestore
 } from '../services/firestore/cmsService';
 
 import { useAuth } from './AuthContext';
@@ -352,6 +353,11 @@ export const CMSProvider = ({ children }) => {
     updateSEO,
     refreshLogs,
     resetToDefaults,
+    pushToFirestore: async () => {
+      const res = await pushInitialDataToFirestore(currentUser);
+      await loadAllCMSData();
+      return res;
+    },
     // Backwards-compatible aliases for Phase 2 components
     slides: homepageData?.heroSlides || initialSlides,
     addNotice: (n) => saveNotice(n),

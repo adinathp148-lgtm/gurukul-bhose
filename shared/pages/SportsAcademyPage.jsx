@@ -87,17 +87,13 @@ export const SportsAcademyPage = () => {
             </div>
 
             <div className="pt-2 flex items-center gap-4">
-              <Link to="/admission-enquiry">
-                <Button variant="primary" size="md">
-                  प्रवेशासाठी संपर्क साधा
-                </Button>
-              </Link>
-              <a href={institution.brochureUrl} target="_blank" rel="noopener noreferrer">
-                <Button variant="outline" size="md">
-                  <Download className="w-4 h-4 mr-1.5" />
-                  माहिती पत्रक
-                </Button>
-              </a>
+              <Button to="/admission-enquiry" variant="primary" size="md">
+                प्रवेशासाठी संपर्क साधा
+              </Button>
+              <Button href={institution.brochureUrl || "https://bit.ly/3mUeaH6"} target="_blank" rel="noopener noreferrer" variant="outline" size="md">
+                <Download className="w-4 h-4 mr-1.5" />
+                माहिती पत्रक
+              </Button>
             </div>
           </div>
 

@@ -79,10 +79,10 @@ export const ContactInfoSection = ({ institution = institutionInfo }) => {
           </div>
         </div>
 
-        <div className="pt-4 border-t border-slate-100 flex items-center gap-4">
+        <div className="pt-4 border-t border-slate-100 flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4">
           <a
             href={`tel:${primaryPhone}`}
-            className="text-xs font-bold text-white bg-gurukul-navy-900 hover:bg-black px-4 py-2.5 rounded-lg transition-colors"
+            className="text-xs font-bold text-white bg-gurukul-navy-900 hover:bg-black px-4 py-2.5 rounded-lg transition-colors text-center"
           >
             {isMarathi ? 'आत्ताच कॉल करा (Call Now)' : 'Call Campus Now'}
           </a>
@@ -90,7 +90,7 @@ export const ContactInfoSection = ({ institution = institutionInfo }) => {
             href={mapUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-xs font-bold text-slate-700 hover:text-gurukul-saffron-600 flex items-center gap-1"
+            className="text-xs font-bold text-slate-700 hover:text-gurukul-saffron-600 flex items-center justify-center gap-1 py-1"
           >
             <span>{isMarathi ? 'Google Maps उघडा' : 'Open in Google Maps'}</span>
             <ExternalLink className="w-3.5 h-3.5" />

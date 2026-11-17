@@ -25,6 +25,25 @@ export const ProtectedRoute = ({ children, allowedRoles = [] }) => {
     return <Navigate to="/admin/login" state={{ from: location }} replace />;
   }
 
+  // If user is pending admin approval or inactive, deny access to protected portals
+  const userStatus = (currentUser?.status || '').toLowerCase();
+  const isPending = userStatus === 'pending' || userStatus === 'pending_approval' || currentUser?.role === 'pending_applicant';
+  if (isPending || userStatus === 'inactive') {
+    if (location.pathname.startsWith('/telecaller')) {
+      return (
+        <Navigate 
+          to="/telecaller/login" 
+          state={{ 
+            from: location,
+            errorMessage: 'आपले खाते अद्याप प्रशासकीय मंजुरीसाठी प्रलंबित आहे (Pending Admin Approval). ॲडमिनने मंजूर केल्यानंतरच तुम्हाला प्रवेश मिळेल.'
+          }} 
+          replace 
+        />
+      );
+    }
+    return <Navigate to="/admin/login" state={{ from: location }} replace />;
+  }
+
   // Check role authorization
   if (allowedRoles.length > 0) {
     const normalizedRole = role.toLowerCase();

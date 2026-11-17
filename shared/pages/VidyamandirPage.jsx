@@ -31,14 +31,14 @@ export const VidyamandirPage = () => {
   return (
     <div className="space-y-16 pb-16">
       <SEO
-        title="गुरुकुल विद्यामंदिर, भोसे (इ. ५ वी ते १० वी) | सैनिक पॅटर्न निवासी शाळा"
-        description="इ. ५ वी ते १० वी सैनिक पॅटर्न निवासी मराठी व सेमी-इंग्रजी स्कूल. स्कॉलरशिप, नवोदय, सैनिक स्कूल स्पर्धा परीक्षा तयारी, नो डोनेशन थेट प्रवेश."
+        title="गुरुकुल विद्यामंदिर, भोसे (इ. १ ली ते १० वी) | सैनिक पॅटर्न निवासी शाळा"
+        description="इ. १ ली ते १० वी सैनिक पॅटर्न निवासी मराठी व सेमी-इंग्रजी स्कूल तसेच प्री-प्रायमरी (Nursery, LKG, UKG). स्कॉलरशिप, नवोदय, सैनिक स्कूल स्पर्धा परीक्षा तयारी, नो डोनेशन थेट प्रवेश."
         canonicalUrl="/vidyamandir"
       />
 
       {/* Page Header */}
       <PageHeader
-        badge="इयत्ता ५ वी ते १० वी निवासी शाळा"
+        badge="इयत्ता १ ली ते १० वी निवासी शाळा • प्री-प्रायमरी (Nursery, LKG, UKG)"
         title="गुरुकुल विद्यामंदिर, भोसे"
         subtitle="सैनिक पॅटर्न निवासी मराठी व सेमी माध्यम स्कूल • विद्यार्थ्यांच्या शिक्षणाचा व जीवनाचा भक्कम पाया"
         breadcrumbs={[
@@ -58,25 +58,21 @@ export const VidyamandirPage = () => {
               सर्वगुणसंपन्न विद्यार्थी घडवणारी एकमेव सैनिक पॅटर्न निवासी शाळा
             </h2>
             <p className="text-xs sm:text-sm text-slate-700 leading-relaxed">
-              <strong>गुरुकुल विद्यामंदिर</strong> ही इयत्ता ५ वी ते १० वी च्या विद्यार्थ्यांसाठी चालवली जाणारी महाराष्ट्रातील एक अग्रगण्य निवासी शाळा आहे. येथे महाराष्ट्र राज्य माध्यमिक व उच्च माध्यमिक शिक्षण मंडळ (SSC Board) अभ्यासक्रमानुसार मराठी व सेमी-इंग्रजी माध्यमातून गुणवत्तापूर्ण अध्यापन केले जाते.
+              <strong>गुरुकुल विद्यामंदिर</strong> ही इयत्ता १ ली ते १० वी च्या विद्यार्थ्यांसाठी चालवली जाणारी महाराष्ट्रातील एक अग्रगण्य निवासी शाळा आहे. येथे महाराष्ट्र राज्य माध्यमिक व उच्च माध्यमिक शिक्षण मंडळ (SSC Board) अभ्यासक्रमानुसार मराठी व सेमी-इंग्रजी माध्यमातून गुणवत्तापूर्ण अध्यापन केले जाते.
             </p>
             <p className="text-xs sm:text-sm text-slate-700 leading-relaxed">
               केवळ शालेय पुस्तकी ज्ञानावर अवलंबून न राहता, विद्यार्थ्यांमध्ये देशप्रेम, शिस्त, वेळेचे काटेकोर नियोजन, स्वावलंबन आणि नेतृत्वगुणांची जोपासना केली जाते.
             </p>
 
-            <div className="pt-2 flex flex-wrap gap-4">
-              <Link to="/admission-enquiry">
-                <Button variant="primary" size="md">
-                  <span>प्रवेश अर्ज करा / Apply</span>
-                  <ArrowRight className="w-4 h-4 ml-1.5" />
-                </Button>
-              </Link>
-              <a href={institution.brochureUrl} target="_blank" rel="noopener noreferrer">
-                <Button variant="outline" size="md">
-                  <Download className="w-4 h-4 mr-1.5" />
-                  <span>माहिती पत्रक (Brochure)</span>
-                </Button>
-              </a>
+            <div className="pt-2 flex flex-col sm:flex-row gap-3 sm:gap-4 w-full sm:w-auto">
+              <Button to="/admission-enquiry" variant="primary" size="md" className="w-full sm:w-auto">
+                <span>प्रवेश अर्ज करा / Apply</span>
+                <ArrowRight className="w-4 h-4 ml-1.5" />
+              </Button>
+              <Button href={institution.brochureUrl || "https://bit.ly/3mUeaH6"} target="_blank" rel="noopener noreferrer" variant="outline" size="md" className="w-full sm:w-auto">
+                <Download className="w-4 h-4 mr-1.5" />
+                <span>माहिती पत्रक (Brochure)</span>
+              </Button>
             </div>
           </div>
 
@@ -139,12 +135,14 @@ export const VidyamandirPage = () => {
             इयत्ता व वर्ग रचना (Available Classes)
           </span>
           <h2 className="text-2xl sm:text-3xl font-black text-gurukul-navy-900 mt-1">
-            इ. ५ वी ते १० वी मराठी व सेमी-इंग्रजी माध्यम
+            इ. १ ली ते १० वी मराठी व सेमी-इंग्रजी माध्यम (तसेच Nursery, LKG, UKG)
           </h2>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {[
+            { standard: "पूर्व प्राथमिक (Nursery, LKG, UKG)", desc: "हसत-खेळत आनंददायी इंग्रजी शिक्षण, सुसंस्कार, शब्द व अंक ओळख आणि मूलभूत कौशल्यांचा विकास." },
+            { standard: "इयत्ता १ ली ते ४ वी (Primary School)", desc: "पायाभूत गणित, भाषा प्रभुत्व, वाचन-लेखन सराव, खेळ व प्रत्येक मुलावर वैयक्तिक लक्ष." },
             { standard: "इयत्ता ५ वी (Class 5th)", desc: "स्कॉलरशिप व नवोदय पूर्वतयारीची पायाभूत बॅच. स्वावलंबन व चांगल्या सवयींचे संवर्धन." },
             { standard: "इयत्ता ६ वी (Class 6th)", desc: "मूलभूत गणित व इंग्रजी संभाषण सराव. नियमित मैदानी व्यायाम व योगासने." },
             { standard: "इयत्ता ७ वी (Class 7th)", desc: "NMMS व माध्यमिक शिष्यवृत्ती पायाभरणी. विज्ञान प्रयोगांचे प्रत्यक्ष आकलन." },
@@ -258,7 +256,7 @@ export const VidyamandirPage = () => {
       {/* 7. Admission CTA */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <CTASection
-          title="इयत्ता ५ वी ते १० वी प्रवेशासाठी त्वरित नाव नोंदवा!"
+          title="इयत्ता १ ली ते १० वी व प्री-प्रायमरी प्रवेशासाठी त्वरित नाव नोंदवा!"
           subtitle="नो डोनेशन • थेट प्रवेश • सुरक्षित वसतिगृह • सैनिक पॅटर्न निवासी शाळा"
           brochureUrl={institution.brochureUrl}
           phone={primaryPhone}

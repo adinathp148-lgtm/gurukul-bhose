@@ -65,11 +65,9 @@ export const CourseCard = ({ course }) => {
           <ArrowRight className="w-3.5 h-3.5" />
         </Link>
 
-        <Link to="/admission-enquiry">
-          <Button variant="primary" size="sm">
-            Apply Now
-          </Button>
-        </Link>
+        <Button to="/admission-enquiry" variant="primary" size="sm">
+          Apply Now
+        </Button>
       </div>
     </div>
   );

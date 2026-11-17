@@ -40,8 +40,8 @@ import { FollowUpsPage } from '../pages/admin/FollowUpsPage';
 import { AdmissionsPage } from '../pages/admin/AdmissionsPage';
 import { ParentCommunicationPage } from '../pages/admin/ParentCommunicationPage';
 import { MetaIntegrationPage } from '../pages/admin/MetaIntegrationPage';
-import { CallMonitoringPage } from '../pages/admin/CallMonitoringPage';
-import { TelecallerPerformancePage } from '../pages/admin/TelecallerPerformancePage';
+import { CallMonitoringPage } from '../../shared/pages/admin/CallMonitoringPage';
+import { TelecallerPerformancePage } from '../../shared/pages/admin/TelecallerPerformancePage';
 import { AdminProfilePage } from '../../shared/pages/admin/AdminProfilePage';
 
 // Website CMS Modules (Phase 4)
