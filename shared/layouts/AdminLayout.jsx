@@ -193,7 +193,7 @@ export const AdminLayout = () => {
   };
 
   return (
-    <div className="min-h-screen flex bg-[#fbfbfa] font-sans selection:bg-gurukul-saffron-500 selection:text-white">
+    <div className="min-h-screen bg-[#fbfbfa] font-sans selection:bg-gurukul-saffron-500 selection:text-white antialiased">
       {/* Mobile backdrop */}
       {sidebarOpen && (
         <div 
@@ -441,34 +441,34 @@ export const AdminLayout = () => {
       </aside>
 
       {/* Main Content Area */}
-      <div className="flex-1 lg:pl-64 flex flex-col min-h-screen">
+      <div className="lg:pl-64 flex flex-col min-h-screen min-w-0 w-full">
         {/* Top bar with authentic Gurukul Website branding */}
-        <header className="h-16 sm:h-17 bg-white/95 backdrop-blur-md border-b border-slate-200/90 sticky top-0 z-30 px-3 sm:px-6 flex items-center justify-between shadow-xs">
-          <div className="flex items-center gap-3">
+        <header className="h-16 sm:h-17 bg-white/95 backdrop-blur-md border-b border-slate-200/90 sticky top-0 z-30 px-3 sm:px-6 flex items-center justify-between shadow-xs w-full min-w-0">
+          <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
             <button
               onClick={() => setSidebarOpen(true)}
-              className="lg:hidden p-2 rounded-xl text-slate-600 hover:bg-slate-100 transition-colors"
+              className="lg:hidden p-2 rounded-xl text-slate-600 hover:bg-slate-100 transition-colors shrink-0"
               aria-label="Toggle Navigation Menu"
             >
               <Menu className="w-5 h-5" />
             </button>
 
-            <Link to="/" className="flex items-center gap-2.5 sm:gap-3 group text-left">
+            <Link to="/" className="flex items-center gap-2.5 sm:gap-3 group text-left min-w-0">
               <img 
                 src="/gurukul-logo.png" 
                 alt="गुरुकुल भोसे" 
                 className="w-9 h-9 sm:w-10 sm:h-10 object-contain drop-shadow-xs shrink-0 group-hover:scale-105 transition-transform" 
               />
-              <div className="flex flex-col text-left">
+              <div className="flex flex-col text-left min-w-0">
                 <div className="flex items-center gap-2">
-                  <span className="font-black text-base sm:text-lg text-gurukul-navy-950 leading-tight tracking-tight">
+                  <span className="font-black text-base sm:text-lg text-gurukul-navy-950 leading-tight tracking-tight truncate">
                     {isMarathi ? 'गुरुकुल भोसे' : 'Gurukul Bhose'}
                   </span>
-                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-orange-50 border border-orange-200 text-gurukul-saffron-700">
+                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-orange-50 border border-orange-200 text-gurukul-saffron-700 shrink-0">
                     CRM Portal
                   </span>
                 </div>
-                <span className="text-[10px] sm:text-[11px] font-semibold text-gurukul-saffron-600 hidden sm:block leading-tight mt-0.5">
+                <span className="text-[10px] sm:text-[11px] font-semibold text-gurukul-saffron-600 hidden md:block lg:hidden xl:block leading-tight mt-0.5 truncate max-w-[280px]">
                   {isMarathi 
                     ? 'विद्यामंदिर व ज्युनिअर कॉलेज (सैनिक पॅटर्न निवासी)' 
                     : 'Sainik Pattern Residential School & College'}
@@ -478,10 +478,10 @@ export const AdminLayout = () => {
           </div>
 
           {/* Right Header items */}
-          <div className="flex items-center gap-2 sm:gap-3.5">
+          <div className="flex items-center gap-1.5 sm:gap-2.5 md:gap-3 shrink-0">
             {/* Quick Overdue Alert if any */}
             {metrics.overdueFollowUps > 0 && (
-              <div className="hidden lg:flex items-center gap-1.5 px-3 py-1 bg-red-50 text-red-700 border border-red-200 rounded-full text-xs font-semibold">
+              <div className="hidden xl:flex items-center gap-1.5 px-3 py-1 bg-red-50 text-red-700 border border-red-200 rounded-full text-xs font-semibold shrink-0">
                 <Flame className="w-3.5 h-3.5 text-red-500 animate-pulse" />
                 <span>{metrics.overdueFollowUps} {isMarathi ? 'थकबाकी' : 'Overdue'}</span>
               </div>
@@ -494,7 +494,7 @@ export const AdminLayout = () => {
             <NotificationCenter />
 
             {/* Role indicator */}
-            <Badge variant={role === 'telecaller' ? 'Telecaller' : 'Admin'}>
+            <Badge variant={role === 'telecaller' ? 'Telecaller' : 'Admin'} className="shrink-0">
               {role === 'telecaller' ? 'TELECALLER' : 'ADMIN'}
             </Badge>
 
@@ -503,7 +503,7 @@ export const AdminLayout = () => {
               href={getPublicWebsiteUrl()}
               target="_blank"
               rel="noopener noreferrer"
-              className="hidden sm:inline-flex items-center gap-1.5 text-xs font-bold px-3.5 py-2 rounded-xl text-white bg-gradient-to-r from-gurukul-saffron-600 to-gurukul-saffron-500 hover:from-gurukul-saffron-500 hover:to-gurukul-saffron-600 shadow-xs hover:shadow transition-all"
+              className="hidden sm:inline-flex items-center gap-1.5 text-xs font-bold px-3.5 py-2 rounded-xl text-white bg-gradient-to-r from-gurukul-saffron-600 to-gurukul-saffron-500 hover:from-gurukul-saffron-500 hover:to-gurukul-saffron-600 shadow-xs hover:shadow transition-all shrink-0"
             >
               <span>{isMarathi ? 'शाळा वेबसाईट' : 'View Website'}</span>
               <ExternalLink className="w-3.5 h-3.5" />
@@ -512,7 +512,7 @@ export const AdminLayout = () => {
         </header>
 
         {/* Page Content */}
-        <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto space-y-6 sm:space-y-8">
+        <main className="flex-1 p-3.5 sm:p-5 lg:p-6 xl:p-8 max-w-7xl w-full mx-auto space-y-6 sm:space-y-8 min-w-0">
           <Outlet />
         </main>
       </div>

@@ -132,7 +132,7 @@ export const TelecallerLayout = () => {
   };
 
   return (
-    <div className="min-h-screen flex bg-[#fbfbfa] font-sans selection:bg-emerald-600 selection:text-white">
+    <div className="min-h-screen bg-[#fbfbfa] font-sans selection:bg-emerald-600 selection:text-white antialiased">
       {/* Mobile Backdrop */}
       {sidebarOpen && (
         <div 
@@ -304,34 +304,34 @@ export const TelecallerLayout = () => {
       </aside>
 
       {/* Main Workspace */}
-      <div className="flex-1 lg:pl-64 flex flex-col min-h-screen">
+      <div className="lg:pl-64 flex flex-col min-h-screen min-w-0 w-full">
         {/* Top bar with authentic Gurukul Website branding */}
-        <header className="h-16 sm:h-17 bg-white/95 backdrop-blur-md border-b border-slate-200/90 sticky top-0 z-30 px-3 sm:px-6 flex items-center justify-between shadow-xs">
-          <div className="flex items-center gap-3">
+        <header className="h-16 sm:h-17 bg-white/95 backdrop-blur-md border-b border-slate-200/90 sticky top-0 z-30 px-3 sm:px-6 flex items-center justify-between shadow-xs w-full min-w-0">
+          <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
             <button
               onClick={() => setSidebarOpen(true)}
-              className="lg:hidden p-2 rounded-xl text-slate-600 hover:bg-slate-100 transition-colors"
+              className="lg:hidden p-2 rounded-xl text-slate-600 hover:bg-slate-100 transition-colors shrink-0"
               aria-label="Toggle Navigation Menu"
             >
               <Menu className="w-5 h-5" />
             </button>
 
-            <Link to="/" className="flex items-center gap-2.5 sm:gap-3 group text-left">
+            <Link to="/" className="flex items-center gap-2.5 sm:gap-3 group text-left min-w-0">
               <img 
                 src="/gurukul-logo.png" 
                 alt="गुरुकुल भोसे" 
                 className="w-9 h-9 sm:w-10 sm:h-10 object-contain drop-shadow-xs shrink-0 group-hover:scale-105 transition-transform" 
               />
-              <div className="flex flex-col text-left">
+              <div className="flex flex-col text-left min-w-0">
                 <div className="flex items-center gap-2">
-                  <span className="font-black text-base sm:text-lg text-gurukul-navy-950 leading-tight tracking-tight">
+                  <span className="font-black text-base sm:text-lg text-gurukul-navy-950 leading-tight tracking-tight truncate">
                     {isMarathi ? 'गुरुकुल भोसे' : 'Gurukul Bhose'}
                   </span>
-                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 border border-emerald-200 text-emerald-800">
+                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 border border-emerald-200 text-emerald-800 shrink-0">
                     Telecaller Workspace
                   </span>
                 </div>
-                <span className="text-[10px] sm:text-[11px] font-semibold text-emerald-700 hidden sm:block leading-tight mt-0.5">
+                <span className="text-[10px] sm:text-[11px] font-semibold text-emerald-700 hidden md:block lg:hidden xl:block leading-tight mt-0.5 truncate max-w-[280px]">
                   {isMarathi 
                     ? 'विद्यामंदिर व ज्युनिअर कॉलेज (सैनिक पॅटर्न निवासी) • समुपदेशक व कॉलिंग पोर्टल' 
                     : 'Sainik Pattern Residential School & College • Admission Counselor Hub'}
@@ -340,9 +340,9 @@ export const TelecallerLayout = () => {
             </Link>
           </div>
 
-          <div className="flex items-center gap-2 sm:gap-3.5">
+          <div className="flex items-center gap-1.5 sm:gap-2.5 md:gap-3 shrink-0">
             {myOverdueCount > 0 && (
-              <div className="flex items-center gap-1.5 px-3 py-1 bg-rose-50 text-rose-700 border border-rose-200 rounded-full text-xs font-semibold">
+              <div className="hidden xl:flex items-center gap-1.5 px-3 py-1 bg-rose-50 text-rose-700 border border-rose-200 rounded-full text-xs font-semibold shrink-0">
                 <Flame className="w-3.5 h-3.5 text-rose-600 animate-pulse" />
                 <span>{myOverdueCount} {isMarathi ? 'थकबाकी' : 'Overdue'}</span>
               </div>
@@ -357,13 +357,13 @@ export const TelecallerLayout = () => {
             {(isAdmin || isSuperAdmin) && (
               <Link
                 to="/admin/dashboard"
-                className="hidden md:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-gurukul-navy-950 text-white hover:bg-gurukul-navy-900 transition-colors shadow-xs"
+                className="hidden md:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-gurukul-navy-950 text-white hover:bg-gurukul-navy-900 transition-colors shadow-xs shrink-0"
               >
                 <span>{isMarathi ? 'अ‍ॅडमिन पॅनेल' : 'Admin Panel'}</span>
               </Link>
             )}
 
-            <Badge variant="Telecaller">
+            <Badge variant="Telecaller" className="shrink-0">
               TELECALLER
             </Badge>
 
@@ -372,7 +372,7 @@ export const TelecallerLayout = () => {
               href={getPublicWebsiteUrl()}
               target="_blank"
               rel="noopener noreferrer"
-              className="hidden sm:inline-flex items-center gap-1.5 text-xs font-bold px-3.5 py-2 rounded-xl text-white bg-gradient-to-r from-gurukul-saffron-600 to-gurukul-saffron-500 hover:from-gurukul-saffron-500 hover:to-gurukul-saffron-600 shadow-xs hover:shadow transition-all"
+              className="hidden sm:inline-flex items-center gap-1.5 text-xs font-bold px-3.5 py-2 rounded-xl text-white bg-gradient-to-r from-gurukul-saffron-600 to-gurukul-saffron-500 hover:from-gurukul-saffron-500 hover:to-gurukul-saffron-600 shadow-xs hover:shadow transition-all shrink-0"
             >
               <span>{isMarathi ? 'शाळा वेबसाईट' : 'View Website'}</span>
               <ExternalLink className="w-3.5 h-3.5" />
@@ -381,7 +381,7 @@ export const TelecallerLayout = () => {
         </header>
 
         {/* Page Content */}
-        <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto space-y-6 sm:space-y-8">
+        <main className="flex-1 p-3.5 sm:p-5 lg:p-6 xl:p-8 max-w-7xl w-full mx-auto space-y-6 sm:space-y-8 min-w-0">
           <Outlet />
         </main>
       </div>

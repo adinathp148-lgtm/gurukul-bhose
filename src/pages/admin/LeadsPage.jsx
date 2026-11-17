@@ -312,24 +312,24 @@ export const LeadsPage = () => {
     <div className="space-y-6 pb-12">
       
       {/* 1. Header & Primary Action Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2">
-            <h1 className="text-xl sm:text-2xl font-black text-slate-900">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 min-w-0">
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-center gap-2">
+            <h1 className="text-lg sm:text-xl xl:text-2xl font-black text-slate-900 tracking-tight">
               {isMarathi ? 'प्रवेश नोंदणी व लीड व्यवस्थापन (Admission CRM)' : 'Admission Lead Management (CRM)'}
             </h1>
-            <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-orange-100 text-gurukul-saffron-800 border border-orange-200">
+            <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-orange-100 text-gurukul-saffron-800 border border-orange-200 shrink-0">
               {leads.length} {isMarathi ? 'एकूण लीड्स' : 'Total Leads'}
             </span>
           </div>
-          <p className="text-xs text-slate-500 mt-0.5">
+          <p className="text-xs text-slate-500 mt-1">
             {isMarathi 
               ? 'वेबसाईट, थेट संपर्क, फेसबुक ऍड्स व फोनवरून आलेली सर्व प्रवेश विचारणा माहिती' 
               : 'All admission inquiries captured from website, direct walk-ins, phone calls and Meta ads'}
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2 shrink-0">
           {/* CSV Export Button (Role-Authorized) */}
           {isAdmin && (
             <Button
@@ -359,7 +359,7 @@ export const LeadsPage = () => {
       </div>
 
       {/* 2. Top Metric Analytics - 10 Core Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3.5">
+      <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-5 gap-3 sm:gap-3.5">
         <StatCard
           title={isMarathi ? 'एकूण नोंदणी (Total)' : 'Total Enquiries'}
           value={analytics.totalEnquiries}
@@ -433,46 +433,46 @@ export const LeadsPage = () => {
       </div>
 
       {/* 3. Distribution Overview Strip */}
-      <div className="p-4 bg-white rounded-2xl border border-slate-200/80 shadow-sm grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs">
-        <div className="border-r border-slate-100 pr-3">
-          <span className="text-slate-400 block text-[11px] font-medium">{isMarathi ? 'आजची नोंदणी (Today):' : "Today's Enquiries:"}</span>
+      <div className="p-4 bg-white rounded-2xl border border-slate-200/80 shadow-sm grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs min-w-0">
+        <div className="border-r border-slate-100 pr-3 min-w-0">
+          <span className="text-slate-400 block text-[11px] font-medium truncate">{isMarathi ? 'आजची नोंदणी (Today):' : "Today's Enquiries:"}</span>
           <span className="text-lg font-black text-slate-800">{analytics.enquiriesToday} {isMarathi ? 'अर्ज' : 'Leads'}</span>
         </div>
-        <div className="border-r border-slate-100 pr-3">
-          <span className="text-slate-400 block text-[11px] font-medium">{isMarathi ? 'या आठवड्यातील (This Week):' : 'This Week:'}</span>
+        <div className="border-r border-slate-100 pr-3 min-w-0">
+          <span className="text-slate-400 block text-[11px] font-medium truncate">{isMarathi ? 'या आठवड्यातील (This Week):' : 'This Week:'}</span>
           <span className="text-lg font-black text-slate-800">{analytics.enquiriesThisWeek} {isMarathi ? 'अर्ज' : 'Leads'}</span>
         </div>
-        <div className="border-r border-slate-100 pr-3">
-          <span className="text-slate-400 block text-[11px] font-medium">{isMarathi ? 'या महिन्यातील (This Month):' : 'This Month:'}</span>
+        <div className="border-r border-slate-100 pr-3 min-w-0">
+          <span className="text-slate-400 block text-[11px] font-medium truncate">{isMarathi ? 'या महिन्यातील (This Month):' : 'This Month:'}</span>
           <span className="text-lg font-black text-slate-800">{analytics.enquiriesThisMonth} {isMarathi ? 'अर्ज' : 'Leads'}</span>
         </div>
-        <div>
-          <span className="text-slate-400 block text-[11px] font-medium">{isMarathi ? 'प्रवेश रूपांतरण दर (Conversion Rate):' : 'Conversion Rate:'}</span>
+        <div className="min-w-0">
+          <span className="text-slate-400 block text-[11px] font-medium truncate">{isMarathi ? 'प्रवेश रूपांतरण दर (Conversion Rate):' : 'Conversion Rate:'}</span>
           <span className="text-lg font-black text-emerald-600">{analytics.conversionRate}</span>
         </div>
       </div>
 
       {/* 4. Search & Multi-Criteria Filter Bar */}
-      <div className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm space-y-3">
+      <div className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm space-y-3 min-w-0">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           {/* Search box */}
-          <div className="relative">
+          <div className="relative min-w-0">
             <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
             <input
               type="text"
               value={searchTerm}
               onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
               placeholder={isMarathi ? "नाव, मोबाईल, लीड नंबर किंवा गाव शोधा..." : "Search name, phone, lead ID, village..."}
-              className="w-full text-xs pl-9 pr-3 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-gurukul-saffron-500 focus:outline-none"
+              className="w-full text-xs pl-9 pr-3 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-gurukul-saffron-500 focus:outline-none min-w-0"
             />
           </div>
 
           {/* Status Filter */}
-          <div>
+          <div className="min-w-0">
             <select
               value={statusFilter}
               onChange={(e) => { setStatusFilter(e.target.value); setCurrentPage(1); }}
-              className="w-full text-xs px-3 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-gurukul-saffron-500 focus:outline-none bg-white font-medium"
+              className="w-full text-xs px-3 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-gurukul-saffron-500 focus:outline-none bg-white font-medium min-w-0"
             >
               <option value="ALL">{isMarathi ? 'सर्व स्थिती (All Status)' : 'All Statuses'}</option>
               {statusList.map(st => (
@@ -482,11 +482,11 @@ export const LeadsPage = () => {
           </div>
 
           {/* Admission Class Filter */}
-          <div>
+          <div className="min-w-0">
             <select
               value={classFilter}
               onChange={(e) => { setClassFilter(e.target.value); setCurrentPage(1); }}
-              className="w-full text-xs px-3 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-gurukul-saffron-500 focus:outline-none bg-white font-medium"
+              className="w-full text-xs px-3 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-gurukul-saffron-500 focus:outline-none bg-white font-medium min-w-0"
             >
               <option value="ALL">{isMarathi ? 'सर्व इयत्ता (All Classes)' : 'All Classes'}</option>
               <option value="5">{isMarathi ? 'इ. 5 वी (5th Standard)' : 'Class 5th'}</option>
@@ -501,11 +501,11 @@ export const LeadsPage = () => {
           </div>
 
           {/* Lead Source Filter */}
-          <div>
+          <div className="min-w-0">
             <select
               value={sourceFilter}
               onChange={(e) => { setSourceFilter(e.target.value); setCurrentPage(1); }}
-              className="w-full text-xs px-3 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-gurukul-saffron-500 focus:outline-none bg-white font-medium"
+              className="w-full text-xs px-3 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-gurukul-saffron-500 focus:outline-none bg-white font-medium min-w-0"
             >
               <option value="ALL">{isMarathi ? 'सर्व मार्ग (All Sources)' : 'All Sources'}</option>
               <option value="Website">Website</option>
@@ -522,11 +522,11 @@ export const LeadsPage = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-2 border-t border-slate-100">
           {/* Telecaller Filter */}
           {isAdmin && (
-            <div>
+            <div className="min-w-0">
               <select
                 value={telecallerFilter}
                 onChange={(e) => { setTelecallerFilter(e.target.value); setCurrentPage(1); }}
-                className="w-full text-xs px-3 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-gurukul-saffron-500 focus:outline-none bg-white font-medium"
+                className="w-full text-xs px-3 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-gurukul-saffron-500 focus:outline-none bg-white font-medium min-w-0"
               >
                 <option value="ALL">{isMarathi ? 'सर्व समुपदेशक (All Counselors)' : 'All Counselors'}</option>
                 <option value="UNASSIGNED">{isMarathi ? 'विनावाटप (Unassigned Only)' : 'Unassigned Only'}</option>
@@ -540,11 +540,11 @@ export const LeadsPage = () => {
           )}
 
           {/* Academic Year Filter */}
-          <div>
+          <div className="min-w-0">
             <select
               value={yearFilter}
               onChange={(e) => { setYearFilter(e.target.value); setCurrentPage(1); }}
-              className="w-full text-xs px-3 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-gurukul-saffron-500 focus:outline-none bg-white font-medium"
+              className="w-full text-xs px-3 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-gurukul-saffron-500 focus:outline-none bg-white font-medium min-w-0"
             >
               <option value="ALL">{isMarathi ? 'सर्व शैक्षणिक वर्षे (All Years)' : 'All Academic Years'}</option>
               <option value="2026-2027">2026-2027</option>
@@ -553,24 +553,24 @@ export const LeadsPage = () => {
           </div>
 
           {/* Start Date */}
-          <div className="flex items-center gap-1.5">
-            <span className="text-[11px] text-slate-400 whitespace-nowrap">{isMarathi ? 'पासून:' : 'From:'}</span>
+          <div className="flex items-center gap-1.5 min-w-0">
+            <span className="text-[11px] text-slate-400 whitespace-nowrap shrink-0">{isMarathi ? 'पासून:' : 'From:'}</span>
             <input
               type="date"
               value={startDate}
               onChange={(e) => { setStartDate(e.target.value); setCurrentPage(1); }}
-              className="w-full text-xs px-2.5 py-1.5 border border-slate-200 rounded-xl bg-white"
+              className="w-full text-xs px-2.5 py-1.5 border border-slate-200 rounded-xl bg-white min-w-0"
             />
           </div>
 
           {/* End Date */}
-          <div className="flex items-center gap-1.5">
-            <span className="text-[11px] text-slate-400 whitespace-nowrap">{isMarathi ? 'पर्यंत:' : 'To:'}</span>
+          <div className="flex items-center gap-1.5 min-w-0">
+            <span className="text-[11px] text-slate-400 whitespace-nowrap shrink-0">{isMarathi ? 'पर्यंत:' : 'To:'}</span>
             <input
               type="date"
               value={endDate}
               onChange={(e) => { setEndDate(e.target.value); setCurrentPage(1); }}
-              className="w-full text-xs px-2.5 py-1.5 border border-slate-200 rounded-xl bg-white"
+              className="w-full text-xs px-2.5 py-1.5 border border-slate-200 rounded-xl bg-white min-w-0"
             />
           </div>
         </div>
@@ -578,12 +578,12 @@ export const LeadsPage = () => {
 
       {/* 5. Bulk Selection Action Bar */}
       {isAdmin && selectedLeadIds.length > 0 && (
-        <div className="p-3.5 bg-gurukul-navy-900 text-white rounded-2xl flex items-center justify-between shadow-md text-xs">
+        <div className="p-3.5 bg-gurukul-navy-900 text-white rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-3 shadow-md text-xs min-w-0">
           <div className="flex items-center gap-2">
-            <CheckSquare className="w-4 h-4 text-gurukul-saffron-400" />
+            <CheckSquare className="w-4 h-4 text-gurukul-saffron-400 shrink-0" />
             <span><strong>{selectedLeadIds.length}</strong> {isMarathi ? 'लीड्स निवडल्या आहेत' : 'leads selected'}</span>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <button
               onClick={() => setSelectedLeadIds([])}
               className="px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white font-bold"
@@ -601,9 +601,9 @@ export const LeadsPage = () => {
       )}
 
       {/* 6. Professional CRM Data Table */}
-      <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs">
+      <div className="bg-white rounded-2xl sm:rounded-3xl border border-slate-200 shadow-sm overflow-hidden w-full max-w-full min-w-0">
+        <div className="overflow-x-auto w-full custom-scrollbar">
+          <table className="w-full min-w-[980px] text-left text-xs">
             <thead className="bg-slate-50 text-slate-500 uppercase text-[10px] tracking-wider border-b border-slate-200">
               <tr>
                 {isAdmin && (

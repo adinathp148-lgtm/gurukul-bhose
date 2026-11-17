@@ -38,40 +38,40 @@
   html[lang="mr"],
   html.lang-mr {
     font-family: 'Mukta', 'Noto Sans Devanagari', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    font-size: 16.5px; /* Optical scale boost to match Latin x-height and let matras breathe */
-    letter-spacing: 0.01em;
+    font-size: 15.5px; /* Clean optical balance to let matras breathe without breaking 100% zoom layouts */
+    letter-spacing: 0.005em;
   }
 
   html[lang="mr"] body,
   html.lang-mr body {
-    line-height: 1.6;
+    line-height: 1.55;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
   }
 
-  /* Optical adjustments for small text classes in Marathi so labels, tags and badges are clear */
+  /* Optical adjustments for small text classes in Marathi so labels, tags and badges are clear and fit perfectly */
   html[lang="mr"] .text-\[10px\],
   html.lang-mr .text-\[10px\] {
-    font-size: 11.5px;
+    font-size: 10.5px;
     line-height: 1.35;
   }
 
   html[lang="mr"] .text-\[11px\],
   html.lang-mr .text-\[11px\] {
-    font-size: 12.5px;
+    font-size: 11.5px;
     line-height: 1.35;
   }
 
   html[lang="mr"] .text-xs,
   html.lang-mr .text-xs {
-    font-size: 0.84rem;
+    font-size: 0.8rem;
     line-height: 1.45;
   }
 
   html[lang="mr"] .text-sm,
   html.lang-mr .text-sm {
-    font-size: 0.935rem;
+    font-size: 0.9rem;
     line-height: 1.5;
   }
 
