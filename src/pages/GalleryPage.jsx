@@ -140,6 +140,7 @@ export const GalleryPage = () => {
             <img
               src={selectedImage.imageUrl}
               alt={selectedImage.title}
+              onError={(e) => { e.currentTarget.src = 'https://images.unsplash.com/photo-1715843453107-81f53c93d942?auto=format&fit=crop&w=800&q=80'; }}
               className="max-h-[75vh] w-auto max-w-full object-contain mx-auto"
             />
             <div className="p-4 text-white bg-slate-950/80">

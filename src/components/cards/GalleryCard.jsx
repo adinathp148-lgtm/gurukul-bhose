@@ -1,16 +1,21 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { ZoomIn } from 'lucide-react';
 
+const FALLBACK_IMAGE = 'https://images.unsplash.com/photo-1715843453107-81f53c93d942?auto=format&fit=crop&w=800&q=80';
+
 export const GalleryCard = ({ item, onSelect }) => {
+  const [imgError, setImgError] = useState(false);
+
   return (
     <div
       onClick={() => onSelect(item)}
-      className="group relative rounded-2xl overflow-hidden shadow-sm aspect-square bg-slate-100 cursor-pointer border border-slate-200"
+      className="group relative rounded-2xl overflow-hidden shadow-sm aspect-square bg-slate-900 cursor-pointer border border-slate-200"
     >
       <img
-        src={item.imageUrl}
+        src={imgError ? FALLBACK_IMAGE : (item.imageUrl || FALLBACK_IMAGE)}
         alt={item.title}
         loading="lazy"
+        onError={() => setImgError(true)}
         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
       />
       <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-4">
