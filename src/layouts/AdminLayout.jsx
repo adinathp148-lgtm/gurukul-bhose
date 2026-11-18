@@ -74,10 +74,10 @@ export const AdminLayout = () => {
   const handleLogout = async () => {
     try {
       await logout();
-      navigate('/login');
+      navigate('/admin/login', { replace: true, state: null });
     } catch (error) {
       console.error('Logout error:', error);
-      navigate('/login');
+      navigate('/admin/login', { replace: true, state: null });
     }
   };
 

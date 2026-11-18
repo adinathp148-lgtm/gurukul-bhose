@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { Shield, Lock, Mail, ArrowRight, AlertCircle, CheckCircle2, UserPlus } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
@@ -17,6 +17,14 @@ export const AdminLoginPage = () => {
   const [error, setError] = useState(null);
   const [successMessage, setSuccessMessage] = useState(location.state?.successMessage || null);
   const [loading, setLoading] = useState(false);
+
+  // Clear credentials on mount or navigation unless explicitly passed from registration
+  useEffect(() => {
+    if (!location.state?.registeredEmail) {
+      setEmail('');
+    }
+    setPassword('');
+  }, [location.key]);
 
   // Password reset modal state
   const [resetModalOpen, setResetModalOpen] = useState(false);
@@ -107,7 +115,7 @@ export const AdminLoginPage = () => {
           </div>
         )}
 
-        <form onSubmit={handleLogin} className="space-y-4">
+        <form onSubmit={handleLogin} autoComplete="off" className="space-y-4">
           <div>
             <label className="block text-xs font-semibold text-slate-700 mb-1">
               {isMarathi ? 'अधिकृत ईमेल (Admin Email) *' : 'Official Admin Email *'}
@@ -116,6 +124,9 @@ export const AdminLoginPage = () => {
               <Mail className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
               <input
                 type="email"
+                name="official_admin_email"
+                id="official_admin_email"
+                autoComplete="off"
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -142,6 +153,9 @@ export const AdminLoginPage = () => {
               <Lock className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
               <input
                 type="password"
+                name="official_admin_password"
+                id="official_admin_password"
+                autoComplete="new-password"
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}

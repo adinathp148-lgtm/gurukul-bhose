@@ -67,7 +67,8 @@ export const TelecallerLayout = () => {
 
   const handleLogout = async () => {
     await logout();
-    navigate(isBasenameTelecaller ? '/login' : (prefix ? `${prefix}/login` : '/login'));
+    const dest = isBasenameTelecaller ? '/login' : '/telecaller/login';
+    navigate(dest, { replace: true, state: null });
   };
 
   const navItems = [

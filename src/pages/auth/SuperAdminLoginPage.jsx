@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { Shield, Lock, Mail, ArrowRight, AlertCircle, CheckCircle2, KeyRound } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { Button } from '../../components/common/Button';
@@ -8,11 +8,18 @@ import { Modal } from '../../components/common/Modal';
 export const SuperAdminLoginPage = () => {
   const { login, requestPasswordReset } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
+
+  // Clear credentials on mount or navigation
+  useEffect(() => {
+    setEmail('');
+    setPassword('');
+  }, [location.key]);
 
   // Password reset modal state
   const [resetModalOpen, setResetModalOpen] = useState(false);
@@ -78,7 +85,7 @@ export const SuperAdminLoginPage = () => {
           </div>
         )}
 
-        <form onSubmit={handleLogin} className="space-y-4">
+        <form onSubmit={handleLogin} autoComplete="off" className="space-y-4">
           <div>
             <label className="block text-xs font-semibold text-slate-700 mb-1">
               सुपर ॲडमिन ईमेल (Official Email) *
@@ -87,6 +94,9 @@ export const SuperAdminLoginPage = () => {
               <Mail className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
               <input
                 type="email"
+                name="superadmin_login_email"
+                id="superadmin_login_email"
+                autoComplete="off"
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -113,6 +123,9 @@ export const SuperAdminLoginPage = () => {
               <Lock className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
               <input
                 type="password"
+                name="superadmin_login_password"
+                id="superadmin_login_password"
+                autoComplete="new-password"
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}

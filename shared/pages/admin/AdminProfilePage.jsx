@@ -229,7 +229,7 @@ export const AdminProfilePage = () => {
 
   const handleLogout = async () => {
     await logout();
-    navigate('/login');
+    navigate('/admin/login', { replace: true, state: null });
   };
 
   return (

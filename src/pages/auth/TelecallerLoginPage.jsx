@@ -20,6 +20,14 @@ export const TelecallerLoginPage = () => {
   const [successBanner, setSuccessBanner] = useState(location.state?.successMessage || null);
   const [loading, setLoading] = useState(false);
 
+  // Clear credentials on mount or navigation unless explicitly passed from registration
+  useEffect(() => {
+    if (!location.state?.registeredEmail) {
+      setEmail('');
+    }
+    setPassword('');
+  }, [location.key]);
+
   // Password reset modal
   const [resetModalOpen, setResetModalOpen] = useState(false);
   const [resetEmail, setResetEmail] = useState('');
@@ -137,7 +145,7 @@ export const TelecallerLoginPage = () => {
           </div>
         )}
 
-        <form onSubmit={handleLogin} className="space-y-4">
+        <form onSubmit={handleLogin} autoComplete="off" className="space-y-4">
           <div>
             <label className="block text-xs font-semibold text-slate-700 mb-1">
               {isMarathi ? 'समुपदेशक ईमेल (Telecaller Email) *' : 'Counselor Email *'}
@@ -146,6 +154,9 @@ export const TelecallerLoginPage = () => {
               <Mail className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
               <input
                 type="email"
+                name="counselor_login_email"
+                id="counselor_login_email"
+                autoComplete="off"
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -172,6 +183,9 @@ export const TelecallerLoginPage = () => {
               <Lock className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
               <input
                 type="password"
+                name="counselor_login_password"
+                id="counselor_login_password"
+                autoComplete="new-password"
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
