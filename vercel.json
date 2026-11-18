@@ -4,8 +4,16 @@
   "outputDirectory": "dist",
   "rewrites": [
     {
+      "source": "/telecaller",
+      "destination": "/telecaller/index.html"
+    },
+    {
       "source": "/telecaller/:match*",
       "destination": "/telecaller/index.html"
+    },
+    {
+      "source": "/admin",
+      "destination": "/admin/index.html"
     },
     {
       "source": "/admin/:match*",

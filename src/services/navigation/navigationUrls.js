@@ -23,18 +23,13 @@ export const getPublicWebsiteUrl = () => {
     return 'https://gurukul-bhose-web.web.app';
   }
 
-  // 3. Explicitly configured environment variable
-  if (import.meta.env?.VITE_PUBLIC_WEBSITE_URL) {
-    return import.meta.env.VITE_PUBLIC_WEBSITE_URL;
-  }
-
-  // 4. Fallback to current origin (Vercel, custom domain, single-origin host)
+  // 3. Fallback to current origin (Vercel, custom domain, single-origin host)
   return window.location.origin;
 };
 
 export const getAdminPanelUrl = () => {
   if (typeof window === 'undefined') {
-    return import.meta.env?.VITE_ADMIN_PANEL_URL || 'https://admin.gurukulbhose.com';
+    return '';
   }
 
   const hostname = window.location.hostname;
@@ -49,28 +44,19 @@ export const getAdminPanelUrl = () => {
     return 'https://gurukul-bhose-admin.web.app';
   }
 
-  // 3. Explicitly configured environment variable
-  if (import.meta.env?.VITE_ADMIN_PANEL_URL) {
-    return import.meta.env.VITE_ADMIN_PANEL_URL;
-  }
-
-  // 4. If current host is already the dedicated admin subdomain
+  // 3. Dedicated admin subdomain (if DNS is configured)
   if (hostname.startsWith('admin.')) {
     return window.location.origin;
   }
 
-  // 5. Unified single-origin deployment (Vercel, preview domains, custom domains)
-  // On Vercel, admin is served under window.location.origin (e.g. /admin/..., /login, /register)
+  // 4. Vercel deployment & unified single-origin domains (e.g. *.vercel.app or gurukulbhose.com)
+  // On Vercel, all 3 applications live on the SAME origin (/admin, /telecaller, /)
   return window.location.origin;
 };
 
 export const getTelecallerPanelUrl = () => {
   if (typeof window === 'undefined') {
-    return import.meta.env?.VITE_TELECALLER_PANEL_URL || 'https://admin.gurukulbhose.com/telecaller';
-  }
-
-  if (import.meta.env?.VITE_TELECALLER_PANEL_URL) {
-    return import.meta.env.VITE_TELECALLER_PANEL_URL;
+    return '/telecaller';
   }
 
   const hostname = window.location.hostname;
@@ -88,7 +74,7 @@ export const getTelecallerPanelUrl = () => {
     return 'https://gurukul-bhose-admin.web.app/telecaller';
   }
 
-  // 3. If current host is already the dedicated admin subdomain
+  // 3. Dedicated admin subdomain
   if (hostname.startsWith('admin.')) {
     return `${window.location.origin}/telecaller`;
   }

@@ -110,6 +110,7 @@ export const AppRoutes = () => {
       >
         {/* Main Dashboard */}
         <Route path="/" element={<Navigate to="/admin/dashboard" replace />} />
+        <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
         <Route path="/dashboard" element={<DashboardPage />} />
         <Route path="/admin/dashboard" element={<DashboardPage />} />
 
