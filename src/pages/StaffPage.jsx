@@ -505,18 +505,19 @@ export const StaffPage = () => {
 
                     <div className="p-5 sm:p-6 space-y-4">
                       {/* Role & Avatar / Photo */}
-                      <div className="flex items-start gap-4">
+                      <div className="flex items-start gap-3.5 sm:gap-4">
                         {staff.image ? (
-                          <div className="w-18 h-22 sm:w-20 sm:h-24 rounded-2xl overflow-hidden border-2 border-orange-200/90 shadow-md shrink-0 group-hover:scale-105 transition-transform bg-slate-100">
+                          <div className="w-20 h-24 sm:w-24 sm:h-28 rounded-2xl overflow-hidden border-2 border-orange-200/90 shadow-md shrink-0 group-hover:scale-105 transition-transform bg-slate-100 ring-1 ring-orange-500/10">
                             <img 
                               src={staff.image} 
                               alt={staff.name} 
-                              className="w-full h-full object-cover object-center"
+                              loading="lazy"
+                              className="w-full h-full object-cover object-top"
                             />
                           </div>
                         ) : (
-                          <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${staff.accentColor} text-white flex items-center justify-center font-black text-xl shadow-md shrink-0 group-hover:scale-105 transition-transform`}>
-                            <IconComponent className="w-7 h-7" />
+                          <div className={`w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-br ${staff.accentColor} text-white flex items-center justify-center font-black text-xl shadow-md shrink-0 group-hover:scale-105 transition-transform`}>
+                            <IconComponent className="w-8 h-8" />
                           </div>
                         )}
                         <div className="flex-1 min-w-0">

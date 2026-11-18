@@ -17,8 +17,7 @@ import {
   Flame,
   CheckCircle2,
   Calendar,
-  Building2,
-  ChevronRight
+  Building2
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useCRM } from '../contexts/CRMContext';
@@ -26,10 +25,10 @@ import { useLanguage } from '../contexts/LanguageContext';
 import { Badge } from '../components/common/Badge';
 import { LanguageSwitcher } from '../components/common/LanguageSwitcher';
 import { NotificationCenter } from '../components/common/NotificationCenter';
-import { getPublicWebsiteUrl, getAdminPanelUrl } from '../services/navigation/navigationUrls';
+import { getPublicWebsiteUrl } from '../services/navigation/navigationUrls';
 
 export const TelecallerLayout = () => {
-  const { currentUser, userProfile, logout, isAdmin, isSuperAdmin, isTelecaller } = useAuth();
+  const { currentUser, userProfile, logout, isTelecaller } = useAuth();
   const { leads, getMetrics } = useCRM();
   const { isMarathi } = useLanguage();
   const location = useLocation();
@@ -259,38 +258,6 @@ export const TelecallerLayout = () => {
           })}
         </nav>
 
-        {/* Telecaller Profile Card in Sidebar Footer */}
-        <div className="p-3 bg-slate-950/90 border-t border-slate-800/80">
-          <Link
-            to={prefix ? `${prefix}/profile` : '/profile'}
-            onClick={() => setSidebarOpen(false)}
-            className={`flex items-center gap-2.5 p-2 rounded-xl transition-all ${
-              isActive(prefix ? `${prefix}/profile` : '/profile')
-                ? 'bg-emerald-600 text-white shadow-md'
-                : 'bg-white/4 hover:bg-white/8 text-slate-200 border border-white/6'
-            }`}
-          >
-            <div className="relative shrink-0">
-              <div className="w-8 h-8 rounded-full bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center font-bold text-xs text-emerald-400">
-                {counselorInitial}
-              </div>
-              <span className="absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full border-2 border-slate-900 bg-emerald-400" />
-            </div>
-
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center justify-between gap-1">
-                <p className="text-xs font-bold truncate text-white">
-                  {counselorName}
-                </p>
-                <ChevronRight className="w-3.5 h-3.5 opacity-60 shrink-0" />
-              </div>
-              <p className="text-[10px] text-slate-400 truncate">
-                {counselorEmail}
-              </p>
-            </div>
-          </Link>
-        </div>
-
         {/* Footer actions */}
         <div className="p-3 border-t border-slate-800/80 space-y-1 bg-gurukul-navy-950/80">
           <a
@@ -364,15 +331,6 @@ export const TelecallerLayout = () => {
 
             {/* In-App Notification Center */}
             <NotificationCenter isTelecaller={true} />
-
-            {(isAdmin || isSuperAdmin) && (
-              <a
-                href={`${getAdminPanelUrl()}/admin/dashboard`}
-                className="hidden md:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-gurukul-navy-950 text-white hover:bg-gurukul-navy-900 transition-colors shadow-xs shrink-0"
-              >
-                <span>{isMarathi ? 'अ‍ॅडमिन पॅनेल' : 'Admin Panel'}</span>
-              </a>
-            )}
 
             <Badge variant="Telecaller" className="shrink-0">
               TELECALLER
