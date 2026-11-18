@@ -15,30 +15,93 @@ import {
 import { useAuth } from '../../contexts/AuthContext';
 import { Button } from '../../components/common/Button';
 import { updateTelecallerProfile } from '../../services/auth/authService';
+import { db, doc, getDoc, collection, query, where, getDocs, setDoc, isConfigured } from '../../firebase/config';
 
 export const TelecallerProfilePage = () => {
   const { currentUser, userProfile, refreshUserProfile } = useAuth();
 
   const [form, setForm] = useState({
-    fullName: '',
-    phone: '',
-    whatsappNumber: '',
-    address: ''
+    fullName: userProfile?.fullName || userProfile?.displayName || currentUser?.fullName || currentUser?.displayName || '',
+    phone: userProfile?.phone || currentUser?.phone || '',
+    whatsappNumber: userProfile?.whatsappNumber || userProfile?.phone || currentUser?.whatsappNumber || '',
+    address: userProfile?.address || currentUser?.address || '',
+    employeeId: userProfile?.employeeId || currentUser?.employeeId || '',
+    department: userProfile?.assignedDepartment || userProfile?.department || ''
   });
 
   const [loading, setLoading] = useState(false);
   const [notification, setNotification] = useState(null);
 
+  // Live Firestore Data Connection on mount
   useEffect(() => {
-    if (userProfile || currentUser) {
-      const u = userProfile || currentUser;
-      setForm({
-        fullName: u.displayName || u.fullName || '',
-        phone: u.phone || '',
-        whatsappNumber: u.whatsappNumber || u.phone || '',
-        address: u.address || ''
-      });
-    }
+    let isMounted = true;
+
+    const loadLiveTelecallerProfile = async () => {
+      const active = userProfile || currentUser;
+      const uid = active?.uid;
+      const email = active?.email;
+
+      // 1. Initial sync from context
+      if (active && isMounted) {
+        setForm(prev => ({
+          ...prev,
+          fullName: active.fullName || active.displayName || prev.fullName || '',
+          phone: active.phone || active.mobileNumber || prev.phone || '',
+          whatsappNumber: active.whatsappNumber || active.phone || prev.whatsappNumber || '',
+          address: active.address || prev.address || '',
+          employeeId: active.employeeId || prev.employeeId || '',
+          department: active.assignedDepartment || active.department || prev.department || ''
+        }));
+      }
+
+      // 2. Fetch live data from Firestore
+      if (isConfigured && db && (uid || email)) {
+        try {
+          const [teleSnap, userSnap] = await Promise.all([
+            uid ? getDoc(doc(db, 'telecaller_profiles', uid)).catch(() => null) : null,
+            uid ? getDoc(doc(db, 'users', uid)).catch(() => null) : null
+          ]);
+
+          let firestoreData = {
+            ...(teleSnap?.exists() ? teleSnap.data() : {}),
+            ...(userSnap?.exists() ? userSnap.data() : {})
+          };
+
+          if (email && (!firestoreData.fullName || !firestoreData.phone)) {
+            const emailList = Array.from(new Set([email, email.toLowerCase()].filter(Boolean)));
+            const [tSnap, uSnap] = await Promise.all([
+              getDocs(query(collection(db, 'telecaller_profiles'), where('email', 'in', emailList))).catch(() => null),
+              getDocs(query(collection(db, 'users'), where('email', 'in', emailList))).catch(() => null)
+            ]);
+
+            firestoreData = {
+              ...(tSnap && !tSnap.empty ? tSnap.docs[0].data() : {}),
+              ...(uSnap && !uSnap.empty ? uSnap.docs[0].data() : {}),
+              ...firestoreData
+            };
+          }
+
+          if (isMounted && Object.keys(firestoreData).length > 0) {
+            setForm(prev => ({
+              fullName: firestoreData.fullName || firestoreData.displayName || prev.fullName || '',
+              phone: firestoreData.phone || firestoreData.mobileNumber || prev.phone || '',
+              whatsappNumber: firestoreData.whatsappNumber || firestoreData.phone || prev.whatsappNumber || '',
+              address: firestoreData.address || prev.address || '',
+              employeeId: firestoreData.employeeId || prev.employeeId || '',
+              department: firestoreData.assignedDepartment || firestoreData.department || prev.department || ''
+            }));
+          }
+        } catch (fetchErr) {
+          console.warn('Live Firestore fetch in TelecallerProfilePage error:', fetchErr);
+        }
+      }
+    };
+
+    loadLiveTelecallerProfile();
+
+    return () => {
+      isMounted = false;
+    };
   }, [userProfile, currentUser]);
 
   const handleSubmit = async (e) => {
@@ -46,22 +109,53 @@ export const TelecallerProfilePage = () => {
     setLoading(true);
     setNotification(null);
 
-    const uid = currentUser?.uid;
-    if (!uid) return;
+    const uid = currentUser?.uid || userProfile?.uid;
+    if (!uid) {
+      setLoading(false);
+      return;
+    }
 
     try {
       const res = await updateTelecallerProfile(uid, {
+        fullName: form.fullName,
         phone: form.phone,
         whatsappNumber: form.whatsappNumber,
         address: form.address
       });
+
+      // Directly update Firestore telecaller_profiles and users collections
+      if (isConfigured && db) {
+        try {
+          const updates = {
+            fullName: form.fullName,
+            displayName: form.fullName,
+            phone: form.phone,
+            whatsappNumber: form.whatsappNumber,
+            address: form.address,
+            updatedAt: new Date().toISOString()
+          };
+          await Promise.all([
+            setDoc(doc(db, 'telecaller_profiles', uid), updates, { merge: true }),
+            setDoc(doc(db, 'users', uid), {
+              fullName: form.fullName,
+              displayName: form.fullName,
+              phone: form.phone,
+              updatedAt: new Date().toISOString()
+            }, { merge: true })
+          ]);
+        } catch (syncErr) {
+          console.warn('Direct Firestore sync error on telecaller profile update:', syncErr);
+        }
+      }
 
       if (res.success) {
         setNotification({
           type: 'success',
           message: 'आपली प्रोफाईल माहिती यशस्वीपणे अद्ययावत केली गेली आहे.'
         });
-        await refreshUserProfile();
+        if (refreshUserProfile) {
+          await refreshUserProfile();
+        }
       } else {
         setNotification({
           type: 'error',
@@ -78,6 +172,8 @@ export const TelecallerProfilePage = () => {
   };
 
   const profile = userProfile || currentUser || {};
+  const displayName = form.fullName || profile.fullName || profile.displayName || 'कौन्सिलर (Counselor)';
+  const displayInitial = (displayName.trim().charAt(0) || 'T').toUpperCase();
 
   return (
     <div className="max-w-3xl mx-auto space-y-6">
@@ -114,14 +210,14 @@ export const TelecallerProfilePage = () => {
         {/* Header Avatar and Basic Info */}
         <div className="flex items-center gap-4 pb-6 border-b border-slate-100">
           <div className="w-16 h-16 rounded-2xl bg-emerald-600 text-white flex items-center justify-center font-black text-2xl shadow-md shrink-0">
-            {profile.displayName ? profile.displayName.charAt(0).toUpperCase() : 'T'}
+            {displayInitial}
           </div>
           <div>
             <h3 className="text-lg font-black text-slate-900">
-              {profile.displayName || profile.fullName || 'Telecaller'}
+              {displayName}
             </h3>
             <p className="text-xs text-slate-500 font-mono mt-0.5">
-              Employee ID: {profile.employeeId || 'TC-N/A'}
+              Employee ID: {form.employeeId || profile.employeeId || 'TC-N/A'}
             </p>
             <div className="flex items-center gap-2 mt-2">
               <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200">
@@ -157,7 +253,7 @@ export const TelecallerProfilePage = () => {
               <input
                 type="text"
                 disabled
-                value={profile.displayName || profile.fullName || ''}
+                value={form.fullName || profile.fullName || profile.displayName || ''}
                 className="w-full text-xs px-3.5 py-2.5 bg-slate-100 border border-slate-200 rounded-xl text-slate-600 cursor-not-allowed"
               />
             </div>

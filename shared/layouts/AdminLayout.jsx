@@ -59,7 +59,11 @@ export const AdminLayout = () => {
   const [cmsOpen, setCmsOpen] = useState(() => location.pathname.startsWith('/admin/cms'));
   const [visitsOpen, setVisitsOpen] = useState(() => location.pathname.startsWith('/admin/visit') || location.pathname.startsWith('/admin/campus-visit'));
 
-  const adminName = userProfile?.fullName || userProfile?.displayName || userProfile?.name || currentUser?.displayName || currentUser?.email?.split('@')[0] || (isMarathi ? 'प्रशासक' : 'Administrator');
+  const rawAdminName = userProfile?.fullName || userProfile?.displayName || userProfile?.name || currentUser?.fullName || currentUser?.displayName;
+  const adminEmail = userProfile?.email || currentUser?.email || '';
+  const adminName = (rawAdminName && !rawAdminName.toLowerCase().includes('super admin') && rawAdminName !== 'Administrator')
+    ? rawAdminName
+    : ((adminEmail.toLowerCase().includes('adinath')) ? 'Adinath Powar' : (rawAdminName || (isMarathi ? 'प्रशासक' : 'Administrator')));
   const adminInitial = (adminName.trim().charAt(0) || 'A').toUpperCase();
   const adminRoleLabel = isSuperAdmin 
     ? (isMarathi ? 'मुख्य प्रशासक (Super Admin)' : 'Super Admin')
@@ -240,7 +244,7 @@ export const AdminLayout = () => {
                 </span>
               </div>
               <p className="text-[11.5px] text-gurukul-saffron-400 font-semibold leading-tight mt-1 truncate">
-                {isMarathi ? 'प्रशासकीय नियंत्रण कक्ष' : 'School Admin Portal'}
+                {isMarathi ? 'शाळा प्रशासक पोर्टल' : 'School Admin Portal'}
               </p>
             </div>
           </Link>
