@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { 
   Phone, 
@@ -9,17 +9,57 @@ import {
   ChevronRight, 
   ArrowUp, 
   Shield,
+  ShieldCheck,
+  Headset,
   LogIn,
-  ExternalLink
+  ExternalLink,
+  ChevronUp,
+  X
 } from 'lucide-react';
 import { useCMS } from '../../contexts/CMSContext';
 import { useLanguage } from '../../contexts/LanguageContext';
-import { getAdminPanelUrl } from '../../services/navigation/navigationUrls';
+import { getAdminPanelUrl, getTelecallerPanelUrl } from '../../services/navigation/navigationUrls';
 
 export const Footer = ({ showStaffLink = true }) => {
   const { institution, websiteSettings } = useCMS();
   const { isMarathi } = useLanguage();
   const adminBaseUrl = getAdminPanelUrl();
+  const telecallerBaseUrl = getTelecallerPanelUrl();
+
+  const [crmMenuOpen, setCrmMenuOpen] = useState(false);
+  const crmMenuRef = useRef(null);
+
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (crmMenuRef.current && !crmMenuRef.current.contains(event.target)) {
+        setCrmMenuOpen(false);
+      }
+    }
+    function handleKeyDown(event) {
+      if (event.key === 'Escape') {
+        setCrmMenuOpen(false);
+      }
+    }
+    if (crmMenuOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener('keydown', handleKeyDown);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [crmMenuOpen]);
+
+  const crmUrls = {
+    admin: `${adminBaseUrl}/admin/leads`,
+    adminDashboard: `${adminBaseUrl}/admin/dashboard`,
+    adminProfile: `${adminBaseUrl}/admin/profile`,
+    telecaller: `${telecallerBaseUrl}/login`,
+    telecallerDashboard: telecallerBaseUrl,
+    login: `${adminBaseUrl}/login`,
+    telecallerRegister: `${telecallerBaseUrl}/register`,
+    adminRegister: `${adminBaseUrl}/admin/register`
+  };
 
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -203,17 +243,165 @@ export const Footer = ({ showStaffLink = true }) => {
         {/* Bottom copyright & back to top */}
         <div className="mt-12 pt-6 border-t border-slate-800/80 flex flex-col md:flex-row items-center justify-between text-xs text-slate-400 gap-4 text-center md:text-left">
           <p>{copyrightText}</p>
-          <div className="flex flex-wrap items-center justify-center md:justify-end gap-3 sm:gap-4">
-            <a
-              href={`${adminBaseUrl}/admin/profile`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-900 hover:bg-slate-800 border border-slate-700/80 hover:border-yellow-400 text-yellow-400 hover:text-yellow-300 text-[11px] font-semibold transition-all shadow-sm"
-              title={isMarathi ? 'अ‍ॅडमिन पॅनेल प्रोफाइल' : 'Admin Panel Profile'}
-            >
-              <Shield className="w-3.5 h-3.5 text-gurukul-saffron-400" />
-              <span>{isMarathi ? 'अ‍ॅडमिन पॅनेल प्रोफाइल' : 'Admin Panel Profile'}</span>
-            </a>
+          
+          <div className="flex flex-wrap items-center justify-center md:justify-end gap-3 sm:gap-4 relative">
+            {/* Admin Profile & CRM Hub Popover Button */}
+            <div className="relative" ref={crmMenuRef}>
+              <button
+                type="button"
+                onClick={() => setCrmMenuOpen(!crmMenuOpen)}
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-[11px] font-semibold transition-all shadow-sm ${
+                  crmMenuOpen 
+                    ? 'bg-slate-800 border-yellow-400 text-yellow-300 ring-2 ring-yellow-400/20' 
+                    : 'bg-slate-900 hover:bg-slate-800 border-slate-700/80 hover:border-yellow-400 text-yellow-400 hover:text-yellow-300'
+                }`}
+                title={isMarathi ? 'अ‍ॅडमिन पॅनेल प्रोफाइल व प्रवेश CRM' : 'Admin Panel Profile & Admission CRM'}
+                aria-expanded={crmMenuOpen}
+                aria-haspopup="true"
+              >
+                <Shield className="w-3.5 h-3.5 text-gurukul-saffron-400 shrink-0" />
+                <span>{isMarathi ? 'अ‍ॅडमिन पॅनेल प्रोफाइल' : 'Admin Panel Profile'}</span>
+                <ChevronUp className={`w-3.5 h-3.5 text-yellow-400/80 transition-transform duration-200 shrink-0 ${crmMenuOpen ? 'rotate-180' : ''}`} />
+              </button>
+
+              {/* CRM & Admin Profile Popover Menu (opens upward) */}
+              {crmMenuOpen && (
+                <div 
+                  className="absolute bottom-full mb-3 right-0 sm:right-0 left-1/2 -translate-x-1/2 sm:translate-x-0 w-80 sm:w-88 bg-slate-900/98 backdrop-blur-md rounded-2xl shadow-2xl border border-slate-700/90 py-3 z-50 animate-in fade-in slide-in-from-bottom-2 text-left"
+                  role="menu"
+                >
+                  {/* Popover Header */}
+                  <div className="px-4 py-2 border-b border-slate-800 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="w-6 h-6 rounded-md bg-yellow-400/10 flex items-center justify-center">
+                        <Shield className="w-3.5 h-3.5 text-yellow-400" />
+                      </div>
+                      <span className="text-[11px] font-bold uppercase tracking-wider text-slate-300">
+                        {isMarathi ? 'अ‍ॅडमिन व CRM प्रवेश पोर्टल' : 'Admin & CRM Portals'}
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setCrmMenuOpen(false)}
+                      className="text-slate-400 hover:text-white p-1 rounded-md hover:bg-slate-800 transition-colors"
+                      aria-label="Close"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+
+                  {/* 1. Admin Profile Direct Access */}
+                  <a
+                    href={crmUrls.adminProfile}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={() => setCrmMenuOpen(false)}
+                    className="flex items-start gap-3 px-4 py-2.5 hover:bg-slate-800/80 transition-colors group"
+                  >
+                    <div className="w-8 h-8 rounded-lg bg-yellow-400/15 text-yellow-400 flex items-center justify-center shrink-0 mt-0.5 group-hover:bg-yellow-400 group-hover:text-slate-950 transition-colors">
+                      <Shield className="w-4 h-4" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-1.5">
+                        <span className="font-bold text-sm text-white group-hover:text-yellow-400 transition-colors">
+                          {isMarathi ? 'अ‍ॅडमिन पॅनेल प्रोफाइल' : 'Admin Panel Profile'}
+                        </span>
+                        <ExternalLink className="w-3 h-3 text-slate-500 group-hover:text-yellow-400 shrink-0" />
+                      </div>
+                      <span className="block text-xs text-slate-400 mt-0.5">
+                        {isMarathi ? 'अ‍ॅडमिन खाते, पासवर्ड व प्रोफाइल सेटिंग्ज' : 'Profile, Password & Account Settings'}
+                      </span>
+                    </div>
+                  </a>
+
+                  {/* 2. Admin & Lead CRM */}
+                  <a
+                    href={crmUrls.admin}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={() => setCrmMenuOpen(false)}
+                    className="flex items-start gap-3 px-4 py-2.5 hover:bg-slate-800/80 border-t border-slate-800/70 transition-colors group"
+                  >
+                    <div className="w-8 h-8 rounded-lg bg-orange-500/15 text-gurukul-saffron-400 flex items-center justify-center shrink-0 mt-0.5 group-hover:bg-gurukul-saffron-500 group-hover:text-white transition-colors">
+                      <ShieldCheck className="w-4 h-4" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-1.5">
+                        <span className="font-bold text-sm text-white group-hover:text-gurukul-saffron-400 transition-colors">
+                          {isMarathi ? 'अ‍ॅडमिन CRM (Admin Panel)' : 'Admin CRM (Admin Panel)'}
+                        </span>
+                        <ExternalLink className="w-3 h-3 text-slate-500 group-hover:text-gurukul-saffron-400 shrink-0" />
+                      </div>
+                      <span className="block text-xs text-slate-400 mt-0.5">
+                        {isMarathi ? 'सर्व लीड्स, प्रवेश अर्ज, CMS व अहवाल' : 'All Leads, Enquiries, CMS & Reports'}
+                      </span>
+                    </div>
+                  </a>
+
+                  {/* 3. Telecaller CRM */}
+                  <a
+                    href={crmUrls.telecaller}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={() => setCrmMenuOpen(false)}
+                    className="flex items-start gap-3 px-4 py-2.5 hover:bg-slate-800/80 border-t border-slate-800/70 transition-colors group"
+                  >
+                    <div className="w-8 h-8 rounded-lg bg-blue-500/15 text-blue-400 flex items-center justify-center shrink-0 mt-0.5 group-hover:bg-blue-500 group-hover:text-white transition-colors">
+                      <Headset className="w-4 h-4" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-1.5">
+                        <span className="font-bold text-sm text-white group-hover:text-blue-400 transition-colors">
+                          {isMarathi ? 'टेलिकॉलर पोर्टल (Telecaller CRM)' : 'Telecaller Portal (CRM)'}
+                        </span>
+                        <ExternalLink className="w-3 h-3 text-slate-500 group-hover:text-blue-400 shrink-0" />
+                      </div>
+                      <span className="block text-xs text-slate-400 mt-0.5">
+                        {isMarathi ? 'असाइन केलेल्या लीड्स, कॉलिंग व फॉलो-अप' : 'Assigned Leads & Follow-ups'}
+                      </span>
+                    </div>
+                  </a>
+
+                  {/* 4. Direct Staff Login & Registration Links */}
+                  <div className="mt-1 pt-2.5 border-t border-slate-800 px-4 py-2.5 flex flex-wrap items-center justify-between text-xs bg-slate-950/70 rounded-b-xl gap-2">
+                    <a
+                      href={crmUrls.login}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={() => setCrmMenuOpen(false)}
+                      className="font-bold text-slate-200 hover:text-yellow-400 flex items-center gap-1.5 transition-colors shrink-0"
+                    >
+                      <LogIn className="w-3.5 h-3.5 text-gurukul-saffron-400 shrink-0" />
+                      <span>{isMarathi ? 'थेट स्टाफ लॉगिन' : 'Staff Login'}</span>
+                    </a>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <a
+                        href={crmUrls.telecallerRegister}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={() => setCrmMenuOpen(false)}
+                        className="font-bold text-emerald-400 hover:text-emerald-300 text-[11px] transition-colors"
+                        title={isMarathi ? 'समुपदेशक नोंदणी' : 'Telecaller Register'}
+                      >
+                        {isMarathi ? '+ समुपदेशक नोंदणी' : '+ Register'}
+                      </a>
+                      <span className="text-slate-600">|</span>
+                      <a
+                        href={crmUrls.adminRegister}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={() => setCrmMenuOpen(false)}
+                        className="font-bold text-blue-400 hover:text-blue-300 text-[11px] transition-colors"
+                        title={isMarathi ? 'अ‍ॅडमिन नोंदणी' : 'Admin Register'}
+                      >
+                        {isMarathi ? '+ अ‍ॅडमिन' : '+ Admin'}
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
             <span className="text-slate-700">•</span>
             <a 
               href={`${adminBaseUrl}/login`} 

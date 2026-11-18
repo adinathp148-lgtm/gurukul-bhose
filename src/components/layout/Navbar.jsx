@@ -405,133 +405,14 @@ export const Navbar = ({ showAdminLink = true }) => {
           </nav>
 
           {/* Action CTAs (Right-aligned, cleanly centered buttons) */}
-          <div className="hidden xl:flex items-center gap-1.5 xl:gap-2 2xl:gap-2.5 shrink-0">
-            {/* CRM Portal Access Button with Dropdown */}
-            <div className="relative">
-              <button
-                type="button"
-                onClick={() => {
-                  setCrmOpen(!crmOpen);
-                  setAcademicsOpen(false);
-                  setGalleryOpen(false);
-                }}
-                onMouseEnter={() => {
-                  setCrmOpen(true);
-                  setAcademicsOpen(false);
-                  setGalleryOpen(false);
-                }}
-                className={`h-8 sm:h-8.5 inline-flex items-center justify-center gap-1.5 px-2 xl:px-2.5 2xl:px-3 text-xs font-semibold rounded-lg transition-all border shadow-2xs whitespace-nowrap shrink-0 group ${
-                  crmOpen 
-                    ? 'text-gurukul-saffron-600 bg-orange-50 border-orange-200' 
-                    : 'text-slate-700 hover:text-gurukul-saffron-600 bg-white hover:bg-orange-50/60 border-slate-200/90'
-                }`}
-                title={isMarathi ? 'CRM व स्टाफ पोर्टल' : 'CRM & Staff Portal'}
-              >
-                <ShieldCheck className="w-3.5 h-3.5 text-gurukul-saffron-600 group-hover:scale-105 transition-transform shrink-0" />
-                <span>{isMarathi ? 'CRM लॉगिन' : 'CRM Login'}</span>
-                <ChevronDown className={`w-3.5 h-3.5 text-slate-400 group-hover:text-gurukul-saffron-600 transition-transform duration-200 ${crmOpen ? 'rotate-180' : ''}`} />
-              </button>
-
-              {crmOpen && (
-                <div 
-                  onMouseLeave={() => setCrmOpen(false)}
-                  className="absolute right-0 mt-1 w-72 sm:w-80 bg-white rounded-2xl shadow-2xl border border-slate-100 py-2.5 z-50 animate-in fade-in slide-in-from-top-2 text-left"
-                >
-                  <div className="px-4 py-2 border-b border-slate-100/80">
-                    <span className="block text-[11px] font-bold uppercase tracking-wider text-slate-400">
-                      {isMarathi ? 'प्रवेश CRM व स्टाफ पोर्टल' : 'Admission CRM & Staff Workspace'}
-                    </span>
-                  </div>
-
-                  {/* Admin & Lead CRM */}
-                  <a
-                    href={crmUrls.admin}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    onClick={() => setCrmOpen(false)}
-                    className="flex items-start gap-3 px-4 py-2.5 hover:bg-orange-50/70 transition-colors text-left group"
-                  >
-                    <div className="w-8 h-8 rounded-lg bg-orange-100 text-gurukul-saffron-600 flex items-center justify-center shrink-0 mt-0.5 group-hover:bg-gurukul-saffron-500 group-hover:text-white transition-colors">
-                      <ShieldCheck className="w-4 h-4" />
-                    </div>
-                    <div className="text-left flex-1 min-w-0">
-                      <span className="block font-bold text-sm text-slate-900 group-hover:text-gurukul-saffron-600 transition-colors whitespace-nowrap">
-                        {isMarathi ? 'अ‍ॅडमिन CRM (Admin Panel)' : 'Admin CRM (Admin Panel)'}
-                      </span>
-                      <span className="block text-xs text-slate-500 font-medium mt-0.5">
-                        {isMarathi ? 'सर्व लीड्स, प्रवेश अर्ज, CMS व अहवाल' : 'All Leads, Enquiries, CMS & Reports'}
-                      </span>
-                    </div>
-                  </a>
-
-                  {/* Telecaller CRM */}
-                  <a
-                    href={crmUrls.telecaller}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    onClick={() => setCrmOpen(false)}
-                    className="flex items-start gap-3 px-4 py-2.5 hover:bg-orange-50/70 border-t border-slate-100/60 transition-colors text-left group"
-                  >
-                    <div className="w-8 h-8 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center shrink-0 mt-0.5 group-hover:bg-blue-600 group-hover:text-white transition-colors">
-                      <Headset className="w-4 h-4" />
-                    </div>
-                    <div className="text-left flex-1 min-w-0">
-                      <span className="block font-bold text-sm text-slate-900 group-hover:text-gurukul-saffron-600 transition-colors whitespace-nowrap">
-                        {isMarathi ? 'टेलिकॉलर पोर्टल (Telecaller CRM)' : 'Telecaller Portal (CRM)'}
-                      </span>
-                      <span className="block text-xs text-slate-500 font-medium mt-0.5">
-                        {isMarathi ? 'असाइन केलेल्या लीड्स व फॉलो-अप' : 'Assigned Leads & Follow-ups'}
-                      </span>
-                    </div>
-                  </a>
-
-                  {/* Direct Login & Register Links */}
-                  <div className="mt-1 pt-2 border-t border-slate-100 px-4 py-2 flex items-center justify-between text-xs bg-slate-50/60 rounded-b-xl gap-2">
-                    <a
-                      href={crmUrls.login}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      onClick={() => setCrmOpen(false)}
-                      className="font-bold text-gurukul-navy-900 hover:text-gurukul-saffron-600 flex items-center gap-1.5 transition-colors shrink-0"
-                    >
-                      <LogIn className="w-3.5 h-3.5 text-gurukul-saffron-500 shrink-0" />
-                      <span>{isMarathi ? 'थेट स्टाफ लॉगिन' : 'Direct Staff Login'}</span>
-                    </a>
-                    <div className="flex items-center gap-1.5 shrink-0">
-                      <a
-                        href={`${telecallerBaseUrl}/register`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        onClick={() => setCrmOpen(false)}
-                        className="font-bold text-emerald-700 hover:text-emerald-800 flex items-center gap-0.5 transition-colors text-[11px]"
-                        title={isMarathi ? 'समुपदेशक / टेलिकॉलर नोंदणी' : 'Telecaller Registration'}
-                      >
-                        <span>{isMarathi ? '+ समुपदेशक नोंदणी' : '+ Register'}</span>
-                      </a>
-                      <span className="text-slate-300">|</span>
-                      <a
-                        href={`${adminBaseUrl}/admin/register`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        onClick={() => setCrmOpen(false)}
-                        className="font-bold text-blue-700 hover:text-blue-800 flex items-center gap-0.5 transition-colors text-[11px]"
-                        title={isMarathi ? 'अ‍ॅडमिन नोंदणी' : 'Admin Registration'}
-                      >
-                        <span>{isMarathi ? '+ अ‍ॅडमिन' : '+ Admin'}</span>
-                      </a>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-
+          <div className="hidden xl:flex items-center gap-2 xl:gap-2.5 shrink-0">
             {/* Language Switcher */}
             <LanguageSwitcher />
 
             {/* Apply Action Button */}
             <Link 
               to="/admission-enquiry" 
-              className="h-8 sm:h-8.5 inline-flex items-center justify-center px-3 xl:px-3.5 2xl:px-4 text-xs font-bold text-white bg-gradient-to-r from-gurukul-saffron-600 to-gurukul-saffron-500 hover:from-gurukul-saffron-700 hover:to-gurukul-saffron-600 rounded-lg shadow-xs hover:shadow transition-all whitespace-nowrap shrink-0"
+              className="h-8 sm:h-8.5 inline-flex items-center justify-center px-3.5 xl:px-4 text-xs font-bold text-white bg-gradient-to-r from-gurukul-saffron-600 to-gurukul-saffron-500 hover:from-gurukul-saffron-700 hover:to-gurukul-saffron-600 rounded-lg shadow-xs hover:shadow transition-all whitespace-nowrap shrink-0"
             >
               <span>
                 {isMarathi ? 'प्रवेश अर्ज' : 'Apply Now'}
@@ -729,47 +610,6 @@ export const Navbar = ({ showAdminLink = true }) => {
           >
             <span className="text-left">{isMarathi ? 'संपर्क' : 'Contact'}</span>
           </Link>
-          {/* Mobile CRM Portal Section */}
-          <div className="pt-2 pb-1 px-3 text-xs font-bold uppercase tracking-wider text-slate-400 text-left">
-            {isMarathi ? 'प्रवेश CRM व स्टाफ पोर्टल (CRM Portals)' : 'CRM & Staff Portals'}
-          </div>
-          <div className="grid grid-cols-2 gap-2 px-1">
-            <a
-              href={crmUrls.admin}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={closeMenu}
-              className="flex items-center gap-2 p-2.5 rounded-xl border border-orange-200 bg-orange-50/70 hover:bg-orange-100 transition-colors text-left"
-            >
-              <ShieldCheck className="w-4 h-4 text-gurukul-saffron-600 shrink-0" />
-              <div className="min-w-0">
-                <span className="block text-xs font-bold text-slate-900 leading-tight">
-                  {isMarathi ? 'अ‍ॅडमिन CRM' : 'Admin CRM'}
-                </span>
-                <span className="block text-[10px] text-slate-500 mt-0.5">
-                  {isMarathi ? 'लीड व्यवस्थापन' : 'Lead Mgmt'}
-                </span>
-              </div>
-            </a>
-            <a
-              href={crmUrls.telecaller}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={closeMenu}
-              className="flex items-center gap-2 p-2.5 rounded-xl border border-blue-200 bg-blue-50/70 hover:bg-blue-100 transition-colors text-left"
-            >
-              <Headset className="w-4 h-4 text-blue-600 shrink-0" />
-              <div className="min-w-0">
-                <span className="block text-xs font-bold text-slate-900 leading-tight">
-                  {isMarathi ? 'टेलिकॉलर CRM' : 'Telecaller'}
-                </span>
-                <span className="block text-[10px] text-slate-500 mt-0.5">
-                  {isMarathi ? 'कॉलिंग पोर्टल' : 'Calling Panel'}
-                </span>
-              </div>
-            </a>
-          </div>
-
           <Link 
             to="/admission-enquiry" 
             onClick={closeMenu}
@@ -777,40 +617,6 @@ export const Navbar = ({ showAdminLink = true }) => {
           >
             <span className="text-center">{isMarathi ? 'ऑनलाईन प्रवेश अर्ज करा (Apply Now)' : 'Apply Online for Admission'}</span>
           </Link>
-
-          <div className="pt-3 border-t border-slate-100 flex flex-col items-center justify-center gap-2 text-xs text-slate-500">
-            <a 
-              href={crmUrls.login} 
-              target="_blank" 
-              rel="noopener noreferrer" 
-              onClick={closeMenu} 
-              className="font-bold text-gurukul-navy-900 flex items-center gap-1.5 text-left hover:text-gurukul-saffron-600 transition-colors"
-            >
-              <ShieldCheck className="w-4 h-4 text-gurukul-saffron-500 shrink-0" />
-              <span>{isMarathi ? 'थेट स्टाफ लॉगिन (Staff Login)' : 'Staff Login'}</span>
-            </a>
-            <div className="flex items-center gap-2 text-[11px]">
-              <a 
-                href={`${telecallerBaseUrl}/register`} 
-                target="_blank" 
-                rel="noopener noreferrer" 
-                onClick={closeMenu} 
-                className="font-bold text-emerald-700 hover:text-emerald-800"
-              >
-                {isMarathi ? '+ समुपदेशक नोंदणी' : '+ Telecaller Register'}
-              </a>
-              <span className="text-slate-300">|</span>
-              <a 
-                href={`${adminBaseUrl}/admin/register`} 
-                target="_blank" 
-                rel="noopener noreferrer" 
-                onClick={closeMenu} 
-                className="font-bold text-blue-700 hover:text-blue-800"
-              >
-                {isMarathi ? '+ अ‍ॅडमिन नोंदणी' : '+ Admin Register'}
-              </a>
-            </div>
-          </div>
         </div>
       )}
     </header>
