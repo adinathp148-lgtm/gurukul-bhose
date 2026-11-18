@@ -56,7 +56,8 @@ export const GalleryPage = () => {
     { id: 'all', label: 'सर्व छायाचित्रे (All)' },
     { id: 'campus', label: 'कॅम्पस (Campus)' },
     { id: 'activities', label: 'उपक्रम (Activities)' },
-    { id: 'sports', label: 'क्रीडा व ग्राऊंड (Sports)' },
+    { id: 'yoga', label: 'योगा उपक्रम (Yoga Activities)' },
+    { id: 'sports', label: 'क्रीडा व ग्राउंड (Sports)' },
     { id: 'gathering', label: 'स्नेहसंमेलन (Gathering)' },
     { id: 'result', label: 'गुणवंत विद्यार्थी निकाल (Result)' }
   ];

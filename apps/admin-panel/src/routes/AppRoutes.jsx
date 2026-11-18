@@ -185,7 +185,22 @@ export const AppRoutes = () => {
         <Route path="/admin/cms/settings" element={<CMSSettingsPage />} />
         <Route path="/admin/cms/activity-logs" element={<CMSActivityLogsPage />} />
         
-        {/* Short aliases for CMS */}
+        {/* Direct shortcuts & CMS aliases */}
+        <Route path="/admin/gallery" element={<Navigate to="/admin/cms/gallery" replace />} />
+        <Route path="/cms/gallery" element={<Navigate to="/admin/cms/gallery" replace />} />
+        <Route path="/cms/videos" element={<Navigate to="/admin/cms/videos" replace />} />
+        <Route path="/cms/notices" element={<Navigate to="/admin/cms/notices" replace />} />
+        <Route path="/cms/facilities" element={<Navigate to="/admin/cms/facilities" replace />} />
+        <Route path="/cms/courses" element={<Navigate to="/admin/cms/courses" replace />} />
+        <Route path="/cms/programs" element={<Navigate to="/admin/cms/programs" replace />} />
+        <Route path="/cms/pages" element={<Navigate to="/admin/cms/pages" replace />} />
+        <Route path="/cms/about" element={<Navigate to="/admin/cms/about" replace />} />
+        <Route path="/cms/contact" element={<Navigate to="/admin/cms/contact" replace />} />
+        <Route path="/cms/homepage" element={<Navigate to="/admin/cms/homepage" replace />} />
+        <Route path="/cms/seo" element={<Navigate to="/admin/cms/seo" replace />} />
+        <Route path="/cms/settings" element={<Navigate to="/admin/cms/settings" replace />} />
+        <Route path="/cms/activity-logs" element={<Navigate to="/admin/cms/activity-logs" replace />} />
+        <Route path="/gallery" element={<Navigate to="/admin/cms/gallery" replace />} />
         <Route path="/cms" element={<Navigate to="/admin/cms" replace />} />
         <Route path="/cms/*" element={<Navigate to="/admin/cms" replace />} />
 

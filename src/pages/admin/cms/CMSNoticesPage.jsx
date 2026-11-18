@@ -16,14 +16,18 @@ import {
   Edit2,
   Clock,
   Search,
-  Filter
+  Filter,
+  Eye,
+  Loader2,
+  RefreshCw
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useCMS } from '../../../contexts/CMSContext';
 import { uploadMediaFile, validateUploadFile } from '../../../services/storage/mediaUploadService';
+import { getPublicWebsiteUrl } from '../../../services/navigation/navigationUrls';
 
 export const CMSNoticesPage = () => {
-  const { notices, saveNotice, deleteNotice } = useCMS();
+  const { notices, saveNotice, deleteNotice, loading } = useCMS();
 
   const [showModal, setShowModal] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -171,7 +175,7 @@ export const CMSNoticesPage = () => {
     }
   };
 
-  const filteredNotices = notices.filter(n => {
+  const filteredNotices = (notices || []).filter(n => {
     const matchesCat = categoryFilter === 'all' || n.category === categoryFilter;
     const matchesSearch = !searchTerm ||
       (n.title || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -204,7 +208,7 @@ export const CMSNoticesPage = () => {
 
         <div className="flex items-center gap-2">
           <a
-            href="/notices"
+            href={`${getPublicWebsiteUrl()}/notices`}
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-1.5 px-3.5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold text-xs border border-slate-300 transition-all"
@@ -447,7 +451,12 @@ export const CMSNoticesPage = () => {
         </div>
 
         <div className="divide-y divide-slate-100">
-          {filteredNotices.length === 0 ? (
+          {loading && (!notices || notices.length === 0) ? (
+            <div className="p-12 text-center text-slate-500 space-y-3">
+              <div className="w-8 h-8 border-3 border-gurukul-saffron-500 border-t-transparent rounded-full animate-spin mx-auto" />
+              <p className="text-xs font-semibold text-slate-600">सूचना लोड होत आहेत (Loading notices)...</p>
+            </div>
+          ) : filteredNotices.length === 0 ? (
             <div className="p-8 text-center text-slate-400 text-sm">
               कोणतीही सूचना आढळली नाही.
             </div>

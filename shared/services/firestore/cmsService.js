@@ -37,7 +37,9 @@ import {
 const getLocal = (key, fallback) => {
   try {
     const val = localStorage.getItem(`gurukul_cms_${key}`);
-    return val ? JSON.parse(val) : fallback;
+    if (!val) return fallback;
+    const parsed = JSON.parse(val);
+    return parsed !== null && parsed !== undefined ? parsed : fallback;
   } catch {
     return fallback;
   }
@@ -597,23 +599,61 @@ export const deleteCMSCourse = async (courseId, user) => {
 export const getCMSGallery = async () => {
   if (isConfigured && db) {
     try {
-      const snap = await getDocs(query(collection(db, 'gallery'), orderBy('displayOrder', 'asc')));
-      if (!snap.empty) {
-        return snap.docs.map(d => ({ imageId: d.id, ...d.data() }));
+      let snap;
+      try {
+        snap = await getDocs(query(collection(db, 'gallery'), orderBy('displayOrder', 'asc')));
+      } catch {
+        snap = await getDocs(collection(db, 'gallery'));
+      }
+      if (!snap || snap.empty) {
+        snap = await getDocs(collection(db, 'gallery'));
+      }
+      if (snap && !snap.empty) {
+        const items = snap.docs.map(d => {
+          const data = d.data();
+          const imgUrl = data.imageUrl || data.url || data.image || '';
+          return {
+            id: d.id,
+            imageId: d.id,
+            ...data,
+            imageUrl: imgUrl,
+            url: imgUrl,
+            category: data.category || 'कॅम्पस (Campus)',
+            displayOrder: Number(data.displayOrder) || 1,
+            status: data.status || 'published'
+          };
+        });
+        items.sort((a, b) => (Number(a.displayOrder) || 0) - (Number(b.displayOrder) || 0));
+        return items;
       }
     } catch (e) {
       console.warn('[CMSService] getGallery error:', e);
     }
   }
-  return getLocal('gallery_items', galleryList.map((g, idx) => ({
+  const fallbackList = (galleryList || []).map((g, idx) => ({
+    id: g.id || `gal-${idx}`,
     imageId: g.id || `gal-${idx}`,
-    title: g.title,
-    caption: g.title,
-    category: g.category || 'activities',
-    imageUrl: g.imageUrl,
+    title: g.title || '',
+    caption: g.caption || g.title || '',
+    category: g.category || 'कॅम्पस (Campus)',
+    imageUrl: g.imageUrl || g.image || '',
+    url: g.imageUrl || g.image || '',
     displayOrder: idx + 1,
     status: 'published'
-  })));
+  }));
+
+  const localItems = getLocal('gallery_items', fallbackList);
+  if (Array.isArray(localItems) && localItems.length > 0) {
+    const existingIds = new Set(localItems.map(g => g.imageId || g.id));
+    const missing = fallbackList.filter(g => !existingIds.has(g.imageId));
+    if (missing.length > 0) {
+      const merged = [...localItems, ...missing];
+      setLocal('gallery_items', merged);
+      return merged;
+    }
+    return localItems;
+  }
+  return fallbackList;
 };
 
 export const saveCMSGalleryItem = async (itemData, user) => {

@@ -32,6 +32,11 @@ export const heroSlides = [
     badge: "प्रवेश सुरू - चालू शैक्षणिक वर्ष",
     description: "चार एकर निसर्गरम्य सुरक्षित कॅम्पस, सैनिक शिस्त, दर्जेदार शिक्षण आणि हमखास करिअर यश.",
     image: "https://images.unsplash.com/photo-1580582932707-520aed937b7b?auto=format&fit=crop&w=1600&q=80",
+    imageUrl: "https://images.unsplash.com/photo-1580582932707-520aed937b7b?auto=format&fit=crop&w=1600&q=80",
+    ctaText: "प्रवेश अर्ज करा / Apply",
+    ctaLink: "/admission-enquiry",
+    active: true,
+    displayOrder: 1,
     ctaPrimary: { text: "प्रवेश अर्ज करा / Apply", link: "/admission-enquiry" },
     ctaSecondary: { text: "माहिती पत्रक / Brochure", link: institutionInfo.brochureUrl, external: true }
   },
@@ -42,6 +47,11 @@ export const heroSlides = [
     badge: "सैनिक पॅटर्न निवासी तयारी",
     description: "शाळा व कॉलेज अभ्यासासोबत दररोज सकाळ-संध्याकाळ फिजिकल ग्राऊंड, रायफल शूटिंग आणि स्पर्धा परीक्षा वर्ग.",
     image: "https://images.unsplash.com/photo-1509062522246-3755977927d7?auto=format&fit=crop&w=1600&q=80",
+    imageUrl: "https://images.unsplash.com/photo-1509062522246-3755977927d7?auto=format&fit=crop&w=1600&q=80",
+    ctaText: "कोर्सेस पहा",
+    ctaLink: "/courses",
+    active: true,
+    displayOrder: 2,
     ctaPrimary: { text: "कोर्सेस पहा", link: "/courses" },
     ctaSecondary: { text: "कॅम्पस संपर्क", link: "/contact" }
   },
@@ -52,6 +62,11 @@ export const heroSlides = [
     badge: "दर्जेदार निकालांची परंपरा",
     description: "प्रत्येक विद्यार्थ्यावर वैयक्तिक लक्ष, वर्गात फक्त ३० विद्यार्थी, डिजिटल लॅब व तज्ज्ञ प्राध्यापक.",
     image: "https://images.unsplash.com/photo-1523050854058-8df90110c9f1?auto=format&fit=crop&w=1600&q=80",
+    imageUrl: "https://images.unsplash.com/photo-1523050854058-8df90110c9f1?auto=format&fit=crop&w=1600&q=80",
+    ctaText: "आमच्याबद्दल जाणून घ्या",
+    ctaLink: "/about",
+    active: true,
+    displayOrder: 3,
     ctaPrimary: { text: "आमच्याबद्दल जाणून घ्या", link: "/about" },
     ctaSecondary: { text: "व्हिडिओ पहा", link: "/videos" }
   }
@@ -431,10 +446,31 @@ export const noticesList = [
 export const galleryList = [
   {
     id: "gal-1",
-    category: "activities",
+    category: "yoga",
     title: "कॅम्पस योगा व ध्यान सत्र",
     caption: "सकाळी ५:३० वाजता सुरू होणारे योग व प्राणायाम सत्र",
     imageUrl: "https://images.unsplash.com/photo-1545205597-3d9d02c29597?auto=format&fit=crop&w=800&q=80"
+  },
+  {
+    id: "gal-yoga-2",
+    category: "yoga",
+    title: "विद्यार्थी सूर्यनमस्कार व प्रात्यक्षिके",
+    caption: "सकाळच्या दिनचर्येतील १२ सूर्यनमस्कार व शारीरिक लवचिकता सराव",
+    imageUrl: "https://images.unsplash.com/photo-1506126613408-eca07ce68773?auto=format&fit=crop&w=800&q=80"
+  },
+  {
+    id: "gal-yoga-3",
+    category: "yoga",
+    title: "प्राणायाम व ओंकार ध्यान साधना",
+    caption: "अभ्यासात एकाग्रता, स्मरणशक्ती व आत्मविश्वासासाठी दैनंदिन ध्यानधारणा",
+    imageUrl: "https://images.unsplash.com/photo-1575052814086-f385e2e2ad1b?auto=format&fit=crop&w=800&q=80"
+  },
+  {
+    id: "gal-yoga-4",
+    category: "yoga",
+    title: "आंतरराष्ट्रीय योग दिन विशेष सत्र",
+    caption: "२१ जून - गुरुकुल भोसे विद्यार्थी व शिक्षकांचा भव्य योग दिन उपक्रम",
+    imageUrl: "https://images.unsplash.com/photo-1518611012118-696072aa579a?auto=format&fit=crop&w=800&q=80"
   },
   {
     id: "gal-2",

@@ -160,8 +160,9 @@ export const matchesCategory = (itemCategory = '', filter = 'all') => {
   const f = String(filter).toLowerCase();
   if (cat === f) return true;
   if (cat.includes(f) || f.includes(cat)) return true;
-  if ((f === 'activities' || f === 'उपक्रम') && (cat.includes('उपक्रम') || cat.includes('activities') || cat.includes('कार्यक्रम') || cat.includes('events'))) return true;
-  if ((f === 'sports' || f === 'क्रीडा') && (cat.includes('क्रीडा') || cat.includes('sports') || cat.includes('ग्राउंड') || cat.includes('मैदान'))) return true;
+  if ((f === 'yoga' || f === 'योगा' || f.includes('yoga') || f.includes('योगा') || f.includes('योग')) && (cat.includes('yoga') || cat.includes('योगा') || cat.includes('योग') || cat.includes('ध्यान') || cat.includes('प्राणायाम') || cat.includes('सूर्यनमस्कार') || cat.includes('आसन'))) return true;
+  if ((f === 'activities' || f === 'उपक्रम') && (cat.includes('उपक्रम') || cat.includes('activities') || cat.includes('कार्यक्रम') || cat.includes('events')) && !cat.includes('yoga') && !cat.includes('योगा')) return true;
+  if ((f === 'sports' || f === 'क्रीडा') && (cat.includes('क्रीडा') || cat.includes('sports') || cat.includes('ग्राउंड') || cat.includes('ग्राऊंड') || cat.includes('मैदान'))) return true;
   if ((f === 'campus' || f === 'कॅम्पस') && (cat.includes('कॅम्पस') || cat.includes('campus') || cat.includes('परिसर'))) return true;
   if ((f === 'gathering' || f === 'स्नेहसंमेलन') && (cat.includes('स्नेहसंमेलन') || cat.includes('gathering') || cat.includes('महोत्सव'))) return true;
   if ((f === 'result' || f === 'निकाल') && (cat.includes('निकाल') || cat.includes('result') || cat.includes('गुणवंत'))) return true;
@@ -209,7 +210,9 @@ export const getGalleryImages = async (categoryFilter = 'all') => {
     if (saved) {
       const parsed = JSON.parse(saved);
       if (Array.isArray(parsed) && parsed.length > 0) {
-        list = parsed.filter(g => g.status !== 'draft');
+        const existingIds = new Set(parsed.map(p => p.id || p.imageId));
+        const missingDefaults = galleryList.filter(g => !existingIds.has(g.id));
+        list = [...parsed, ...missingDefaults].filter(g => g.status !== 'draft');
       }
     }
   } catch (e) {

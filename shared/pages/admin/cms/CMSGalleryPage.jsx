@@ -22,7 +22,17 @@ import { useCMS } from '../../../contexts/CMSContext';
 import { uploadMediaFile, validateUploadFile, isStoragePathInUse } from '../../../services/storage/mediaUploadService';
 
 export const CMSGalleryPage = () => {
-  const { gallery, saveGalleryItem, deleteGalleryItem, pages = [], courses = [], programs = [] } = useCMS();
+  const { 
+    gallery = [], 
+    saveGalleryItem, 
+    deleteGalleryItem, 
+    pages = [], 
+    courses = [], 
+    programs = [],
+    loading = false 
+  } = useCMS();
+
+  const safeGallery = Array.isArray(gallery) ? gallery : [];
 
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
@@ -45,7 +55,7 @@ export const CMSGalleryPage = () => {
     imageUrl: '',
     url: '',
     storagePath: '',
-    displayOrder: gallery.length + 1,
+    displayOrder: safeGallery.length + 1,
     status: 'published',
     createdAt: new Date().toISOString()
   };
@@ -55,17 +65,24 @@ export const CMSGalleryPage = () => {
   // Extract unique categories from gallery
   const existingCategories = Array.from(new Set([
     'कॅम्पस (Campus)',
-    'कार्यक्रम (Events)',
+    'उपक्रम (Activities)',
+    'योगा उपक्रम (Yoga Activities)',
     'क्रीडा (Sports)',
+    'स्नेहसंमेलन (Gathering)',
     'शैक्षणिक (Academics)',
-    ...gallery.map(g => g.category).filter(Boolean)
+    'गुणवंत निकाल (Result)',
+    ...safeGallery.map(g => {
+      if (!g || !g.category) return '';
+      if (typeof g.category === 'string') return g.category;
+      return g.category.mr || g.category.en || '';
+    }).filter(Boolean)
   ]));
 
   const handleOpenUpload = () => {
     setFormData({
       ...defaultItem,
       imageId: `gal_${Date.now()}`,
-      displayOrder: gallery.length + 1
+      displayOrder: safeGallery.length + 1
     });
     setIsEditing(false);
     setShowUploadModal(true);
@@ -73,11 +90,13 @@ export const CMSGalleryPage = () => {
   };
 
   const handleOpenEdit = (item) => {
+    if (!item) return;
     setFormData({
       ...defaultItem,
       ...item,
-      url: item.imageUrl || item.url || '',
-      imageUrl: item.imageUrl || item.url || ''
+      url: item.imageUrl || item.url || item.image || '',
+      imageUrl: item.imageUrl || item.url || item.image || '',
+      category: typeof item.category === 'string' ? item.category : (item.category?.mr || 'कॅम्पस (Campus)')
     });
     setIsEditing(true);
     setShowUploadModal(true);
@@ -142,7 +161,7 @@ export const CMSGalleryPage = () => {
           imageUrl: downloadURL,
           url: downloadURL,
           storagePath: res.storagePath || '',
-          displayOrder: gallery.length + i + 1,
+          displayOrder: safeGallery.length + i + 1,
           status: 'published',
           createdAt: new Date().toISOString()
         });
@@ -200,11 +219,12 @@ export const CMSGalleryPage = () => {
   };
 
   const handleDelete = async (item) => {
+    if (!item) return;
     // Check if referenced elsewhere
     const inUse = isStoragePathInUse(item.storagePath || item.imageUrl || item.url, [
-      ...pages,
-      ...courses,
-      ...programs
+      ...(Array.isArray(pages) ? pages : []),
+      ...(Array.isArray(courses) ? courses : []),
+      ...(Array.isArray(programs) ? programs : [])
     ]);
 
     if (inUse) {
@@ -233,14 +253,17 @@ export const CMSGalleryPage = () => {
     setCustomCategoryInput('');
   };
 
-  const sortedGallery = [...gallery].sort((a, b) => (Number(a.displayOrder) || 0) - (Number(b.displayOrder) || 0));
+  const sortedGallery = [...safeGallery].sort((a, b) => (Number(a?.displayOrder) || 0) - (Number(b?.displayOrder) || 0));
 
   const filteredGallery = sortedGallery.filter(item => {
-    const matchesCat = selectedCategory === 'all' || item.category === selectedCategory;
-    const matchesSearch = !searchTerm || 
-      (item.title || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (item.caption || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (item.category || '').toLowerCase().includes(searchTerm.toLowerCase());
+    if (!item) return false;
+    const catStr = typeof item.category === 'string' ? item.category : (item.category?.mr || item.category?.en || '');
+    const matchesCat = selectedCategory === 'all' || catStr === selectedCategory;
+    const q = (searchTerm || '').toLowerCase();
+    const matchesSearch = !q || 
+      (item.title || '').toLowerCase().includes(q) ||
+      (item.caption || '').toLowerCase().includes(q) ||
+      catStr.toLowerCase().includes(q);
     return matchesCat && matchesSearch;
   });
 
@@ -319,11 +342,11 @@ export const CMSGalleryPage = () => {
                 : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
             }`}
           >
-            सर्व ({gallery.length})
+            सर्व ({safeGallery.length})
           </button>
           {existingCategories.map(cat => (
             <button
-              key={cat}
+              key={typeof cat === 'string' ? cat : JSON.stringify(cat)}
               onClick={() => setSelectedCategory(cat)}
               className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${
                 selectedCategory === cat
@@ -331,7 +354,7 @@ export const CMSGalleryPage = () => {
                   : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
               }`}
             >
-              {cat.split(' ')[0]}
+              {typeof cat === 'string' ? cat.split(' ')[0] : String(cat)}
             </button>
           ))}
         </div>
@@ -623,7 +646,7 @@ export const CMSGalleryPage = () => {
             <div className="p-4 space-y-1">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold text-gurukul-saffron-600">
-                  {showPreviewModal.category}
+                  {typeof showPreviewModal.category === 'string' ? showPreviewModal.category : (showPreviewModal.category?.mr || 'कॅम्पस')}
                 </span>
                 <span className="text-[10px] text-slate-400">
                   क्रम: #{showPreviewModal.displayOrder || 1}
@@ -638,84 +661,126 @@ export const CMSGalleryPage = () => {
         </div>
       )}
 
-      {/* Gallery Grid */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-        {filteredGallery.map((item) => (
-          <div key={item.imageId || item.id} className="group bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col justify-between hover:shadow-md transition-all">
-            <div 
-              onClick={() => setShowPreviewModal(item)}
-              className="relative aspect-4/3 bg-slate-100 overflow-hidden cursor-pointer"
-            >
-              <img 
-                src={item.imageUrl || item.url} 
-                alt={item.altText || item.title} 
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" 
-              />
-              <div className="absolute top-2 left-2 flex items-center gap-1.5">
-                <span className="px-2 py-0.5 rounded-full bg-black/60 text-white text-[10px] font-semibold backdrop-blur-xs">
-                  {item.category?.split(' ')[0]}
-                </span>
-                <span className="px-1.5 py-0.5 rounded bg-white/90 text-slate-900 text-[10px] font-bold">
-                  #{item.displayOrder || 1}
-                </span>
-              </div>
+      {/* Gallery Grid or Empty State */}
+      {filteredGallery.length === 0 ? (
+        <div className="bg-white rounded-2xl border border-dashed border-slate-300 p-12 text-center space-y-4">
+          <div className="w-16 h-16 mx-auto bg-orange-50 rounded-2xl flex items-center justify-center">
+            <ImageIcon className="w-8 h-8 text-gurukul-saffron-600" />
+          </div>
+          <div className="max-w-md mx-auto space-y-1">
+            <h3 className="text-base font-bold text-slate-800">
+              {searchTerm || selectedCategory !== 'all' ? 'कोणतेही फोटो सापडले नाहीत' : 'गॅलरीमध्ये अद्याप फोटो नाहीत'}
+            </h3>
+            <p className="text-xs text-slate-500">
+              {searchTerm || selectedCategory !== 'all' 
+                ? 'कृपया वेगळा शोध शब्द वापरा किंवा वर्गवारी फिल्टर बदला.' 
+                : 'नवीन फोटो जोडण्यासाठी वर दिलेल्या "नवीन फोटो (Single)" किंवा "बॅच अपलोड" बटणावर क्लिक करा.'}
+            </p>
+          </div>
+          <div className="flex items-center justify-center gap-3 pt-2">
+            {(searchTerm || selectedCategory !== 'all') ? (
               <button
                 type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleToggleStatus(item);
-                }}
-                className={`absolute top-2 right-2 px-2 py-0.5 rounded-full text-[10px] font-bold cursor-pointer shadow-sm ${
-                  item.status === 'published' 
-                    ? 'bg-emerald-500 text-white' 
-                    : 'bg-amber-400 text-slate-900'
-                }`}
-                title="स्थिती बदलण्यासाठी क्लिक करा"
+                onClick={() => { setSearchTerm(''); setSelectedCategory('all'); }}
+                className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition-colors"
               >
-                {item.status === 'published' ? 'प्रकाशित' : 'मसुदा'}
+                फिल्टर काढा (Reset Filter)
               </button>
-            </div>
-
-            <div className="p-3.5 space-y-2 flex-1 flex flex-col justify-between">
-              <div>
-                <h3 className="text-xs font-bold text-gurukul-navy-900 line-clamp-2">{item.title}</h3>
-                {item.caption && (
-                  <p className="text-[11px] text-slate-500 mt-0.5 line-clamp-1">{item.caption}</p>
-                )}
-              </div>
-
-              <div className="pt-2 border-t border-slate-100 flex items-center justify-between">
-                <div className="flex items-center gap-1">
-                  <button
-                    type="button"
-                    onClick={() => setShowPreviewModal(item)}
-                    className="p-1 text-slate-400 hover:text-gurukul-saffron-600 rounded"
-                    title="प्रिव्ह्यू पहा"
-                  >
-                    <Eye className="w-3.5 h-3.5" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleOpenEdit(item)}
-                    className="p-1 text-slate-400 hover:text-gurukul-navy-900 rounded"
-                    title="संपादन करा"
-                  >
-                    <Edit2 className="w-3.5 h-3.5" />
-                  </button>
+            ) : (
+              <button
+                type="button"
+                onClick={handleOpenUpload}
+                className="inline-flex items-center gap-1.5 px-4 py-2.5 bg-gurukul-saffron-600 hover:bg-gurukul-saffron-700 text-white rounded-xl text-xs font-bold shadow transition-all"
+              >
+                <Plus className="w-4 h-4" />
+                <span>पहिला फोटो जोडा</span>
+              </button>
+            )}
+          </div>
+        </div>
+      ) : (
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+          {filteredGallery.map((item) => (
+            <div key={item.imageId || item.id} className="group bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col justify-between hover:shadow-md transition-all">
+              <div 
+                onClick={() => setShowPreviewModal(item)}
+                className="relative aspect-4/3 bg-slate-100 overflow-hidden cursor-pointer"
+              >
+                <img 
+                  src={item.imageUrl || item.url || item.image || '/gurukul-logo.png'} 
+                  alt={item.altText || item.title || 'गॅलरी फोटो'} 
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                  onError={(e) => {
+                    e.currentTarget.onerror = null;
+                    e.currentTarget.src = 'https://images.unsplash.com/photo-1545205597-3d9d02c29597?auto=format&fit=crop&w=800&q=80';
+                  }}
+                />
+                <div className="absolute top-2 left-2 flex items-center gap-1.5">
+                  <span className="px-2 py-0.5 rounded-full bg-black/60 text-white text-[10px] font-semibold backdrop-blur-xs">
+                    {typeof item.category === 'string' ? item.category.split(' ')[0] : (item.category?.mr || 'कॅम्पस')}
+                  </span>
+                  <span className="px-1.5 py-0.5 rounded bg-white/90 text-slate-900 text-[10px] font-bold">
+                    #{item.displayOrder || 1}
+                  </span>
                 </div>
                 <button
                   type="button"
-                  onClick={() => handleDelete(item)}
-                  className="p-1 text-slate-400 hover:text-red-500 transition-colors"
-                  title="काढून टाका"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleToggleStatus(item);
+                  }}
+                  className={`absolute top-2 right-2 px-2 py-0.5 rounded-full text-[10px] font-bold cursor-pointer shadow-sm ${
+                    item.status === 'published' 
+                      ? 'bg-emerald-500 text-white' 
+                      : 'bg-amber-400 text-slate-900'
+                  }`}
+                  title="स्थिती बदलण्यासाठी क्लिक करा"
                 >
-                  <Trash2 className="w-3.5 h-3.5 text-red-500" />
+                  {item.status === 'published' ? 'प्रकाशित' : 'मसुदा'}
                 </button>
               </div>
+
+              <div className="p-3.5 space-y-2 flex-1 flex flex-col justify-between">
+                <div>
+                  <h3 className="text-xs font-bold text-gurukul-navy-900 line-clamp-2">{item.title}</h3>
+                  {item.caption && (
+                    <p className="text-[11px] text-slate-500 mt-0.5 line-clamp-1">{item.caption}</p>
+                  )}
+                </div>
+
+                <div className="pt-2 border-t border-slate-100 flex items-center justify-between">
+                  <div className="flex items-center gap-1">
+                    <button
+                      type="button"
+                      onClick={() => setShowPreviewModal(item)}
+                      className="p-1 text-slate-400 hover:text-gurukul-saffron-600 rounded"
+                      title="प्रिव्ह्यू पहा"
+                    >
+                      <Eye className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleOpenEdit(item)}
+                      className="p-1 text-slate-400 hover:text-gurukul-navy-900 rounded"
+                      title="संपादन करा"
+                    >
+                      <Edit2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleDelete(item)}
+                    className="p-1 text-slate-400 hover:text-red-500 transition-colors"
+                    title="काढून टाका"
+                  >
+                    <Trash2 className="w-3.5 h-3.5 text-red-500" />
+                  </button>
+                </div>
+              </div>
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 };

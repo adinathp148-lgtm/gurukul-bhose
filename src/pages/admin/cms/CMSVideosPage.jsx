@@ -13,11 +13,13 @@ import {
   Edit2,
   Upload,
   Search,
-  Filter
+  Filter,
+  Eye
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useCMS } from '../../../contexts/CMSContext';
 import { uploadMediaFile, validateUploadFile } from '../../../services/storage/mediaUploadService';
+import { getPublicWebsiteUrl } from '../../../services/navigation/navigationUrls';
 
 export const CMSVideosPage = () => {
   const { videos, saveVideo, deleteVideo } = useCMS();
@@ -178,7 +180,7 @@ export const CMSVideosPage = () => {
     }
   };
 
-  const sortedVideos = [...videos].sort((a, b) => (Number(a.displayOrder) || 0) - (Number(b.displayOrder) || 0));
+  const sortedVideos = [...(videos || [])].sort((a, b) => (Number(a.displayOrder) || 0) - (Number(b.displayOrder) || 0));
 
   const filteredVideos = sortedVideos.filter(vid => {
     const matchesCat = categoryFilter === 'all' || vid.category === categoryFilter;
@@ -213,7 +215,7 @@ export const CMSVideosPage = () => {
 
         <div className="flex items-center gap-2">
           <a
-            href="/videos"
+            href={`${getPublicWebsiteUrl()}/videos`}
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-1.5 px-3.5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold text-xs border border-slate-300 transition-all"

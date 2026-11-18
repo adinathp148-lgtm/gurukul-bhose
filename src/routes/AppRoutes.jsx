@@ -142,6 +142,11 @@ export const AppRoutes = () => {
         <Route path="cms/seo" element={<CMSSEOPage />} />
         <Route path="cms/settings" element={<CMSSettingsPage />} />
         <Route path="cms/activity-logs" element={<CMSActivityLogsPage />} />
+        <Route path="gallery" element={<Navigate to="/admin/cms/gallery" replace />} />
+        <Route path="videos" element={<Navigate to="/admin/cms/videos" replace />} />
+        <Route path="notices" element={<Navigate to="/admin/cms/notices" replace />} />
+        <Route path="facilities" element={<Navigate to="/admin/cms/facilities" replace />} />
+        <Route path="courses" element={<Navigate to="/admin/cms/courses" replace />} />
         
         <Route path="meta-integration" element={<MetaIntegrationPage />} />
         <Route path="profile" element={<AdminProfilePage />} />

@@ -540,6 +540,7 @@ export const CMSPage = () => {
               className="w-full text-xs px-3 py-2 border rounded-lg bg-white"
             >
               <option value="activities">{isMarathi ? 'उपक्रम (Activities)' : 'Activities'}</option>
+              <option value="yoga">{isMarathi ? 'योगा उपक्रम (Yoga Activities)' : 'Yoga Activities'}</option>
               <option value="sports">{isMarathi ? 'क्रीडा (Sports)' : 'Sports'}</option>
               <option value="gathering">{isMarathi ? 'स्नेहसंमेलन (Gathering)' : 'Annual Gathering'}</option>
               <option value="result">{isMarathi ? 'निकाल (Result)' : 'Academic Results'}</option>

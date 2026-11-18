@@ -35,6 +35,7 @@ import { useLanguage } from '../contexts/LanguageContext';
 import { Badge } from '../components/common/Badge';
 import { LanguageSwitcher } from '../components/common/LanguageSwitcher';
 import { NotificationCenter } from '../components/common/NotificationCenter';
+import { ErrorBoundary } from '../components/common/ErrorState';
 import { getPublicWebsiteUrl } from '../services/navigation/navigationUrls';
 
 export const AdminLayout = () => {
@@ -513,7 +514,9 @@ export const AdminLayout = () => {
 
         {/* Page Content */}
         <main className="flex-1 p-3.5 sm:p-4 lg:p-5 xl:p-6 max-w-7xl w-full mx-auto space-y-4 sm:space-y-5 xl:space-y-6 min-w-0">
-          <Outlet />
+          <ErrorBoundary>
+            <Outlet />
+          </ErrorBoundary>
         </main>
       </div>
     </div>

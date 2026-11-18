@@ -36,34 +36,34 @@ export const HeroSection = ({ slides = [], institution = {} }) => {
       };
     }
 
-    // English translations based on slide id/index
-    if (currentSlideIndex === 1 || slide.id === 'slide-2') {
+    // English translations based on slide id/index with dynamic fallback
+    if (slide.id === 'slide-2') {
       return {
-        badge: 'Sainik Pattern Residential Training',
-        title: 'Assured Government Jobs & Careers After 12th',
-        subtitle: 'NDA, Army, Navy, Airforce, Police, MPSC, UPSC',
-        description: 'Daily morning & evening physical training, rifle shooting and competitive exam coaching alongside regular schooling.',
-        ctaPrimaryText: 'Explore Courses',
-        ctaSecondaryText: 'Campus Contact'
+        badge: slide.badge || 'Sainik Pattern Residential Training',
+        title: slide.title || 'Assured Government Jobs & Careers After 12th',
+        subtitle: slide.subtitle || 'NDA, Army, Navy, Airforce, Police, MPSC, UPSC',
+        description: slide.description || 'Daily morning & evening physical training, rifle shooting and competitive exam coaching alongside regular schooling.',
+        ctaPrimaryText: slide.ctaText || slide.ctaPrimary?.text || 'Explore Courses',
+        ctaSecondaryText: slide.ctaSecondary?.text || 'Campus Contact'
       };
     }
-    if (currentSlideIndex === 2 || slide.id === 'slide-3') {
+    if (slide.id === 'slide-3') {
       return {
-        badge: 'Proven Tradition of Academic Excellence',
-        title: 'Gurukul Residential Science & Talent Academy',
-        subtitle: 'NEET, JEE, MHT-CET, Scholarship, Navodaya School',
-        description: 'Personalized mentorship, only 30 students per class, modern digital labs and expert coaching faculty.',
-        ctaPrimaryText: 'About Gurukul Bhose',
-        ctaSecondaryText: 'Watch Videos'
+        badge: slide.badge || 'Proven Tradition of Academic Excellence',
+        title: slide.title || 'Gurukul Residential Science & Talent Academy',
+        subtitle: slide.subtitle || 'NEET, JEE, MHT-CET, Scholarship, Navodaya School',
+        description: slide.description || 'Personalized mentorship, only 30 students per class, modern digital labs and expert coaching faculty.',
+        ctaPrimaryText: slide.ctaText || slide.ctaPrimary?.text || 'About Gurukul Bhose',
+        ctaSecondaryText: slide.ctaSecondary?.text || 'Watch Videos'
       };
     }
     return {
-      badge: 'Admissions Open - Current Academic Year',
-      title: 'Gurukul Vidyamandir & Junior College, Bhose',
-      subtitle: '5th to 12th Std. Sainik Pattern Residential School & College',
-      description: '4-acre scenic safe campus, military discipline, quality education and assured career success.',
-      ctaPrimaryText: 'Apply for Admission',
-      ctaSecondaryText: 'Download Brochure'
+      badge: slide.badge || 'Admissions Open - Current Academic Year',
+      title: slide.title || 'Gurukul Vidyamandir & Junior College, Bhose',
+      subtitle: slide.subtitle || '5th to 12th Std. Sainik Pattern Residential School & College',
+      description: slide.description || '4-acre scenic safe campus, military discipline, quality education and assured career success.',
+      ctaPrimaryText: slide.ctaText || slide.ctaPrimary?.text || 'Apply for Admission',
+      ctaSecondaryText: slide.ctaSecondary?.text || 'Download Brochure'
     };
   };
 
@@ -84,10 +84,10 @@ export const HeroSection = ({ slides = [], institution = {} }) => {
   return (
     <section className="relative bg-gradient-to-br from-gurukul-navy-950 via-slate-900 to-gurukul-navy-900 text-white min-h-[440px] sm:min-h-[480px] lg:min-h-[460px] xl:min-h-[520px] 2xl:min-h-[600px] flex flex-col justify-center overflow-hidden">
       {/* Background slide image with overlay */}
-      {(slide.image || slide.imageUrl) && (
+      {(slide.imageUrl || slide.image) && (
         <div 
           className="absolute inset-0 bg-cover bg-center transition-all duration-1000 transform scale-105"
-          style={{ backgroundImage: `url(${slide.image || slide.imageUrl})` }}
+          style={{ backgroundImage: `url(${slide.imageUrl || slide.image})` }}
         >
           <div className="absolute inset-0 bg-gradient-to-r from-gurukul-navy-950/95 via-gurukul-navy-950/85 to-gurukul-navy-900/75"></div>
         </div>

@@ -22,6 +22,24 @@ import {
 import { uploadMediaFile } from '../../../services/storage/mediaUploadService';
 import { Button } from '../../../components/common/Button';
 
+// Helper to normalize slide properties across different schema versions
+const normalizeSlide = (slide, index) => ({
+  id: slide?.id || `slide-${Date.now()}-${index}`,
+  title: slide?.title || '',
+  subtitle: slide?.subtitle || '',
+  description: slide?.description || '',
+  imageUrl: slide?.imageUrl || slide?.image || '',
+  image: slide?.imageUrl || slide?.image || '',
+  ctaText: slide?.ctaText || slide?.ctaPrimary?.text || '',
+  ctaLink: slide?.ctaLink || slide?.ctaPrimary?.link || '',
+  ctaPrimary: {
+    text: slide?.ctaText || slide?.ctaPrimary?.text || 'प्रवेश चौकशी करा',
+    link: slide?.ctaLink || slide?.ctaPrimary?.link || '/admission-enquiry'
+  },
+  active: slide?.active !== false,
+  displayOrder: Number(slide?.displayOrder) || (index + 1)
+});
+
 export const CMSHomepagePage = () => {
   const { 
     homepageData, 
@@ -29,7 +47,8 @@ export const CMSHomepagePage = () => {
     programs = [], 
     notices = [], 
     gallery = [], 
-    videos = [] 
+    videos = [],
+    loading = false
   } = useCMS();
 
   const [saving, setSaving] = useState(false);
@@ -38,9 +57,10 @@ export const CMSHomepagePage = () => {
   const [uploadingSlideIdx, setUploadingSlideIdx] = useState(null);
   const [uploadingWelcomeImg, setUploadingWelcomeImg] = useState(false);
   const [uploadingAboutImg, setUploadingAboutImg] = useState(false);
+  const [hasInitialized, setHasInitialized] = useState(false);
 
   // Local form states
-  const [slides, setSlides] = useState(() => homepageData?.heroSlides || []);
+  const [slides, setSlides] = useState(() => (homepageData?.heroSlides || []).map(normalizeSlide));
   const [welcome, setWelcome] = useState(() => homepageData?.welcomeSection || {
     heading: '',
     introText: '',
@@ -96,26 +116,88 @@ export const CMSHomepagePage = () => {
     }
   );
 
+  // Synchronize state when homepageData loads asynchronously
+  useEffect(() => {
+    if (homepageData && !hasInitialized) {
+      if (Array.isArray(homepageData.heroSlides) && homepageData.heroSlides.length > 0) {
+        setSlides(homepageData.heroSlides.map(normalizeSlide));
+      }
+      if (homepageData.welcomeSection) {
+        setWelcome(homepageData.welcomeSection);
+      }
+      if (homepageData.aboutSection) {
+        setAbout(homepageData.aboutSection);
+      }
+      if (homepageData.admissionCTA) {
+        setCta(homepageData.admissionCTA);
+      }
+      if (homepageData.featuredPrograms) {
+        setFeaturedPrograms(homepageData.featuredPrograms);
+      }
+      if (homepageData.featuredNotices) {
+        setFeaturedNotices(homepageData.featuredNotices);
+      }
+      if (homepageData.galleryPreview) {
+        setGalleryPreview(homepageData.galleryPreview);
+      }
+      if (homepageData.videoPreview) {
+        setVideoPreview(homepageData.videoPreview);
+      }
+      if (homepageData.enabledSections) {
+        setEnabledSections(homepageData.enabledSections);
+      }
+      setHasInitialized(true);
+    }
+  }, [homepageData, hasInitialized]);
+
   // Slide management
   const handleAddSlide = () => {
+    const newId = `slide-${Date.now()}`;
+    const nextOrder = slides.length + 1;
     const newSlide = {
-      id: `slide-${Date.now()}`,
+      id: newId,
       title: 'नवीन बॅनर शीर्षक (New Banner Title)',
       subtitle: 'सैनिक पॅटर्न निवासी शिक्षण (Sainik Pattern)',
       description: 'इयत्ता ५ वी ते १२ वी मराठी व सेमी इंग्रजी माध्यम निवासी प्रवेश सुरू.',
       imageUrl: 'https://images.unsplash.com/photo-1541829070764-84a7d30dd3f3?auto=format&fit=crop&w=1200&q=80',
+      image: 'https://images.unsplash.com/photo-1541829070764-84a7d30dd3f3?auto=format&fit=crop&w=1200&q=80',
       ctaText: 'प्रवेश चौकशी करा',
       ctaLink: '/admission-enquiry',
+      ctaPrimary: {
+        text: 'प्रवेश चौकशी करा',
+        link: '/admission-enquiry'
+      },
       active: true,
-      displayOrder: slides.length + 1
+      displayOrder: nextOrder
     };
-    setSlides([...slides, newSlide]);
+    setSlides(prev => [...prev, newSlide]);
+    setSuccessMsg(`नवीन बॅनर #${nextOrder} जोडला गेला आहे! खाली स्क्रोल करून संपादन करा व "बदल प्रकाशित करा" बटणावर क्लिक करा.`);
+    
+    // Smooth scroll to the newly added slide card
+    setTimeout(() => {
+      const el = document.getElementById(`banner-card-${newId}`);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }, 150);
   };
 
   const handleUpdateSlide = (index, field, value) => {
-    const updated = [...slides];
-    updated[index] = { ...updated[index], [field]: value };
-    setSlides(updated);
+    setSlides(prev => {
+      const updated = [...prev];
+      const target = { ...updated[index], [field]: value };
+      if (field === 'imageUrl') {
+        target.image = value;
+      }
+      if (field === 'ctaText') {
+        target.ctaPrimary = { ...(target.ctaPrimary || {}), text: value };
+      }
+      if (field === 'ctaLink') {
+        target.ctaPrimary = { ...(target.ctaPrimary || {}), link: value };
+      }
+      updated[index] = target;
+      return updated;
+    });
   };
 
   const handleDeleteSlide = (index) => {
@@ -123,21 +205,25 @@ export const CMSHomepagePage = () => {
       alert('किमान १ बॅनर आवश्यक आहे (At least 1 banner slide is required).');
       return;
     }
-    setSlides(slides.filter((_, i) => i !== index));
+    if (window.confirm(`बॅनर #${index + 1} नक्की हटवायचा आहे का?`)) {
+      setSlides(prev => {
+        const filtered = prev.filter((_, i) => i !== index);
+        return filtered.map((s, idx) => ({ ...s, displayOrder: idx + 1 }));
+      });
+      setSuccessMsg('बॅनर हटवला गेला. बदल सेव्ह करण्यासाठी "बदल प्रकाशित करा" वर क्लिक करा.');
+    }
   };
 
   const handleMoveSlide = (index, direction) => {
     const target = direction === 'up' ? index - 1 : index + 1;
     if (target < 0 || target >= slides.length) return;
-    const updated = [...slides];
-    const temp = updated[index];
-    updated[index] = updated[target];
-    updated[target] = temp;
-    // Update display orders
-    updated.forEach((s, idx) => {
-      s.displayOrder = idx + 1;
+    setSlides(prev => {
+      const updated = [...prev];
+      const temp = updated[index];
+      updated[index] = updated[target];
+      updated[target] = temp;
+      return updated.map((s, idx) => ({ ...s, displayOrder: idx + 1 }));
     });
-    setSlides(updated);
   };
 
   const handleSlideImageUpload = async (index, file) => {
@@ -220,8 +306,22 @@ export const CMSHomepagePage = () => {
     setErrorMsg('');
 
     try {
+      // Normalize slides to ensure all schema fields are synchronized
+      const cleanedSlides = slides.map((s, idx) => ({
+        ...s,
+        displayOrder: Number(s.displayOrder) || (idx + 1),
+        image: s.imageUrl || s.image || '',
+        imageUrl: s.imageUrl || s.image || '',
+        ctaText: s.ctaText || s.ctaPrimary?.text || '',
+        ctaLink: s.ctaLink || s.ctaPrimary?.link || '',
+        ctaPrimary: {
+          text: s.ctaText || s.ctaPrimary?.text || 'प्रवेश चौकशी करा',
+          link: s.ctaLink || s.ctaPrimary?.link || '/admission-enquiry'
+        }
+      }));
+
       await updateHomepage({
-        heroSlides: slides,
+        heroSlides: cleanedSlides,
         welcomeSection: welcome,
         aboutSection: about,
         featuredPrograms,
@@ -239,6 +339,15 @@ export const CMSHomepagePage = () => {
       setSaving(false);
     }
   };
+
+  if (loading && !homepageData) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[360px] space-y-3 bg-white rounded-2xl border border-slate-200 p-8 shadow-xs">
+        <div className="w-9 h-9 border-4 border-gurukul-saffron-500 border-t-transparent rounded-full animate-spin"></div>
+        <p className="text-xs font-bold text-slate-600">मुख्यपृष्ठ माहिती लोड होत आहे... कृपया प्रतीक्षा करा.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8 max-w-5xl">
@@ -302,7 +411,11 @@ export const CMSHomepagePage = () => {
 
         <div className="space-y-6">
           {slides.map((slide, idx) => (
-            <div key={slide.id || idx} className="p-4 rounded-xl border border-slate-200 bg-slate-50/50 space-y-4">
+            <div 
+              key={slide.id || idx} 
+              id={`banner-card-${slide.id || idx}`}
+              className="p-4 rounded-xl border border-slate-200 bg-slate-50/50 space-y-4 transition-all duration-300 scroll-mt-20"
+            >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <span className="text-xs font-bold text-gurukul-navy-900 bg-white px-2.5 py-1 rounded-md border border-slate-200">
@@ -445,6 +558,19 @@ export const CMSHomepagePage = () => {
               </div>
             </div>
           ))}
+        </div>
+
+        {/* Bottom Add Banner Action */}
+        <div className="pt-2 border-t border-slate-100 flex justify-center">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={handleAddSlide}
+            className="text-xs font-bold border-dashed border-2 py-2.5 px-6 hover:bg-orange-50 text-gurukul-saffron-600 border-gurukul-saffron-300 transition-colors w-full sm:w-auto"
+          >
+            <Plus className="w-4 h-4 mr-1.5" />
+            <span>+ आणखी एक नवीन बॅनर जोडा (Add Another Banner)</span>
+          </Button>
         </div>
       </div>
 

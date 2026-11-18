@@ -74,11 +74,115 @@ export const CMSProvider = ({ children }) => {
   const [pages, setPages] = useState([]);
   const [aboutData, setAboutData] = useState(null);
   const [programs, setPrograms] = useState([]);
-  const [courses, setCourses] = useState([]);
-  const [gallery, setGallery] = useState([]);
-  const [videos, setVideos] = useState([]);
-  const [notices, setNotices] = useState([]);
-  const [facilities, setFacilities] = useState([]);
+  const [courses, setCourses] = useState(() => {
+    try {
+      const saved = localStorage.getItem('gurukul_cms_courses');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch {
+      // ignore
+    }
+    return Array.isArray(initialCourses) ? initialCourses.map(c => ({
+      courseId: c.id,
+      id: c.id,
+      ...c,
+      status: 'published'
+    })) : [];
+  });
+  const [gallery, setGallery] = useState(() => {
+    try {
+      const saved = localStorage.getItem('gurukul_cms_gallery_items');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch {
+      // ignore
+    }
+    return Array.isArray(initialGallery) ? initialGallery.map((g, idx) => ({
+      id: g.id || `gal-${idx}`,
+      imageId: g.id || `gal-${idx}`,
+      title: g.title || '',
+      caption: g.caption || g.title || '',
+      category: g.category || 'कॅम्पस (Campus)',
+      imageUrl: g.imageUrl || g.image || '',
+      url: g.imageUrl || g.image || '',
+      displayOrder: idx + 1,
+      status: 'published'
+    })) : [];
+  });
+  const [videos, setVideos] = useState(() => {
+    try {
+      const saved = localStorage.getItem('gurukul_cms_videos_items');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch {
+      // ignore
+    }
+    return Array.isArray(initialVideos) ? initialVideos.map((v, idx) => ({
+      id: v.id || `vid-${idx}`,
+      videoId: v.id || `vid-${idx}`,
+      title: v.title || '',
+      description: v.description || '',
+      youtubeId: v.youtubeId || '',
+      embedUrl: v.youtubeId ? `https://www.youtube.com/embed/${v.youtubeId}` : '',
+      category: v.category || 'कॅम्पस (Campus)',
+      displayOrder: idx + 1,
+      status: 'published'
+    })) : [];
+  });
+
+  const [notices, setNotices] = useState(() => {
+    try {
+      const saved = localStorage.getItem('gurukul_cms_notices_items');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch {
+      // ignore
+    }
+    return Array.isArray(initialNotices) ? initialNotices.map((n, idx) => ({
+      noticeId: n.id || `not-${idx}`,
+      id: n.id || `not-${idx}`,
+      title: n.title,
+      description: n.description || '',
+      category: n.category || 'प्रवेश (Admission)',
+      date: n.date || '2026-06-01',
+      publishedAt: n.date || '2026-06-01',
+      isImportant: Boolean(n.isImportant),
+      downloadLink: n.downloadLink || '',
+      fileUrl: n.downloadLink || '',
+      attachmentUrl: n.downloadLink || '',
+      fileName: n.pdfName || '',
+      status: 'published'
+    })) : [];
+  });
+
+  const [facilities, setFacilities] = useState(() => {
+    try {
+      const saved = localStorage.getItem('gurukul_cms_facilities_items');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch {
+      // ignore
+    }
+    return Array.isArray(initialFacilities) ? initialFacilities.map((f, idx) => ({
+      facilityId: f.id || `fac-${idx}`,
+      id: f.id || `fac-${idx}`,
+      title: f.title || '',
+      description: f.description || '',
+      category: f.category || 'कॅम्पस (Campus)',
+      imageUrl: f.image || f.imageUrl || '',
+      status: 'published'
+    })) : [];
+  });
   const [contactInfo, setContactInfo] = useState(null);
   const [websiteSettings, setWebsiteSettings] = useState(null);
   const [seoSettings, setSeoSettings] = useState(null);
@@ -124,7 +228,7 @@ export const CMSProvider = ({ children }) => {
       setAboutData(abt);
       setPrograms(prgs);
       setCourses(crs);
-      setGallery(gal);
+      setGallery(Array.isArray(gal) && gal.length > 0 ? gal : (prev => (Array.isArray(prev) && prev.length > 0 ? prev : [])));
       setVideos(vids);
       setNotices(nts);
       setFacilities(facs);
@@ -322,7 +426,7 @@ export const CMSProvider = ({ children }) => {
     aboutData,
     programs,
     courses,
-    gallery,
+    gallery: Array.isArray(gallery) ? gallery : [],
     videos,
     notices,
     facilities,
