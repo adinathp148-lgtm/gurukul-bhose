@@ -51,8 +51,30 @@ export const StaffPage = () => {
     { id: 'residential', label: isMarathi ? 'वसतिगृह व विद्यार्थी काळजी' : 'Hostel & Student Care' }
   ];
 
-  // Staff members list (Placeholder cards removed. Real staff will be added when provided)
-  const staffMembers = [];
+  // Official Gurukul Bhose Staff Members
+  const staffMembers = [
+    {
+      id: 'staff-priyanka-shinde',
+      category: 'academics',
+      name: isMarathi ? 'प्रा. प्रियांका साहेबराव शिंदे' : 'Prof. Priyanka Sahebrao Shinde',
+      role: isMarathi ? 'रसायनशास्त्र प्राध्यापिका (Faculty of Chemistry)' : 'Faculty of Chemistry (Junior College)',
+      qualification: 'M.Sc. (Chem), B.Ed.',
+      experience: isMarathi ? 'अनुभव - ५ वर्षे' : '5 Years Experience',
+      dept: isMarathi ? 'ज्युनियर कॉलेज सायन्स (केमिस्ट्री)' : 'Junior College Science (Chemistry)',
+      bio: isMarathi 
+        ? 'इ. ११ वी व १२ वी सायन्स, NEET व JEE परीक्षेसाठी सखोल केमिस्ट्री मार्गदर्शन. रासायनिक समीकरणे, प्रत्यक्ष प्रयोगशाळा सराव व विद्यार्थ्यांच्या शंका निरसनावर विशेष भर.'
+        : 'Dedicated Chemistry professor for 11th & 12th Science, NEET and JEE aspirants with 5 years of teaching experience. Emphasizes laboratory experiments, conceptual clarity, and dedicated student guidance.',
+      specialties: [
+        isMarathi ? 'रसायनशास्त्र (Chemistry)' : 'Chemistry',
+        isMarathi ? '५ वर्षे अध्यापन अनुभव' : '5 Years Experience',
+        isMarathi ? 'NEET / JEE सराव' : 'NEET / JEE Prep',
+        isMarathi ? 'प्रायोगिक लॅब सराव' : 'Lab Experiments'
+      ],
+      image: '/images/staff/priyanka-shinde.png',
+      icon: FlaskConical,
+      accentColor: 'from-orange-500 to-amber-600'
+    }
+  ];
 
   const filteredStaff = selectedCategory === 'all' 
     ? staffMembers 
@@ -294,11 +316,21 @@ export const StaffPage = () => {
                     <div className={`h-3 bg-gradient-to-r ${staff.accentColor}`} />
 
                     <div className="p-5 sm:p-6 space-y-4">
-                      {/* Role & Avatar */}
+                      {/* Role & Avatar / Photo */}
                       <div className="flex items-start gap-4">
-                        <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${staff.accentColor} text-white flex items-center justify-center font-black text-xl shadow-md shrink-0 group-hover:scale-105 transition-transform`}>
-                          <IconComponent className="w-7 h-7" />
-                        </div>
+                        {staff.image ? (
+                          <div className="w-18 h-22 sm:w-20 sm:h-24 rounded-2xl overflow-hidden border-2 border-orange-200/90 shadow-md shrink-0 group-hover:scale-105 transition-transform bg-slate-100">
+                            <img 
+                              src={staff.image} 
+                              alt={staff.name} 
+                              className="w-full h-full object-cover object-center"
+                            />
+                          </div>
+                        ) : (
+                          <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${staff.accentColor} text-white flex items-center justify-center font-black text-xl shadow-md shrink-0 group-hover:scale-105 transition-transform`}>
+                            <IconComponent className="w-7 h-7" />
+                          </div>
+                        )}
                         <div className="flex-1 min-w-0">
                           <span className="inline-block text-[10.5px] font-bold uppercase tracking-wider text-gurukul-saffron-600 bg-orange-50 px-2.5 py-0.5 rounded-md mb-1 border border-orange-200/50">
                             {staff.dept}
@@ -309,12 +341,17 @@ export const StaffPage = () => {
                           <p className="text-xs font-bold text-gurukul-navy-900 mt-0.5">
                             {staff.role}
                           </p>
+                          {staff.experience && (
+                            <span className="inline-block text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md mt-1.5 border border-emerald-200/60">
+                              ⏱ {staff.experience}
+                            </span>
+                          )}
                         </div>
                       </div>
 
                       {/* Qualification Pill */}
-                      <div className="flex items-center gap-1.5 text-xs text-slate-600 bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-100 font-medium">
-                        <GraduationCap className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                      <div className="flex items-center gap-1.5 text-xs text-slate-700 bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-200/80 font-semibold">
+                        <GraduationCap className="w-3.5 h-3.5 text-gurukul-saffron-600 shrink-0" />
                         <span className="truncate">{staff.qualification}</span>
                       </div>
 
