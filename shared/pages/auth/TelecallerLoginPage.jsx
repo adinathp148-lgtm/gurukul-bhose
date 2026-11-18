@@ -58,18 +58,18 @@ export const TelecallerLoginPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-emerald-950 via-slate-900 to-gurukul-navy-950 flex items-center justify-center p-4">
-      <div className="max-w-md w-full bg-white rounded-3xl p-8 sm:p-10 shadow-2xl border border-slate-100 relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-emerald-950 via-slate-900 to-gurukul-navy-950 flex flex-col items-center justify-center py-6 sm:py-10 px-4">
+      <div className="max-w-md w-full bg-white rounded-3xl p-6 sm:p-8 lg:p-9 shadow-2xl border border-slate-100 relative overflow-hidden my-auto">
         {/* Accent bar */}
         <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-emerald-500 via-teal-400 to-emerald-600"></div>
 
         {/* Header */}
-        <div className="text-center mb-8">
-          <div className="relative inline-block mb-3">
+        <div className="text-center mb-5 sm:mb-7">
+          <div className="relative inline-block mb-2 sm:mb-2.5">
             <img 
               src="/gurukul-logo.png" 
               alt="गुरुकुल भोसे" 
-              className="w-16 h-16 object-contain mx-auto drop-shadow-md"
+              className="w-13 h-13 sm:w-15 sm:h-15 object-contain mx-auto drop-shadow-md"
             />
             <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-emerald-600 text-white flex items-center justify-center shadow-md">
               <PhoneCall className="w-3 h-3" />

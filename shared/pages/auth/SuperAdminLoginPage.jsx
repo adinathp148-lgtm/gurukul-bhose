@@ -50,15 +50,15 @@ export const SuperAdminLoginPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-gurukul-navy-950 to-slate-900 flex items-center justify-center p-4">
-      <div className="max-w-md w-full bg-white rounded-3xl p-8 sm:p-10 shadow-2xl border border-slate-800/20 relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-gurukul-navy-950 to-slate-900 flex flex-col items-center justify-center py-6 sm:py-10 px-4">
+      <div className="max-w-md w-full bg-white rounded-3xl p-6 sm:p-8 lg:p-9 shadow-2xl border border-slate-800/20 relative overflow-hidden my-auto">
         {/* Subtle security accent bar */}
         <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-rose-600 via-amber-500 to-rose-600"></div>
 
         {/* Security Badge & Title */}
-        <div className="text-center mb-8">
-          <div className="w-14 h-14 rounded-2xl bg-rose-600 text-white flex items-center justify-center font-black text-2xl mx-auto shadow-lg mb-3">
-            <Shield className="w-7 h-7" />
+        <div className="text-center mb-5 sm:mb-7">
+          <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-rose-600 text-white flex items-center justify-center font-black text-2xl mx-auto shadow-lg mb-2.5">
+            <Shield className="w-6 h-6 sm:w-7 sm:h-7" />
           </div>
           <span className="text-[10px] font-black uppercase tracking-widest text-rose-600 bg-rose-50 px-3 py-1 rounded-full border border-rose-200">
             Root Level Access

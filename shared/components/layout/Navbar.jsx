@@ -92,31 +92,31 @@ export const Navbar = ({ showAdminLink = true }) => {
       )}
 
       {/* Main Navigation Bar */}
-      <div className="w-full px-3 sm:px-5 lg:px-6 2xl:px-8">
-        <div className="flex items-center justify-between h-16 sm:h-17 lg:h-18 gap-2 xl:gap-3 2xl:gap-6">
+      <div className="w-full px-3 sm:px-4 lg:px-5 2xl:px-8">
+        <div className="flex items-center justify-between h-15 sm:h-16 lg:h-16 xl:h-16 2xl:h-17 gap-1.5 xl:gap-2 2xl:gap-6">
           
           {/* Logo & Identity */}
           <Link to="/" className="flex items-center gap-2 sm:gap-2.5 group shrink-0 py-1 text-left">
             <img 
               src={websiteSettings?.logoUrl && websiteSettings.logoUrl !== '/favicon.svg' ? websiteSettings.logoUrl : '/gurukul-logo.png'} 
               alt="गुरुकुल भोसे Logo" 
-              className="w-9 h-9 sm:w-10 sm:h-10 lg:w-11 lg:h-11 object-contain group-hover:scale-105 transition-transform shrink-0 drop-shadow-xs" 
+              className="w-9 h-9 sm:w-10 sm:h-10 lg:w-10.5 lg:h-10.5 2xl:w-11 2xl:h-11 object-contain group-hover:scale-105 transition-transform shrink-0 drop-shadow-xs" 
             />
             <div className="shrink-0 flex flex-col justify-center text-left">
-              <span className="block font-black text-sm sm:text-[17px] lg:text-lg text-gurukul-navy-950 leading-tight tracking-tight whitespace-nowrap text-left">
+              <span className="block font-black text-sm sm:text-base lg:text-[17px] 2xl:text-lg text-gurukul-navy-950 leading-tight tracking-tight whitespace-nowrap text-left">
                 {isMarathi ? 'गुरुकुल भोसे' : 'Gurukul Bhose'}
               </span>
-              <span className="hidden sm:block text-[10px] xl:text-[11px] font-semibold text-gurukul-saffron-600 whitespace-nowrap leading-tight mt-0.5 text-left">
-                {isMarathi ? 'विद्यामंदिर व ज्युनिअर कॉलेज (सैनिक पॅटर्न निवासी)' : 'Sainik Pattern Residential School & College'}
+              <span className="hidden sm:block text-[10px] 2xl:text-[11px] font-semibold text-gurukul-saffron-600 whitespace-nowrap leading-tight mt-0.5 text-left max-w-[190px] 2xl:max-w-none truncate">
+                {isMarathi ? 'विद्यामंदिर व ज्युनिअर कॉलेज' : 'Sainik Pattern Residential School'}
               </span>
             </div>
           </Link>
 
           {/* Desktop Nav Links */}
-          <nav className="hidden xl:flex items-center gap-1 2xl:gap-1.5 text-[13px] 2xl:text-sm font-semibold text-slate-700">
+          <nav className="hidden xl:flex items-center gap-0.5 xl:gap-1 2xl:gap-1.5 text-xs xl:text-[12.5px] 2xl:text-sm font-semibold text-slate-700">
             <Link 
               to="/" 
-              className={`h-8 sm:h-8.5 inline-flex items-center justify-center px-2.5 rounded-lg whitespace-nowrap transition-all ${
+              className={`h-8 sm:h-8.5 inline-flex items-center justify-center px-2 xl:px-2.5 2xl:px-3 rounded-lg whitespace-nowrap transition-all ${
                 isActive('/') 
                   ? 'text-gurukul-saffron-600 font-bold bg-orange-50/90 border border-orange-200/60 shadow-2xs' 
                   : 'text-slate-700 hover:text-gurukul-saffron-600 hover:bg-slate-100/70'
@@ -405,7 +405,7 @@ export const Navbar = ({ showAdminLink = true }) => {
           </nav>
 
           {/* Action CTAs (Right-aligned, cleanly centered buttons) */}
-          <div className="hidden xl:flex items-center gap-2 2xl:gap-2.5 shrink-0">
+          <div className="hidden xl:flex items-center gap-1.5 xl:gap-2 2xl:gap-2.5 shrink-0">
             {/* CRM Portal Access Button with Dropdown */}
             <div className="relative">
               <button
@@ -420,7 +420,7 @@ export const Navbar = ({ showAdminLink = true }) => {
                   setAcademicsOpen(false);
                   setGalleryOpen(false);
                 }}
-                className={`h-8 sm:h-8.5 inline-flex items-center justify-center gap-1.5 px-2.5 2xl:px-3 text-xs font-semibold rounded-lg transition-all border shadow-2xs whitespace-nowrap shrink-0 group ${
+                className={`h-8 sm:h-8.5 inline-flex items-center justify-center gap-1.5 px-2 xl:px-2.5 2xl:px-3 text-xs font-semibold rounded-lg transition-all border shadow-2xs whitespace-nowrap shrink-0 group ${
                   crmOpen 
                     ? 'text-gurukul-saffron-600 bg-orange-50 border-orange-200' 
                     : 'text-slate-700 hover:text-gurukul-saffron-600 bg-white hover:bg-orange-50/60 border-slate-200/90'
@@ -531,7 +531,7 @@ export const Navbar = ({ showAdminLink = true }) => {
             {/* Apply Action Button */}
             <Link 
               to="/admission-enquiry" 
-              className="h-8 sm:h-8.5 inline-flex items-center justify-center px-3.5 2xl:px-4 text-xs font-bold text-white bg-gradient-to-r from-gurukul-saffron-600 to-gurukul-saffron-500 hover:from-gurukul-saffron-700 hover:to-gurukul-saffron-600 rounded-lg shadow-xs hover:shadow transition-all whitespace-nowrap shrink-0"
+              className="h-8 sm:h-8.5 inline-flex items-center justify-center px-3 xl:px-3.5 2xl:px-4 text-xs font-bold text-white bg-gradient-to-r from-gurukul-saffron-600 to-gurukul-saffron-500 hover:from-gurukul-saffron-700 hover:to-gurukul-saffron-600 rounded-lg shadow-xs hover:shadow transition-all whitespace-nowrap shrink-0"
             >
               <span>
                 {isMarathi ? 'प्रवेश अर्ज' : 'Apply Now'}

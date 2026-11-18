@@ -55,17 +55,17 @@ export const AdminLoginPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gurukul-navy-950 via-slate-900 to-gurukul-navy-900 flex items-center justify-center p-4">
-      <div className="max-w-md w-full bg-white rounded-3xl p-8 sm:p-10 shadow-2xl border border-slate-100 relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-gurukul-navy-950 via-slate-900 to-gurukul-navy-900 flex flex-col items-center justify-center py-6 sm:py-10 px-4">
+      <div className="max-w-md w-full bg-white rounded-3xl p-6 sm:p-8 lg:p-9 shadow-2xl border border-slate-100 relative overflow-hidden my-auto">
         {/* Accent bar */}
         <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-blue-600 via-gurukul-saffron-500 to-blue-600"></div>
 
         {/* Header */}
-        <div className="text-center mb-8">
+        <div className="text-center mb-5 sm:mb-7">
           <img 
             src="/gurukul-logo.png" 
             alt="गुरुकुल भोसे Logo" 
-            className="w-16 h-16 object-contain mx-auto drop-shadow-md mb-3" 
+            className="w-13 h-13 sm:w-15 sm:h-15 object-contain mx-auto drop-shadow-md mb-2.5" 
           />
           <span className="text-[10px] font-black uppercase tracking-widest text-blue-600 bg-blue-50 px-3 py-1 rounded-full border border-blue-200">
             Administrative Portal

@@ -319,7 +319,7 @@ export const TelecallerLayout = () => {
       {/* Main Workspace */}
       <div className="lg:pl-64 flex flex-col min-h-screen min-w-0 w-full">
         {/* Top bar with authentic Gurukul Website branding */}
-        <header className="h-16 sm:h-17 bg-white/95 backdrop-blur-md border-b border-slate-200/90 sticky top-0 z-30 px-3 sm:px-6 flex items-center justify-between shadow-xs w-full min-w-0">
+        <header className="h-14 sm:h-15 lg:h-16 bg-white/95 backdrop-blur-md border-b border-slate-200/90 sticky top-0 z-30 px-3 sm:px-5 lg:px-6 flex items-center justify-between shadow-xs w-full min-w-0">
           <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
             <button
               onClick={() => setSidebarOpen(true)}
@@ -394,7 +394,7 @@ export const TelecallerLayout = () => {
         </header>
 
         {/* Page Content */}
-        <main className="flex-1 p-3.5 sm:p-5 lg:p-6 xl:p-8 max-w-7xl w-full mx-auto space-y-6 sm:space-y-8 min-w-0">
+        <main className="flex-1 p-3.5 sm:p-4 lg:p-5 xl:p-6 max-w-7xl w-full mx-auto space-y-4 sm:space-y-5 xl:space-y-6 min-w-0">
           <Outlet />
         </main>
       </div>

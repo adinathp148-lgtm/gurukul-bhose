@@ -82,7 +82,7 @@ export const HeroSection = ({ slides = [], institution = {} }) => {
   const primaryLink = getPrimaryLink();
 
   return (
-    <section className="relative bg-gradient-to-br from-gurukul-navy-950 via-slate-900 to-gurukul-navy-900 text-white min-h-[500px] sm:min-h-[550px] lg:min-h-[620px] flex flex-col justify-center overflow-hidden">
+    <section className="relative bg-gradient-to-br from-gurukul-navy-950 via-slate-900 to-gurukul-navy-900 text-white min-h-[440px] sm:min-h-[480px] lg:min-h-[460px] xl:min-h-[520px] 2xl:min-h-[600px] flex flex-col justify-center overflow-hidden">
       {/* Background slide image with overlay */}
       {(slide.image || slide.imageUrl) && (
         <div 
@@ -96,51 +96,51 @@ export const HeroSection = ({ slides = [], institution = {} }) => {
       {/* Decorative dot matrix */}
       <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#f97316_1px,transparent_1px)] [background-size:20px_20px] pointer-events-none"></div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-20 relative z-10 w-full flex-1 flex items-center">
-        <div className="max-w-3xl space-y-4 sm:space-y-6">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 md:py-10 lg:py-7 xl:py-10 2xl:py-16 relative z-10 w-full flex-1 flex items-center">
+        <div className="max-w-3xl space-y-2.5 sm:space-y-3.5 lg:space-y-3 xl:space-y-4 2xl:space-y-5">
           
           {currentText.badge && (
-            <div className="inline-flex items-center gap-2 px-3 py-1 sm:px-3.5 sm:py-1.5 rounded-full bg-gurukul-saffron-500/20 border border-gurukul-saffron-500/40 text-gurukul-saffron-400 text-[11px] sm:text-xs font-bold uppercase tracking-wider backdrop-blur-sm">
-              <Sparkles className="w-3.5 h-3.5" />
+            <div className="inline-flex items-center gap-1.5 sm:gap-2 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-full bg-gurukul-saffron-500/20 border border-gurukul-saffron-500/40 text-gurukul-saffron-400 text-[10px] sm:text-xs font-bold uppercase tracking-wider backdrop-blur-sm">
+              <Sparkles className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
               <span>{currentText.badge}</span>
             </div>
           )}
 
-          <h1 className="text-2xl sm:text-4xl md:text-5xl lg:text-6xl font-black tracking-tight leading-tight">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-[2rem] xl:text-[2.65rem] 2xl:text-5xl font-black tracking-tight leading-tight sm:leading-snug lg:leading-tight">
             {currentText.title}
           </h1>
 
-          <p className="text-base sm:text-xl text-yellow-400 font-bold">
+          <p className="text-sm sm:text-base lg:text-sm xl:text-lg 2xl:text-xl text-yellow-400 font-bold">
             {currentText.subtitle}
           </p>
 
-          <p className="text-xs sm:text-base text-slate-300 leading-relaxed font-medium">
+          <p className="text-xs sm:text-sm lg:text-xs xl:text-sm 2xl:text-base text-slate-300 leading-relaxed font-medium max-w-2xl line-clamp-2 sm:line-clamp-none">
             {currentText.description}
           </p>
 
           {/* Quick highlights badges */}
-          <div className="flex flex-wrap gap-2 pt-1 sm:pt-2">
-            <span className="px-2.5 sm:px-3 py-1 bg-white/10 rounded-full text-[11px] sm:text-xs font-semibold backdrop-blur-sm border border-white/15">
+          <div className="flex flex-wrap gap-1.5 sm:gap-2 pt-0.5 sm:pt-1">
+            <span className="px-2 sm:px-2.5 py-0.5 sm:py-1 bg-white/10 rounded-full text-[10px] sm:text-xs font-semibold backdrop-blur-sm border border-white/15">
               {isMarathi ? '✓ नो डोनेशन, थेट प्रवेश' : '✓ No Donation, Direct Admission'}
             </span>
-            <span className="px-2.5 sm:px-3 py-1 bg-white/10 rounded-full text-[11px] sm:text-xs font-semibold backdrop-blur-sm border border-white/15">
+            <span className="px-2 sm:px-2.5 py-0.5 sm:py-1 bg-white/10 rounded-full text-[10px] sm:text-xs font-semibold backdrop-blur-sm border border-white/15">
               {isMarathi ? '✓ रोज सकाळ-संध्याकाळ मैदानी सराव' : '✓ Daily Morning & Evening Ground Drills'}
             </span>
-            <span className="px-2.5 sm:px-3 py-1 bg-white/10 rounded-full text-[11px] sm:text-xs font-semibold backdrop-blur-sm border border-white/15">
+            <span className="px-2 sm:px-2.5 py-0.5 sm:py-1 bg-white/10 rounded-full text-[10px] sm:text-xs font-semibold backdrop-blur-sm border border-white/15">
               {isMarathi ? '✓ NDA, Army, Police भरती पूर्वतयारी' : '✓ NDA, Army & Police Recruitment Prep'}
             </span>
           </div>
 
           {/* Action Buttons */}
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4 pt-4">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 sm:gap-3.5 pt-1.5 sm:pt-2.5">
             <Button 
               to={primaryLink}
               variant="primary" 
-              size="lg" 
-              className="w-full sm:w-auto shadow-lg shadow-orange-500/25"
+              size="md" 
+              className="w-full sm:w-auto shadow-lg shadow-orange-500/25 sm:!py-2 sm:!px-4 lg:!py-2 lg:!px-4.5 xl:!py-2.5 xl:!px-5 text-xs sm:text-sm font-bold"
             >
               <span>{currentText.ctaPrimaryText}</span>
-              <ArrowRight className="w-4 h-4 ml-2" />
+              <ArrowRight className="w-4 h-4 ml-1.5" />
             </Button>
 
             <Button 
@@ -148,10 +148,10 @@ export const HeroSection = ({ slides = [], institution = {} }) => {
               target="_blank" 
               rel="noopener noreferrer"
               variant="outline" 
-              size="lg" 
-              className="w-full sm:w-auto bg-white/10 text-white border-white/20 hover:bg-white/20 hover:text-white"
+              size="md" 
+              className="w-full sm:w-auto bg-white/10 text-white border-white/20 hover:bg-white/20 hover:text-white sm:!py-2 sm:!px-4 lg:!py-2 lg:!px-4.5 xl:!py-2.5 xl:!px-5 text-xs sm:text-sm font-bold"
             >
-              <Download className="w-4 h-4 mr-2 text-gurukul-saffron-400" />
+              <Download className="w-4 h-4 mr-1.5 text-gurukul-saffron-400" />
               <span>{currentText.ctaSecondaryText}</span>
             </Button>
           </div>
@@ -161,7 +161,7 @@ export const HeroSection = ({ slides = [], institution = {} }) => {
 
       {/* Mobile Slide Dots */}
       {effectiveSlides.length > 1 && (
-        <div className="sm:hidden flex items-center justify-center gap-2 pb-5 relative z-20">
+        <div className="sm:hidden flex items-center justify-center gap-2 pb-4 relative z-20">
           {effectiveSlides.map((_, idx) => (
             <button
               key={idx}
@@ -176,23 +176,23 @@ export const HeroSection = ({ slides = [], institution = {} }) => {
         </div>
       )}
 
-      {/* Slide Navigation Controls */}
+      {/* Slide Navigation Controls positioned cleanly on the left so they never clash with floating Phone/WhatsApp buttons */}
       {effectiveSlides.length > 1 && (
-        <div className="absolute bottom-6 right-6 z-20 hidden sm:flex items-center gap-2">
+        <div className="absolute bottom-4 sm:bottom-5 left-4 sm:left-6 lg:left-8 z-20 hidden sm:flex items-center gap-2">
           <button
             onClick={() => setCurrentSlideIndex((prev) => (prev - 1 + effectiveSlides.length) % effectiveSlides.length)}
-            className="p-2 rounded-full bg-white/10 hover:bg-white/25 text-white backdrop-blur-sm transition-colors"
+            className="p-1.5 sm:p-2 rounded-full bg-white/10 hover:bg-white/25 text-white backdrop-blur-sm transition-colors"
             title="Previous slide"
           >
-            <ChevronLeft className="w-5 h-5" />
+            <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5" />
           </button>
-          <div className="flex items-center gap-1.5 px-2">
+          <div className="flex items-center gap-1.5 px-1 sm:px-2">
             {effectiveSlides.map((_, idx) => (
               <button
                 key={idx}
                 onClick={() => setCurrentSlideIndex(idx)}
-                className={`h-2 rounded-full transition-all ${
-                  idx === currentSlideIndex ? 'w-6 bg-gurukul-saffron-500' : 'w-2 bg-white/40'
+                className={`h-1.5 sm:h-2 rounded-full transition-all ${
+                  idx === currentSlideIndex ? 'w-5 sm:w-6 bg-gurukul-saffron-500' : 'w-1.5 sm:w-2 bg-white/40'
                 }`}
                 title={`Slide ${idx + 1}`}
               />
@@ -200,10 +200,10 @@ export const HeroSection = ({ slides = [], institution = {} }) => {
           </div>
           <button
             onClick={() => setCurrentSlideIndex((prev) => (prev + 1) % effectiveSlides.length)}
-            className="p-2 rounded-full bg-white/10 hover:bg-white/25 text-white backdrop-blur-sm transition-colors"
+            className="p-1.5 sm:p-2 rounded-full bg-white/10 hover:bg-white/25 text-white backdrop-blur-sm transition-colors"
             title="Next slide"
           >
-            <ChevronRight className="w-5 h-5" />
+            <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
           </button>
         </div>
       )}
