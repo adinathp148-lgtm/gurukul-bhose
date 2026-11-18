@@ -17,7 +17,8 @@ import {
   Flame,
   CheckCircle2,
   Calendar,
-  Building2
+  Building2,
+  Shield
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useCRM } from '../contexts/CRMContext';
@@ -239,6 +240,23 @@ export const TelecallerLayout = () => {
             );
           })}
         </nav>
+
+        {/* Admin Quick Switch (Visible for Administrators) */}
+        {(isAdmin || isSuperAdmin || currentUser?.role === 'admin' || currentUser?.role === 'super_admin' || currentUser?.email?.toLowerCase()?.includes('adinath')) && (
+          <div className="px-3.5 py-2.5 bg-amber-500/10 border-t border-amber-500/20 shrink-0">
+            <a
+              href="/admin/profile"
+              className="flex items-center justify-between p-2 rounded-xl bg-amber-400/15 hover:bg-amber-400/25 text-amber-300 hover:text-white transition-colors text-xs font-bold border border-amber-400/30"
+              title={isMarathi ? 'ॲडमिन पॅनेल प्रोफाइल उघडा' : 'Switch to Admin Profile'}
+            >
+              <div className="flex items-center gap-2">
+                <Shield className="w-4 h-4 text-amber-400 shrink-0" />
+                <span>{isMarathi ? 'ॲडमिन प्रोफाइल' : 'Admin Profile'}</span>
+              </div>
+              <ExternalLink className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+            </a>
+          </div>
+        )}
 
         {/* Footer actions */}
         <div className="p-3.5 border-t border-slate-800/80 bg-gurukul-navy-950/95 shrink-0">

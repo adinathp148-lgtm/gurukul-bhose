@@ -34,6 +34,15 @@ export const determineUserRole = ({ customRole, profileData, email, portalHint =
     if (cr === 'superadmin' || cr === 'super_admin') return 'super_admin';
     if (cr === 'admin') return 'admin';
     if (cr === 'telecaller') {
+      // If user is also a recognized admin email, admin takes precedence
+      if (
+        normEmail.includes('adinath') ||
+        normEmail.includes('admin') ||
+        normEmail.startsWith('principal') ||
+        normEmail.startsWith('director')
+      ) {
+        return 'admin';
+      }
       if (profileData?.status === 'pending' || profileData?.status === 'pending_approval' || profileData?.status === 'inactive' || profileData?.role === 'pending_applicant') {
         return 'pending_applicant';
       }
@@ -41,26 +50,28 @@ export const determineUserRole = ({ customRole, profileData, email, portalHint =
     }
   }
 
-  // 2. Profile role from Firestore or cached object
-  if (profileData?.role) {
-    const pr = String(profileData.role).toLowerCase();
-    if (pr === 'superadmin' || pr === 'super_admin') return 'super_admin';
-    if (pr === 'admin') return 'admin';
-    if (pr === 'telecaller') {
-      // Role can ONLY be telecaller if approved by admin
-      if (profileData.status === 'pending' || profileData.status === 'pending_approval' || profileData.status === 'inactive' || profileData.role === 'pending_applicant') {
-        return 'pending_applicant';
-      }
-      return 'telecaller';
-    }
-    if (pr === 'pending_applicant') return 'pending_applicant';
-  }
-
-  // 3. Known demo accounts (exact match)
+  // 2. Known demo accounts (exact match - always enforce admin roles)
   const demoMatch = demoUsers.find(u => (u.email || '').toLowerCase() === normEmail);
   if (demoMatch?.role) {
     const dr = demoMatch.role.toLowerCase();
-    return (dr === 'superadmin' || dr === 'super_admin') ? 'super_admin' : dr;
+    if (dr === 'superadmin' || dr === 'super_admin') return 'super_admin';
+    if (dr === 'admin') return 'admin';
+  }
+
+  // 3. Admin Email patterns & domain rules (Adinath Powar, Principal, Director, Admin)
+  if (normEmail.includes('superadmin') || normEmail.includes('super_admin')) {
+    return 'super_admin';
+  }
+  if (
+    normEmail.includes('adinath') ||
+    normEmail === 'adinathp148@gmail.com' ||
+    normEmail.includes('admin') || 
+    normEmail.startsWith('principal') || 
+    normEmail.startsWith('director') || 
+    normEmail.startsWith('head') ||
+    normEmail === 'contact@gurukulbhose.com'
+  ) {
+    return 'admin';
   }
 
   // 4. Local admins created in AdminManagementPage
@@ -73,21 +84,31 @@ export const determineUserRole = ({ customRole, profileData, email, portalHint =
     }
   } catch (e) {}
 
-  // 5. Admin Email patterns / domains
-  if (normEmail.includes('superadmin') || normEmail.includes('super_admin')) {
-    return 'super_admin';
-  }
-  if (
-    normEmail.includes('admin') || 
-    normEmail.startsWith('principal') || 
-    normEmail.startsWith('director') || 
-    normEmail.startsWith('head') ||
-    normEmail === 'contact@gurukulbhose.com'
-  ) {
-    return 'admin';
+  // 5. Profile role from Firestore or cached object
+  if (profileData?.role) {
+    const pr = String(profileData.role).toLowerCase();
+    if (pr === 'superadmin' || pr === 'super_admin') return 'super_admin';
+    if (pr === 'admin') return 'admin';
+    if (pr === 'telecaller') {
+      // If accessing via admin portal hint, prioritize admin role
+      if (portalHint === 'admin' || portalHint === 'super_admin') {
+        return portalHint === 'super_admin' ? 'super_admin' : 'admin';
+      }
+      // Role can ONLY be telecaller if approved by admin
+      if (profileData.status === 'pending' || profileData.status === 'pending_approval' || profileData.status === 'inactive' || profileData.role === 'pending_applicant') {
+        return 'pending_applicant';
+      }
+      return 'telecaller';
+    }
+    if (pr === 'pending_applicant') return 'pending_applicant';
   }
 
-  // 6. Registered telecallers check (ONLY if portalHint is not 'admin' or 'super_admin')
+  // 6. Portal hint fallback: if logging in via admin portal, prioritize admin role
+  if (portalHint === 'admin' || portalHint === 'super_admin') {
+    return portalHint === 'super_admin' ? 'super_admin' : 'admin';
+  }
+
+  // 7. Registered telecallers check (ONLY if portalHint is not 'admin' or 'super_admin')
   if (portalHint !== 'admin' && portalHint !== 'super_admin') {
     try {
       const registeredTCs = JSON.parse(localStorage.getItem('gurukul_registered_telecallers') || '[]');
@@ -111,11 +132,6 @@ export const determineUserRole = ({ customRole, profileData, email, portalHint =
         }
       }
     } catch (e) {}
-  }
-
-  // 7. Portal hint fallback: if logging in via admin portal, prioritize admin role
-  if (portalHint === 'admin' || portalHint === 'super_admin') {
-    return portalHint === 'super_admin' ? 'super_admin' : 'admin';
   }
 
   // 8. General fallback
@@ -150,13 +166,13 @@ export const loginWithEmail = async (email, password, portalHint = null) => {
         ]);
 
         const docData = {
-          ...(adminDoc?.exists() ? adminDoc.data() : {}),
           ...(teleDoc?.exists() ? teleDoc.data() : {}),
-          ...(userDoc?.exists() ? userDoc.data() : {})
+          ...(userDoc?.exists() ? userDoc.data() : {}),
+          ...(adminDoc?.exists() ? adminDoc.data() : {})
         };
 
         let emailData = {};
-        if (!docData.fullName || !docData.phone) {
+        if (!docData.fullName || !docData.phone || !docData.role) {
           const emailList = Array.from(new Set([cred.user.email, normalizedEmail].filter(Boolean)));
           const [uSnap, aSnap, tSnap] = await Promise.all([
             getDocs(query(collection(db, 'users'), where('email', 'in', emailList))).catch(() => null),
@@ -165,9 +181,9 @@ export const loginWithEmail = async (email, password, portalHint = null) => {
           ]);
 
           emailData = {
-            ...(aSnap && !aSnap.empty ? aSnap.docs[0].data() : {}),
             ...(tSnap && !tSnap.empty ? tSnap.docs[0].data() : {}),
-            ...(uSnap && !uSnap.empty ? uSnap.docs[0].data() : {})
+            ...(uSnap && !uSnap.empty ? uSnap.docs[0].data() : {}),
+            ...(aSnap && !aSnap.empty ? aSnap.docs[0].data() : {})
           };
         }
 

@@ -264,12 +264,12 @@ export const Footer = ({ showStaffLink = true }) => {
                     ? 'bg-slate-800 border-yellow-400 text-yellow-300 ring-2 ring-yellow-400/20 shadow-lg' 
                     : 'bg-slate-900 hover:bg-slate-800 border-slate-700/80 hover:border-yellow-400 text-yellow-400 hover:text-yellow-300'
                 }`}
-                title={isMarathi ? 'अ‍ॅडमिन व CRM प्रवेश पोर्टल' : 'Admin & CRM Portals'}
+                title={isMarathi ? 'अ‍ॅडमिन पॅनेल प्रोफाइल व प्रवेश CRM' : 'Admin Panel Profile & Admission CRM'}
                 aria-expanded={crmMenuOpen}
                 aria-haspopup="true"
               >
                 <Shield className="w-3.5 h-3.5 text-gurukul-saffron-400 shrink-0" />
-                <span>{isMarathi ? 'अ‍ॅडमिन पॅनेल व CRM' : 'Admin Panel & CRM'}</span>
+                <span>{isMarathi ? 'अ‍ॅडमिन पॅनेल प्रोफाइल' : 'Admin Panel Profile'}</span>
                 <ChevronUp className={`w-3.5 h-3.5 text-yellow-400/80 transition-transform duration-200 shrink-0 ${crmMenuOpen ? 'rotate-180' : ''}`} />
               </button>
 
@@ -303,13 +303,38 @@ export const Footer = ({ showStaffLink = true }) => {
                     </button>
                   </div>
 
-                  {/* 1. Admin & Lead CRM (Unified Admin Panel) */}
+                  {/* 1. Admin Profile Direct Access */}
+                  <a
+                    href={crmUrls.adminProfile}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={() => setCrmMenuOpen(false)}
+                    className="flex items-start gap-3 px-4 py-2.5 hover:bg-slate-800 transition-colors group bg-slate-900"
+                    style={{ backgroundColor: '#0f172a' }}
+                  >
+                    <div className="w-8 h-8 rounded-lg bg-yellow-400/15 text-yellow-400 flex items-center justify-center shrink-0 mt-0.5 group-hover:bg-yellow-400 group-hover:text-slate-950 transition-colors">
+                      <Shield className="w-4 h-4" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-1.5">
+                        <span className="font-bold text-sm text-white group-hover:text-yellow-400 transition-colors">
+                          {isMarathi ? 'अ‍ॅडमिन पॅनेल प्रोफाइल' : 'Admin Panel Profile'}
+                        </span>
+                        <ExternalLink className="w-3 h-3 text-slate-500 group-hover:text-yellow-400 shrink-0" />
+                      </div>
+                      <span className="block text-xs text-slate-400 mt-0.5">
+                        {isMarathi ? 'अ‍ॅडमिन खाते, पासवर्ड व प्रोफाइल सेटिंग्ज' : 'Profile, Password & Account Settings'}
+                      </span>
+                    </div>
+                  </a>
+
+                  {/* 2. Admin & Lead CRM */}
                   <a
                     href={crmUrls.admin}
                     target="_blank"
                     rel="noopener noreferrer"
                     onClick={() => setCrmMenuOpen(false)}
-                    className="flex items-start gap-3 px-4 py-2.5 hover:bg-slate-800 transition-colors group bg-slate-900"
+                    className="flex items-start gap-3 px-4 py-2.5 hover:bg-slate-800 border-t border-slate-800/80 transition-colors group bg-slate-900"
                     style={{ backgroundColor: '#0f172a' }}
                   >
                     <div className="w-8 h-8 rounded-lg bg-orange-500/15 text-gurukul-saffron-400 flex items-center justify-center shrink-0 mt-0.5 group-hover:bg-gurukul-saffron-500 group-hover:text-white transition-colors">
@@ -323,7 +348,7 @@ export const Footer = ({ showStaffLink = true }) => {
                         <ExternalLink className="w-3 h-3 text-slate-500 group-hover:text-gurukul-saffron-400 shrink-0" />
                       </div>
                       <span className="block text-xs text-slate-400 mt-0.5">
-                        {isMarathi ? 'सर्व लीड्स, प्रवेश अर्ज, CMS, प्रोफाईल व अहवाल' : 'All Leads, Enquiries, CMS, Profile & Reports'}
+                        {isMarathi ? 'सर्व लीड्स, प्रवेश अर्ज, CMS व अहवाल' : 'All Leads, Enquiries, CMS & Reports'}
                       </span>
                     </div>
                   </a>

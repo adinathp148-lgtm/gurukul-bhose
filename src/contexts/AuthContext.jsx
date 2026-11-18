@@ -77,13 +77,13 @@ export const AuthProvider = ({ children }) => {
               ]);
 
               const docData = {
-                ...(adminSnap?.exists() ? adminSnap.data() : {}),
                 ...(teleSnap?.exists() ? teleSnap.data() : {}),
-                ...(userSnap?.exists() ? userSnap.data() : {})
+                ...(userSnap?.exists() ? userSnap.data() : {}),
+                ...(adminSnap?.exists() ? adminSnap.data() : {})
               };
 
               let emailData = {};
-              if (!docData.fullName || !docData.phone) {
+              if (!docData.fullName || !docData.phone || !docData.role) {
                 const emailList = Array.from(new Set([firebaseUser.email, firebaseUser.email?.toLowerCase()].filter(Boolean)));
                 const [uSnap, aSnap, tSnap] = await Promise.all([
                   getDocs(query(collection(db, 'users'), where('email', 'in', emailList))).catch(() => null),
@@ -92,9 +92,9 @@ export const AuthProvider = ({ children }) => {
                 ]);
 
                 emailData = {
-                  ...(aSnap && !aSnap.empty ? aSnap.docs[0].data() : {}),
                   ...(tSnap && !tSnap.empty ? tSnap.docs[0].data() : {}),
-                  ...(uSnap && !uSnap.empty ? uSnap.docs[0].data() : {})
+                  ...(uSnap && !uSnap.empty ? uSnap.docs[0].data() : {}),
+                  ...(aSnap && !aSnap.empty ? aSnap.docs[0].data() : {})
                 };
               }
 
@@ -226,13 +226,13 @@ export const AuthProvider = ({ children }) => {
         ]);
 
         const docData = {
-          ...(adminSnap?.exists() ? adminSnap.data() : {}),
           ...(teleSnap?.exists() ? teleSnap.data() : {}),
-          ...(userSnap?.exists() ? userSnap.data() : {})
+          ...(userSnap?.exists() ? userSnap.data() : {}),
+          ...(adminSnap?.exists() ? adminSnap.data() : {})
         };
 
         let emailData = {};
-        if (email && (!docData.fullName || Object.keys(docData).length === 0)) {
+        if (email && (!docData.fullName || !docData.role || Object.keys(docData).length === 0)) {
           const emailList = Array.from(new Set([email, email.toLowerCase()].filter(Boolean)));
           const [uSnap, aSnap, tSnap] = await Promise.all([
             getDocs(query(collection(db, 'users'), where('email', 'in', emailList))).catch(() => null),
@@ -240,9 +240,9 @@ export const AuthProvider = ({ children }) => {
             getDocs(query(collection(db, 'telecaller_profiles'), where('email', 'in', emailList))).catch(() => null)
           ]);
           emailData = {
-            ...(aSnap && !aSnap.empty ? aSnap.docs[0].data() : {}),
             ...(tSnap && !tSnap.empty ? tSnap.docs[0].data() : {}),
-            ...(uSnap && !uSnap.empty ? uSnap.docs[0].data() : {})
+            ...(uSnap && !uSnap.empty ? uSnap.docs[0].data() : {}),
+            ...(aSnap && !aSnap.empty ? aSnap.docs[0].data() : {})
           };
         }
 

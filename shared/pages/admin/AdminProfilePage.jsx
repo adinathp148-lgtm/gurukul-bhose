@@ -96,8 +96,8 @@ export const AdminProfilePage = () => {
           ]);
 
           let firestoreData = {
-            ...(adminSnap?.exists() ? adminSnap.data() : {}),
-            ...(userSnap?.exists() ? userSnap.data() : {})
+            ...(userSnap?.exists() ? userSnap.data() : {}),
+            ...(adminSnap?.exists() ? adminSnap.data() : {})
           };
 
           // If UID doc was not found or has missing name/phone, query by email
@@ -109,9 +109,9 @@ export const AdminProfilePage = () => {
             ]);
 
             firestoreData = {
-              ...(aSnap && !aSnap.empty ? aSnap.docs[0].data() : {}),
+              ...firestoreData,
               ...(uSnap && !uSnap.empty ? uSnap.docs[0].data() : {}),
-              ...firestoreData
+              ...(aSnap && !aSnap.empty ? aSnap.docs[0].data() : {})
             };
           }
 

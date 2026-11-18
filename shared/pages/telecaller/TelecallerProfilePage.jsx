@@ -18,7 +18,7 @@ import { updateTelecallerProfile } from '../../services/auth/authService';
 import { db, doc, getDoc, collection, query, where, getDocs, setDoc, isConfigured } from '../../firebase/config';
 
 export const TelecallerProfilePage = () => {
-  const { currentUser, userProfile, refreshUserProfile } = useAuth();
+  const { currentUser, userProfile, refreshUserProfile, isAdmin, isSuperAdmin } = useAuth();
 
   const [form, setForm] = useState({
     fullName: userProfile?.fullName || userProfile?.displayName || currentUser?.fullName || currentUser?.displayName || '',
@@ -188,6 +188,28 @@ export const TelecallerProfilePage = () => {
           आपली संपर्क माहिती तपासा व आवश्यक बदल करा. प्रशासकीय अधिकार व स्थिती लॉक केलेले आहेत.
         </p>
       </div>
+
+      {(isAdmin || isSuperAdmin || currentUser?.role === 'admin' || currentUser?.role === 'super_admin' || currentUser?.email?.toLowerCase()?.includes('adinath')) && (
+        <div className="p-4 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
+          <div className="flex items-center gap-2.5">
+            <ShieldCheck className="w-5 h-5 text-amber-600 shrink-0" />
+            <div>
+              <p className="text-xs font-bold">
+                शाळा प्रशासक (Admin) खाते ओळखले गेले
+              </p>
+              <p className="text-[11px] text-amber-700 mt-0.5">
+                आपण मुख्य ॲडमिन प्रोफाइल आणि पासवर्ड सेटिंग्ज पाहू इच्छित असल्यास खालील बटणावर क्लिक करा.
+              </p>
+            </div>
+          </div>
+          <a
+            href="/admin/profile"
+            className="inline-flex items-center justify-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-gurukul-saffron-500 hover:bg-gurukul-saffron-600 text-white text-xs font-bold shrink-0 transition-colors shadow-xs"
+          >
+            <span>ॲडमिन प्रोफाइल उघडा →</span>
+          </a>
+        </div>
+      )}
 
       {notification && (
         <div className={`p-4 rounded-2xl text-xs flex items-center gap-2.5 border shadow-sm ${
