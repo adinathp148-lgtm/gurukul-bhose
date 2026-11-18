@@ -2,10 +2,13 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
-  "cleanUrls": true,
   "rewrites": [
     {
       "source": "/telecaller",
+      "destination": "/telecaller/index.html"
+    },
+    {
+      "source": "/telecaller/(.*)",
       "destination": "/telecaller/index.html"
     },
     {
@@ -17,11 +20,19 @@
       "destination": "/admin/index.html"
     },
     {
+      "source": "/admin/(.*)",
+      "destination": "/admin/index.html"
+    },
+    {
       "source": "/admin/:match*",
       "destination": "/admin/index.html"
     },
     {
       "source": "/super-admin",
+      "destination": "/admin/index.html"
+    },
+    {
+      "source": "/super-admin/(.*)",
       "destination": "/admin/index.html"
     },
     {
@@ -45,6 +56,10 @@
       "destination": "/admin/index.html"
     },
     {
+      "source": "/cms/(.*)",
+      "destination": "/admin/index.html"
+    },
+    {
       "source": "/cms/:match*",
       "destination": "/admin/index.html"
     },
@@ -57,11 +72,19 @@
       "destination": "/admin/index.html"
     },
     {
+      "source": "/leads/(.*)",
+      "destination": "/admin/index.html"
+    },
+    {
       "source": "/leads/:match*",
       "destination": "/admin/index.html"
     },
     {
       "source": "/telecallers",
+      "destination": "/admin/index.html"
+    },
+    {
+      "source": "/telecallers/(.*)",
       "destination": "/admin/index.html"
     },
     {
@@ -74,6 +97,66 @@
     },
     {
       "source": "/follow-ups",
+      "destination": "/admin/index.html"
+    },
+    {
+      "source": "/campus-visits",
+      "destination": "/admin/index.html"
+    },
+    {
+      "source": "/visit-desk",
+      "destination": "/admin/index.html"
+    },
+    {
+      "source": "/visit-calendar",
+      "destination": "/admin/index.html"
+    },
+    {
+      "source": "/visit-settings",
+      "destination": "/admin/index.html"
+    },
+    {
+      "source": "/call-monitoring",
+      "destination": "/admin/index.html"
+    },
+    {
+      "source": "/telecaller-performance",
+      "destination": "/admin/index.html"
+    },
+    {
+      "source": "/parent-communication",
+      "destination": "/admin/index.html"
+    },
+    {
+      "source": "/meta-integration",
+      "destination": "/admin/index.html"
+    },
+    {
+      "source": "/admins",
+      "destination": "/admin/index.html"
+    },
+    {
+      "source": "/users",
+      "destination": "/admin/index.html"
+    },
+    {
+      "source": "/reports",
+      "destination": "/admin/index.html"
+    },
+    {
+      "source": "/notifications",
+      "destination": "/admin/index.html"
+    },
+    {
+      "source": "/audit-logs",
+      "destination": "/admin/index.html"
+    },
+    {
+      "source": "/settings",
+      "destination": "/admin/index.html"
+    },
+    {
+      "source": "/profile",
       "destination": "/admin/index.html"
     },
     {

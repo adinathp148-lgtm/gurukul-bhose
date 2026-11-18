@@ -245,14 +245,23 @@ export const Footer = ({ showStaffLink = true }) => {
           <p>{copyrightText}</p>
           
           <div className="flex flex-wrap items-center justify-center md:justify-end gap-3 sm:gap-4 relative">
+            {/* Backdrop overlay when Admin Menu is open to prevent background buttons/text bleed */}
+            {crmMenuOpen && (
+              <div 
+                className="fixed inset-0 bg-slate-950/70 backdrop-blur-[2px] z-40 transition-opacity animate-in fade-in duration-200"
+                onClick={() => setCrmMenuOpen(false)}
+                aria-hidden="true"
+              />
+            )}
+
             {/* Admin Profile & CRM Hub Popover Button */}
-            <div className="relative" ref={crmMenuRef}>
+            <div className={`relative ${crmMenuOpen ? 'z-50' : ''}`} ref={crmMenuRef}>
               <button
                 type="button"
                 onClick={() => setCrmMenuOpen(!crmMenuOpen)}
                 className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-[11px] font-semibold transition-all shadow-sm ${
                   crmMenuOpen 
-                    ? 'bg-slate-800 border-yellow-400 text-yellow-300 ring-2 ring-yellow-400/20' 
+                    ? 'bg-slate-800 border-yellow-400 text-yellow-300 ring-2 ring-yellow-400/20 shadow-lg' 
                     : 'bg-slate-900 hover:bg-slate-800 border-slate-700/80 hover:border-yellow-400 text-yellow-400 hover:text-yellow-300'
                 }`}
                 title={isMarathi ? 'अ‍ॅडमिन पॅनेल प्रोफाइल व प्रवेश CRM' : 'Admin Panel Profile & Admission CRM'}
@@ -264,14 +273,18 @@ export const Footer = ({ showStaffLink = true }) => {
                 <ChevronUp className={`w-3.5 h-3.5 text-yellow-400/80 transition-transform duration-200 shrink-0 ${crmMenuOpen ? 'rotate-180' : ''}`} />
               </button>
 
-              {/* CRM & Admin Profile Popover Menu (opens upward) */}
+              {/* CRM & Admin Profile Popover Menu (opens upward with 100% solid background) */}
               {crmMenuOpen && (
                 <div 
-                  className="absolute bottom-full mb-3 right-0 sm:right-0 left-1/2 -translate-x-1/2 sm:translate-x-0 w-80 sm:w-88 bg-slate-900/98 backdrop-blur-md rounded-2xl shadow-2xl border border-slate-700/90 py-3 z-50 animate-in fade-in slide-in-from-bottom-2 text-left"
+                  className="absolute bottom-full mb-3 left-1/2 -translate-x-1/2 sm:left-auto sm:right-0 sm:translate-x-0 w-[calc(100vw-2rem)] max-w-sm sm:w-88 bg-slate-900 rounded-2xl shadow-2xl shadow-black/95 border border-slate-700/90 py-3 z-50 animate-in fade-in slide-in-from-bottom-2 text-left ring-1 ring-white/10 overflow-hidden"
+                  style={{ backgroundColor: '#0f172a' }}
                   role="menu"
                 >
                   {/* Popover Header */}
-                  <div className="px-4 py-2 border-b border-slate-800 flex items-center justify-between">
+                  <div 
+                    className="px-4 py-2 border-b border-slate-800 flex items-center justify-between bg-slate-900"
+                    style={{ backgroundColor: '#0f172a' }}
+                  >
                     <div className="flex items-center gap-2">
                       <div className="w-6 h-6 rounded-md bg-yellow-400/10 flex items-center justify-center">
                         <Shield className="w-3.5 h-3.5 text-yellow-400" />
@@ -296,7 +309,8 @@ export const Footer = ({ showStaffLink = true }) => {
                     target="_blank"
                     rel="noopener noreferrer"
                     onClick={() => setCrmMenuOpen(false)}
-                    className="flex items-start gap-3 px-4 py-2.5 hover:bg-slate-800/80 transition-colors group"
+                    className="flex items-start gap-3 px-4 py-2.5 hover:bg-slate-800 transition-colors group bg-slate-900"
+                    style={{ backgroundColor: '#0f172a' }}
                   >
                     <div className="w-8 h-8 rounded-lg bg-yellow-400/15 text-yellow-400 flex items-center justify-center shrink-0 mt-0.5 group-hover:bg-yellow-400 group-hover:text-slate-950 transition-colors">
                       <Shield className="w-4 h-4" />
@@ -320,7 +334,8 @@ export const Footer = ({ showStaffLink = true }) => {
                     target="_blank"
                     rel="noopener noreferrer"
                     onClick={() => setCrmMenuOpen(false)}
-                    className="flex items-start gap-3 px-4 py-2.5 hover:bg-slate-800/80 border-t border-slate-800/70 transition-colors group"
+                    className="flex items-start gap-3 px-4 py-2.5 hover:bg-slate-800 border-t border-slate-800/80 transition-colors group bg-slate-900"
+                    style={{ backgroundColor: '#0f172a' }}
                   >
                     <div className="w-8 h-8 rounded-lg bg-orange-500/15 text-gurukul-saffron-400 flex items-center justify-center shrink-0 mt-0.5 group-hover:bg-gurukul-saffron-500 group-hover:text-white transition-colors">
                       <ShieldCheck className="w-4 h-4" />
@@ -344,7 +359,8 @@ export const Footer = ({ showStaffLink = true }) => {
                     target="_blank"
                     rel="noopener noreferrer"
                     onClick={() => setCrmMenuOpen(false)}
-                    className="flex items-start gap-3 px-4 py-2.5 hover:bg-slate-800/80 border-t border-slate-800/70 transition-colors group"
+                    className="flex items-start gap-3 px-4 py-2.5 hover:bg-slate-800 border-t border-slate-800/80 transition-colors group bg-slate-900"
+                    style={{ backgroundColor: '#0f172a' }}
                   >
                     <div className="w-8 h-8 rounded-lg bg-blue-500/15 text-blue-400 flex items-center justify-center shrink-0 mt-0.5 group-hover:bg-blue-500 group-hover:text-white transition-colors">
                       <Headset className="w-4 h-4" />
@@ -362,8 +378,11 @@ export const Footer = ({ showStaffLink = true }) => {
                     </div>
                   </a>
 
-                  {/* 4. Direct Staff Login & Registration Links */}
-                  <div className="mt-1 pt-2.5 border-t border-slate-800 px-4 py-2.5 flex flex-wrap items-center justify-between text-xs bg-slate-950/70 rounded-b-xl gap-2">
+                  {/* 4. Direct Staff Login & Registration Links (100% solid footer) */}
+                  <div 
+                    className="mt-1 pt-2.5 border-t border-slate-800 px-4 py-2.5 flex flex-wrap items-center justify-between text-xs bg-slate-950 rounded-b-xl gap-2"
+                    style={{ backgroundColor: '#020617' }}
+                  >
                     <a
                       href={crmUrls.login}
                       target="_blank"
