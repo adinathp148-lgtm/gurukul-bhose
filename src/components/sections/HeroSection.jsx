@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Sparkles, Download, ArrowRight, ChevronLeft, ChevronRight, Phone } from 'lucide-react';
+import { Sparkles, Download, ArrowRight } from 'lucide-react';
 import { Button } from '../common/Button';
 import { useLanguage } from '../../contexts/LanguageContext';
 
@@ -17,9 +17,9 @@ export const HeroSection = ({ slides = [], institution = {} }) => {
     if (effectiveSlides.length <= 1) return;
     const interval = setInterval(() => {
       setCurrentSlideIndex((prev) => (prev + 1) % effectiveSlides.length);
-    }, 6000);
+    }, 4500);
     return () => clearInterval(interval);
-  }, [effectiveSlides.length]);
+  }, [effectiveSlides.length, currentSlideIndex]);
 
   const slide = effectiveSlides[currentSlideIndex] || effectiveSlides[0] || {};
 
@@ -83,15 +83,23 @@ export const HeroSection = ({ slides = [], institution = {} }) => {
 
   return (
     <section className="relative bg-gradient-to-br from-gurukul-navy-950 via-slate-900 to-gurukul-navy-900 text-white min-h-[440px] sm:min-h-[480px] lg:min-h-[460px] xl:min-h-[520px] 2xl:min-h-[600px] flex flex-col justify-center overflow-hidden">
-      {/* Background slide image with overlay */}
-      {(slide.image || slide.imageUrl) && (
-        <div 
-          className="absolute inset-0 bg-cover bg-center transition-all duration-1000 transform scale-105"
-          style={{ backgroundImage: `url(${slide.image || slide.imageUrl})` }}
-        >
-          <div className="absolute inset-0 bg-gradient-to-r from-gurukul-navy-950/95 via-gurukul-navy-950/85 to-gurukul-navy-900/75"></div>
-        </div>
-      )}
+      {/* Background slide images with smooth crossfade */}
+      {effectiveSlides.map((s, idx) => {
+        const bg = s.image || s.imageUrl;
+        if (!bg) return null;
+        const isActive = idx === currentSlideIndex;
+        return (
+          <div 
+            key={s.id || idx}
+            className={`absolute inset-0 bg-cover bg-center transition-opacity duration-1000 ease-in-out transform scale-105 ${
+              isActive ? 'opacity-100 z-0' : 'opacity-0 pointer-events-none'
+            }`}
+            style={{ backgroundImage: `url(${bg})` }}
+          >
+            <div className="absolute inset-0 bg-gradient-to-r from-gurukul-navy-950/95 via-gurukul-navy-950/85 to-gurukul-navy-900/75"></div>
+          </div>
+        );
+      })}
 
       {/* Decorative dot matrix */}
       <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#f97316_1px,transparent_1px)] [background-size:20px_20px] pointer-events-none"></div>
@@ -176,35 +184,20 @@ export const HeroSection = ({ slides = [], institution = {} }) => {
         </div>
       )}
 
-      {/* Slide Navigation Controls positioned cleanly on the left so they never clash with floating Phone/WhatsApp buttons */}
+      {/* Slide Indicator Dots (Auto-playing carousel indicators) */}
       {effectiveSlides.length > 1 && (
-        <div className="absolute bottom-4 sm:bottom-5 left-4 sm:left-6 lg:left-8 z-20 hidden sm:flex items-center gap-2">
-          <button
-            onClick={() => setCurrentSlideIndex((prev) => (prev - 1 + effectiveSlides.length) % effectiveSlides.length)}
-            className="p-1.5 sm:p-2 rounded-full bg-white/10 hover:bg-white/25 text-white backdrop-blur-sm transition-colors"
-            title="Previous slide"
-          >
-            <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5" />
-          </button>
-          <div className="flex items-center gap-1.5 px-1 sm:px-2">
-            {effectiveSlides.map((_, idx) => (
-              <button
-                key={idx}
-                onClick={() => setCurrentSlideIndex(idx)}
-                className={`h-1.5 sm:h-2 rounded-full transition-all ${
-                  idx === currentSlideIndex ? 'w-5 sm:w-6 bg-gurukul-saffron-500' : 'w-1.5 sm:w-2 bg-white/40'
-                }`}
-                title={`Slide ${idx + 1}`}
-              />
-            ))}
-          </div>
-          <button
-            onClick={() => setCurrentSlideIndex((prev) => (prev + 1) % effectiveSlides.length)}
-            className="p-1.5 sm:p-2 rounded-full bg-white/10 hover:bg-white/25 text-white backdrop-blur-sm transition-colors"
-            title="Next slide"
-          >
-            <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
-          </button>
+        <div className="absolute bottom-4 sm:bottom-5 left-4 sm:left-6 lg:left-8 z-20 hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-black/25 backdrop-blur-sm">
+          {effectiveSlides.map((_, idx) => (
+            <button
+              key={idx}
+              onClick={() => setCurrentSlideIndex(idx)}
+              className={`h-1.5 sm:h-2 rounded-full transition-all duration-300 ${
+                idx === currentSlideIndex ? 'w-5 sm:w-6 bg-gurukul-saffron-500' : 'w-1.5 sm:w-2 bg-white/40 hover:bg-white/70'
+              }`}
+              title={`Slide ${idx + 1}`}
+              aria-label={`Slide ${idx + 1}`}
+            />
+          ))}
         </div>
       )}
     </section>
