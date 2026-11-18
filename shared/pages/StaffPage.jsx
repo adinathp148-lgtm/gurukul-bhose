@@ -115,6 +115,111 @@ export const StaffPage = () => {
       image: '/images/staff/satish-jadhav.jpg',
       icon: GraduationCap,
       accentColor: 'from-indigo-600 to-purple-600'
+    },
+    {
+      id: 'staff-kedarling-mengudle',
+      category: 'academics',
+      name: isMarathi ? 'केदारलिंग राजेन्द्र मेणगुदले' : 'Kedarling Rajendra Mengudle',
+      role: isMarathi ? 'इतिहास व सामाजिक शास्त्रे शिक्षक (TET पात्र)' : 'Faculty of History & Social Sciences',
+      qualification: 'M.A. (इतिहास), B.Ed. (TET Paper 2 Passed)',
+      experience: isMarathi ? 'अनुभव - १२ वर्षे' : '12 Years Experience',
+      dept: isMarathi ? 'इतिहास व सामाजिक शास्त्र विभाग' : 'History & Social Studies Faculty',
+      bio: isMarathi 
+        ? 'इतिहास व सामाजिक शास्त्र विषयांचे १२ वर्षांचे प्रदीर्घ अध्यापन. टीईटी पेपर २ उत्तीर्ण तज्ज्ञ शिक्षक. शालेय अभ्यासक्रमात व स्पर्धा परीक्षेत इतिहास विषयाची गोडी निर्माण करण्यात विशेष हातखंडा.'
+        : 'Experienced educator with 12 years in teaching History and Social Sciences, qualified in TET Paper 2. Dedicated to building deep historical perspective and conceptual mastery for students.',
+      specialties: [
+        isMarathi ? 'M.A. (इतिहास), B.Ed.' : 'M.A. (History), B.Ed.',
+        isMarathi ? 'TET पेपर २ उत्तीर्ण' : 'TET Paper 2 Qualified',
+        isMarathi ? '१२ वर्षे अध्यापन अनुभव' : '12 Years Experience',
+        isMarathi ? 'इतिहास व नागरिकशास्त्र' : 'History & Civics'
+      ],
+      image: '/images/staff/kedarling-mengudle.jpg',
+      icon: BookOpen,
+      accentColor: 'from-amber-600 to-orange-600'
+    },
+    {
+      id: 'staff-rupali-walekar',
+      category: 'academics',
+      name: isMarathi ? 'रुपाली बाळासाहेब वलेकर' : 'Rupali Balasaheb Walekar',
+      role: isMarathi ? 'शालेय शिक्षिका (Language & Humanities Faculty)' : 'Faculty of Languages & Humanities',
+      qualification: 'B.A., B.Ed.',
+      experience: isMarathi ? 'अनुभव - ५ वर्षे' : '5 Years Experience',
+      dept: isMarathi ? 'गुरुकुल विद्यामंदिर' : 'Gurukul Vidyamandir (School)',
+      bio: isMarathi 
+        ? 'विद्यार्थ्यांमध्ये वाचन, लेखन आणि व्याकरण कौशल्यांचा सर्वांगीण विकास. ५ वर्षांचा समर्पित अध्यापन अनुभव आणि प्रत्येक विद्यार्थ्याकडे आपुलकीने वैयक्तिक लक्ष देण्याची कार्यपद्धती.'
+        : 'Dedicated educator with 5 years of teaching experience holding B.A., B.Ed. Committed to developing student language proficiency, creative expression, and strong foundation skills.',
+      specialties: [
+        isMarathi ? 'B.A., B.Ed.' : 'B.A., B.Ed.',
+        isMarathi ? '५ वर्षे अनुभव' : '5 Years Experience',
+        isMarathi ? 'भाषा व व्याकरण विकास' : 'Language & Grammar',
+        isMarathi ? 'वैयक्तिक मार्गदर्शन' : 'Individual Student Care'
+      ],
+      image: '/images/staff/rupali-walekar.jpg',
+      icon: BookOpen,
+      accentColor: 'from-rose-500 to-pink-600'
+    },
+    {
+      id: 'staff-rekha-jere',
+      category: 'academics',
+      name: isMarathi ? 'रेखा पा. जेरे' : 'Rekha P. Jere',
+      role: isMarathi ? 'ज्येष्ठ प्राध्यापिका (Senior Faculty)' : 'Senior Faculty of Arts & Humanities',
+      qualification: 'M.A., B.Ed.',
+      experience: isMarathi ? 'अनुभव - २० वर्षे' : '20 Years Experience',
+      dept: isMarathi ? 'गुरुकुल विद्यामंदिर व ज्युनिअर कॉलेज' : 'Vidyamandir & Junior College',
+      bio: isMarathi 
+        ? '२० वर्षांचा समृद्ध व यशस्वी अध्यापन अनुभव. भाषा व कला विषयांचे सखोल अध्यापन, बोर्ड परीक्षा मार्गदर्शन आणि विद्यार्थ्यांचे उत्कृष्ट शैक्षणिक निकाल.'
+        : 'Distinguished educator with 20 years of teaching experience holding M.A., B.Ed. Expert in board exam preparation, language enrichment, student counseling, and academic excellence.',
+      specialties: [
+        isMarathi ? 'M.A., B.Ed.' : 'M.A., B.Ed.',
+        isMarathi ? '२० वर्षे प्रदीर्घ अनुभव' : '20 Years Experience',
+        isMarathi ? 'ज्येष्ठ विषय तज्ज्ञ' : 'Senior Subject Expert',
+        isMarathi ? 'बोर्ड निकाल गुणवत्ता' : 'Board Exam Mentorship'
+      ],
+      image: '/images/staff/rekha-jere.jpg',
+      icon: Award,
+      accentColor: 'from-purple-600 to-indigo-600'
+    },
+    {
+      id: 'staff-kajal-pawar',
+      category: 'academics',
+      name: isMarathi ? 'काजल रामचंद्र पवार' : 'Kajal Ramchandra Pawar',
+      role: isMarathi ? 'विज्ञान व गणित शिक्षिका (Science & Math Faculty)' : 'Faculty of Science & Mathematics',
+      qualification: 'B.Sc., B.Ed.',
+      experience: isMarathi ? 'अनुभव - ७ वर्षे' : '7 Years Experience',
+      dept: isMarathi ? 'विज्ञान व गणित विभाग' : 'Science & Mathematics Faculty',
+      bio: isMarathi 
+        ? 'विज्ञान व गणितातील मूलभूत संकल्पना सोप्या व रंजक पद्धतीने शिकवण्याचा ७ वर्षांचा अनुभव. प्रयोगाधिष्ठित शिक्षण, आकडेमोड सराव आणि विद्यार्थ्यांमधील विषयाची भीती दूर करण्यात यश.'
+        : 'Dynamic science and math educator with 7 years of teaching experience holding B.Sc., B.Ed. Specializes in practical demonstrations, foundational clarity, and inspiring a love for sciences.',
+      specialties: [
+        isMarathi ? 'B.Sc., B.Ed.' : 'B.Sc., B.Ed.',
+        isMarathi ? '७ वर्षे अध्यापन अनुभव' : '7 Years Experience',
+        isMarathi ? 'विज्ञान व गणित' : 'Science & Mathematics',
+        isMarathi ? 'प्रयोगाधिष्ठित शिक्षण' : 'Activity-Based Learning'
+      ],
+      image: '/images/staff/kajal-pawar.jpg',
+      icon: FlaskConical,
+      accentColor: 'from-teal-600 to-emerald-600'
+    },
+    {
+      id: 'staff-pandurang-lavand',
+      category: 'academics',
+      name: isMarathi ? 'लवांड पांडुरंग चंद्रकांत' : 'Lavand Pandurang Chandrakant',
+      role: isMarathi ? 'ज्येष्ठ शैक्षणिक मार्गदर्शक व समन्वयक' : 'Senior Faculty & Academic Coordinator',
+      qualification: 'M.Sc. / M.A., B.Ed.',
+      experience: isMarathi ? 'अनुभव - २१ वर्षे' : '21 Years Experience',
+      dept: isMarathi ? 'गुरुकुल विद्यामंदिर व ज्युनिअर कॉलेज' : 'Vidyamandir & Junior College',
+      bio: isMarathi 
+        ? '२१ वर्षांचा प्रदीर्घ अध्यापन व प्रशासकीय अनुभव. M.Sc. / M.A., B.Ed. पदवीधर. अभ्यासक्रमाचे सखोल ज्ञान, गुणवत्तापूर्ण निकाल आणि विद्यार्थ्यांच्या सर्वांगीण व्यक्तिमत्त्व विकासासाठी सातत्यपूर्ण कार्य.'
+        : 'Accomplished senior educator with 21 years of rich teaching experience holding M.Sc. / M.A., B.Ed. Expert in curriculum execution, student mentoring, academic discipline, and high-performance results.',
+      specialties: [
+        isMarathi ? 'M.Sc. / M.A., B.Ed.' : 'M.Sc. / M.A., B.Ed.',
+        isMarathi ? '२१ वर्षे प्रदीर्घ अनुभव' : '21 Years Experience',
+        isMarathi ? 'ज्येष्ठ विषय मार्गदर्शक' : 'Senior Academic Mentor',
+        isMarathi ? 'सैनिक पॅटर्न शिस्त' : 'Discipline & Excellence'
+      ],
+      image: '/images/staff/pandurang-lavand.jpg',
+      icon: GraduationCap,
+      accentColor: 'from-blue-600 to-indigo-700'
     }
   ];
 
