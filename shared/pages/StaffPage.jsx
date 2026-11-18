@@ -73,6 +73,48 @@ export const StaffPage = () => {
       image: '/images/staff/priyanka-shinde.png',
       icon: FlaskConical,
       accentColor: 'from-orange-500 to-amber-600'
+    },
+    {
+      id: 'staff-mandakini-khamkar',
+      category: 'technical',
+      name: isMarathi ? 'मंदाकिनी विकास खामकर' : 'Mandakini Vikas Khamkar',
+      role: isMarathi ? 'संगणक व IT प्रशिक्षक (IT & Computer Faculty)' : 'Faculty of Computer Science & IT',
+      qualification: 'BCA (.NET & Oracle Certification)',
+      experience: isMarathi ? 'अनुभव - ७ वर्षे' : '7 Years Experience',
+      dept: isMarathi ? 'कम्प्युटर इन्स्टिट्यूट व IT विभाग' : 'Computer Institute & IT Lab',
+      bio: isMarathi 
+        ? 'संगणक शिक्षण, .NET आणि Oracle सर्टिफाइड तंत्रज्ञानाचे सखोल ज्ञान. विद्यार्थ्यांना आधुनिक संगणक लॅबमध्ये कोडिंग, सॉफ्टवेअर स्किल्स, MS-CIT व प्रॅक्टिकलचे उत्कृष्ट मार्गदर्शन.'
+        : 'Experienced IT educator with 7 years of teaching experience, certified in .NET & Oracle. Committed to practical IT skills, software applications, hands-on computer labs, and digital literacy.',
+      specialties: [
+        isMarathi ? 'BCA (.NET & Oracle)' : 'BCA (.NET & Oracle)',
+        isMarathi ? '७ वर्षे IT अनुभव' : '7 Yrs IT Experience',
+        isMarathi ? 'संगणक व सॉफ्टवेअर लॅब' : 'Computer & IT Lab',
+        isMarathi ? 'प्रॅक्टिकल कोडिंग प्रशिक्षण' : 'Hands-on Practice'
+      ],
+      image: '/images/staff/mandakini-khamkar.jpg',
+      icon: Monitor,
+      accentColor: 'from-blue-600 to-cyan-600'
+    },
+    {
+      id: 'staff-satish-jadhav',
+      category: 'academics',
+      name: isMarathi ? 'सतीश जगन्नाथ जाधव' : 'Satish Jagannath Jadhav',
+      role: isMarathi ? 'ज्येष्ठ शिक्षक व शैक्षणिक मार्गदर्शक' : 'Senior Faculty & Academic Mentor',
+      qualification: 'M.A.',
+      experience: isMarathi ? 'अनुभव - २७ वर्षे' : '27 Years Experience',
+      dept: isMarathi ? 'गुरुकुल विद्यामंदिर व ज्युनिअर कॉलेज' : 'Vidyamandir & Junior College',
+      bio: isMarathi 
+        ? '२७ वर्षांचा प्रदीर्घ व समृद्ध अध्यापन अनुभव. भाषा व सामाजिक शास्त्रे, विद्यार्थ्यांचे नैतिक संस्कार, शिस्तबद्ध अभ्यास आणि बोर्ड परीक्षेच्या उत्तम निकालासाठी सातत्यपूर्ण मार्गदर्शन.'
+        : 'Distinguished senior educator with 27 years of dedicated teaching and mentorship experience. Committed to academic rigor, student discipline, moral development, and board exam excellence.',
+      specialties: [
+        isMarathi ? '२७ वर्षे प्रदीर्घ अनुभव' : '27 Years Experience',
+        isMarathi ? 'ज्येष्ठ शैक्षणिक मार्गदर्शक' : 'Senior Academic Mentor',
+        isMarathi ? 'बोर्ड निकाल गुणवत्ता' : 'Board Exam Excellence',
+        isMarathi ? 'विद्यार्थी समुपदेशन' : 'Student Counseling'
+      ],
+      image: '/images/staff/satish-jadhav.jpg',
+      icon: GraduationCap,
+      accentColor: 'from-indigo-600 to-purple-600'
     }
   ];
 
