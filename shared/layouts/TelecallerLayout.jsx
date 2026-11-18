@@ -52,17 +52,18 @@ export const TelecallerLayout = () => {
   const myTodayCount = myLeads.filter(l => l.nextFollowUp === todayStr && l.leadStatus !== 'Admitted').length;
   const myOverdueCount = myLeads.filter(l => l.nextFollowUp && l.nextFollowUp < todayStr && l.leadStatus !== 'Admitted').length;
 
-  // Strictly display counselor details (Never display admin/superadmin credentials in telecaller workspace)
-  const counselorName = userProfile?.role === 'telecaller'
-    ? (userProfile.displayName || userProfile.fullName || 'Counselor')
-    : (currentUser?.role === 'telecaller' ? (currentUser.displayName || 'Counselor') : (isMarathi ? 'समुपदेशक (Counselor)' : 'Counselor'));
+  // Display counselor personal details from live userProfile / currentUser
+  const counselorName = 
+    userProfile?.fullName || 
+    userProfile?.displayName || 
+    currentUser?.fullName || 
+    currentUser?.displayName || 
+    (currentUser?.email ? currentUser.email.split('@')[0] : (isMarathi ? 'समुपदेशक' : 'Counselor'));
 
-  const counselorEmail = userProfile?.role === 'telecaller'
-    ? (userProfile.email || currentUser?.email || 'counselor@gurukulbhose.com')
-    : (currentUser?.role === 'telecaller' ? currentUser.email : 'counselor@gurukulbhose.com');
+  const counselorEmail = userProfile?.email || currentUser?.email || 'counselor@gurukulbhose.com';
 
-  const employeeId = (userProfile?.role === 'telecaller' ? userProfile.employeeId : currentUser?.employeeId) || '';
-  const counselorInitial = counselorName && counselorName !== 'Counselor' ? counselorName.charAt(0).toUpperCase() : 'C';
+  const employeeId = userProfile?.employeeId || currentUser?.employeeId || '';
+  const counselorInitial = (counselorName.trim().charAt(0) || 'C').toUpperCase();
 
   const handleLogout = async () => {
     await logout();
