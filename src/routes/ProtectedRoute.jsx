@@ -14,13 +14,17 @@ export const ProtectedRoute = ({ children, allowedRoles = [] }) => {
     );
   }
 
+  const isTelecallerRoute = window.location.pathname.startsWith('/telecaller') || location.pathname.startsWith('/telecaller');
+  const isBasenameTelecaller = window.location.pathname.startsWith('/telecaller') && !location.pathname.startsWith('/telecaller');
+  const isSuperAdminRoute = window.location.pathname.startsWith('/super-admin') || location.pathname.startsWith('/super-admin');
+
   // Not authenticated: redirect to appropriate login based on intended route
   if (!currentUser) {
-    if (location.pathname.startsWith('/super-admin')) {
+    if (isSuperAdminRoute) {
       return <Navigate to="/super-admin/login" state={{ from: location }} replace />;
     }
-    if (location.pathname.startsWith('/telecaller')) {
-      return <Navigate to="/telecaller/login" state={{ from: location }} replace />;
+    if (isTelecallerRoute) {
+      return <Navigate to={isBasenameTelecaller ? '/login' : '/telecaller/login'} state={{ from: location }} replace />;
     }
     return <Navigate to="/admin/login" state={{ from: location }} replace />;
   }
@@ -29,10 +33,10 @@ export const ProtectedRoute = ({ children, allowedRoles = [] }) => {
   const userStatus = (currentUser?.status || '').toLowerCase();
   const isPending = userStatus === 'pending' || userStatus === 'pending_approval' || currentUser?.role === 'pending_applicant';
   if (isPending || userStatus === 'inactive') {
-    if (location.pathname.startsWith('/telecaller')) {
+    if (isTelecallerRoute) {
       return (
         <Navigate 
-          to="/telecaller/login" 
+          to={isBasenameTelecaller ? '/login' : '/telecaller/login'} 
           state={{ 
             from: location,
             errorMessage: 'आपले खाते अद्याप प्रशासकीय मंजुरीसाठी प्रलंबित आहे (Pending Admin Approval). ॲडमिनने मंजूर केल्यानंतरच तुम्हाला प्रवेश मिळेल.'
@@ -46,7 +50,7 @@ export const ProtectedRoute = ({ children, allowedRoles = [] }) => {
 
   // Check role authorization
   if (allowedRoles.length > 0) {
-    const normalizedRole = role.toLowerCase();
+    const normalizedRole = (role || '').toLowerCase();
     const isAllowed = allowedRoles.some(r => {
       const nr = r.toLowerCase();
       if ((nr === 'superadmin' || nr === 'super_admin') && isSuperAdmin) return true;
@@ -57,7 +61,11 @@ export const ProtectedRoute = ({ children, allowedRoles = [] }) => {
     if (!isAllowed) {
       // Route access denied: redirect to authorized dashboard
       if (normalizedRole === 'telecaller') {
-        return <Navigate to="/telecaller/dashboard" replace />;
+        return <Navigate to={isBasenameTelecaller ? '/dashboard' : '/telecaller/dashboard'} replace />;
+      }
+      if (isBasenameTelecaller) {
+        window.location.replace('/admin/dashboard');
+        return null;
       }
       return <Navigate to="/admin/dashboard" replace />;
     }

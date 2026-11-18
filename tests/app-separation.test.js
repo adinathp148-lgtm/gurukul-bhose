@@ -131,3 +131,28 @@ test('6. Deployment Configuration: Multi-target Firebase Hosting', () => {
   assert.ok(telecallerRewrite, 'Telecaller SPA rewrite must exist in admin target');
   assert.equal(telecallerRewrite.destination, '/telecaller/index.html');
 });
+
+test('7. Telecaller Workspace & Profile Access: Robust Routing and Loop Prevention', () => {
+  const telecallerRoutesFile = path.join(projectRoot, 'apps', 'telecaller-panel', 'src', 'routes', 'AppRoutes.jsx');
+  const content = fs.readFileSync(telecallerRoutesFile, 'utf8');
+
+  // Must declare /profile and /telecaller/profile routes
+  assert.match(content, /path="\/profile"/, 'Must support /profile');
+  assert.match(content, /path="\/telecaller\/profile"/, 'Must support /telecaller/profile');
+
+  // Must declare /dashboard and /telecaller/dashboard routes
+  assert.match(content, /path="\/dashboard"/, 'Must support /dashboard');
+  assert.match(content, /path="\/telecaller\/dashboard"/, 'Must support /telecaller/dashboard');
+
+  // Cross-app redirect escape for /admin/* to prevent /telecaller/admin/* loops
+  assert.match(content, /CrossAppAdminRedirect/, 'Must define CrossAppAdminRedirect');
+  assert.match(content, /window\.location\.replace\('\/admin\/dashboard'\)/, 'Must escape via window.location.replace');
+
+  // Allowed roles must permit staff/admin to inspect the portal without getting locked into loops
+  assert.match(content, /allowedRoles=\{\['telecaller',\s*'admin',\s*'super_admin',\s*'superadmin'\]\}/);
+
+  // Check TelecallerLayout does not have broken internal navigate('/admin/dashboard')
+  const telecallerLayoutFile = path.join(projectRoot, 'shared', 'layouts', 'TelecallerLayout.jsx');
+  const layoutContent = fs.readFileSync(telecallerLayoutFile, 'utf8');
+  assert.doesNotMatch(layoutContent, /navigate\('\/admin\/dashboard'/);
+});

@@ -63,37 +63,36 @@ export const AuthProvider = ({ children }) => {
 
         if (firebaseUser) {
           try {
-            // Read Custom Claims
-            const idTokenResult = await firebaseUser.getIdTokenResult(true);
+            // Read Custom Claims (cached for speed, no blocking network wait)
+            const idTokenResult = await firebaseUser.getIdTokenResult(false);
             const customRole = idTokenResult.claims.role;
 
-            // Read Firestore Profile
+            // Read Firestore Profile with parallelized lookups
             let profileData = null;
             try {
-              const userSnap = await getDoc(doc(db, 'users', firebaseUser.uid));
-              if (userSnap.exists()) {
-                profileData = userSnap.data();
+              // 1. Check users, telecaller_profiles, and admins concurrently by UID
+              const [userSnap, teleSnap, adminSnap] = await Promise.all([
+                getDoc(doc(db, 'users', firebaseUser.uid)).catch(() => null),
+                getDoc(doc(db, 'telecaller_profiles', firebaseUser.uid)).catch(() => null),
+                getDoc(doc(db, 'admins', firebaseUser.uid)).catch(() => null)
+              ]);
+
+              if (userSnap && userSnap.exists()) {
+                profileData = { ...(teleSnap && teleSnap.exists() ? teleSnap.data() : {}), ...userSnap.data() };
+              } else if (teleSnap && teleSnap.exists()) {
+                profileData = teleSnap.data();
+              } else if (adminSnap && adminSnap.exists()) {
+                profileData = adminSnap.data();
               } else {
-                const adminSnap = await getDoc(doc(db, 'admins', firebaseUser.uid));
-                if (adminSnap.exists()) {
-                  profileData = adminSnap.data();
-                } else {
-                  const uq = query(collection(db, 'users'), where('email', '==', firebaseUser.email));
-                  const uSnap = await getDocs(uq);
-                  if (!uSnap.empty) {
-                    profileData = uSnap.docs[0].data();
-                  } else {
-                    const aq = query(collection(db, 'admins'), where('email', '==', firebaseUser.email));
-                    const aSnap = await getDocs(aq);
-                    if (!aSnap.empty) {
-                      profileData = aSnap.docs[0].data();
-                    } else {
-                      const teleSnap = await getDoc(doc(db, 'telecaller_profiles', firebaseUser.uid));
-                      if (teleSnap.exists()) {
-                        profileData = teleSnap.data();
-                      }
-                    }
-                  }
+                // 2. Concurrently check email lookups if UID doc wasn't found
+                const [uSnap, aSnap] = await Promise.all([
+                  getDocs(query(collection(db, 'users'), where('email', '==', firebaseUser.email))).catch(() => null),
+                  getDocs(query(collection(db, 'admins'), where('email', '==', firebaseUser.email))).catch(() => null)
+                ]);
+                if (uSnap && !uSnap.empty) {
+                  profileData = uSnap.docs[0].data();
+                } else if (aSnap && !aSnap.empty) {
+                  profileData = aSnap.docs[0].data();
                 }
               }
             } catch (readErr) {
@@ -150,11 +149,14 @@ export const AuthProvider = ({ children }) => {
             console.warn('Live user profile fetch error:', err);
           }
         }
+        if (isMounted) {
+          setLoading(false);
+        }
       });
-    }
-
-    if (isMounted) {
-      setLoading(false);
+    } else {
+      if (isMounted) {
+        setLoading(false);
+      }
     }
 
     return () => {
@@ -192,9 +194,16 @@ export const AuthProvider = ({ children }) => {
     if (!currentUser?.uid) return;
     if (isConfigured && db) {
       try {
-        const snap = await getDoc(doc(db, 'users', currentUser.uid));
-        if (snap.exists()) {
-          const updated = { ...currentUser, ...snap.data() };
+        const [userSnap, teleSnap] = await Promise.all([
+          getDoc(doc(db, 'users', currentUser.uid)).catch(() => null),
+          getDoc(doc(db, 'telecaller_profiles', currentUser.uid)).catch(() => null)
+        ]);
+        const mergedData = {
+          ...(teleSnap && teleSnap.exists() ? teleSnap.data() : {}),
+          ...(userSnap && userSnap.exists() ? userSnap.data() : {})
+        };
+        if (Object.keys(mergedData).length > 0) {
+          const updated = { ...currentUser, ...mergedData };
           setCurrentUser(updated);
           setUserProfile(updated);
           localStorage.setItem('gurukul_active_user', JSON.stringify(updated));

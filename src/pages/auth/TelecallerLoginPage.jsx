@@ -24,9 +24,10 @@ export const TelecallerLoginPage = () => {
   const [resetEmail, setResetEmail] = useState('');
   const [resetStatus, setResetStatus] = useState({ loading: false, message: null, error: null });
 
-  const registerPath = location.pathname.startsWith('/telecaller') ? '/telecaller/register' : '/register';
+  const isBasenameTelecaller = window.location.pathname.startsWith('/telecaller') && !location.pathname.startsWith('/telecaller');
+  const registerPath = isBasenameTelecaller ? '/register' : (location.pathname.startsWith('/telecaller') ? '/telecaller/register' : '/register');
 
-  const from = location.state?.from?.pathname || '/telecaller/dashboard';
+  const from = location.state?.from?.pathname || (isBasenameTelecaller ? '/dashboard' : '/telecaller/dashboard');
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -36,9 +37,14 @@ export const TelecallerLoginPage = () => {
     const res = await login(email, password, 'telecaller');
     if (res.success) {
       if (res.user.role === 'admin' || res.user.role === 'super_admin' || res.user.role === 'superadmin') {
-        navigate('/admin/dashboard', { replace: true });
+        if (isBasenameTelecaller) {
+          window.location.replace('/admin/dashboard');
+        } else {
+          navigate('/admin/dashboard', { replace: true });
+        }
       } else {
-        navigate('/telecaller/dashboard', { replace: true });
+        const dest = isBasenameTelecaller ? '/dashboard' : '/telecaller/dashboard';
+        navigate(dest, { replace: true });
       }
     } else {
       setError(res.error || 'लॉगिन अयशस्वी झाले. कृपया ईमेल आणि पासवर्ड तपासा.');

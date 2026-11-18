@@ -26,7 +26,7 @@ import { useLanguage } from '../contexts/LanguageContext';
 import { Badge } from '../components/common/Badge';
 import { LanguageSwitcher } from '../components/common/LanguageSwitcher';
 import { NotificationCenter } from '../components/common/NotificationCenter';
-import { getPublicWebsiteUrl } from '../services/navigation/navigationUrls';
+import { getPublicWebsiteUrl, getAdminPanelUrl } from '../services/navigation/navigationUrls';
 
 export const TelecallerLayout = () => {
   const { currentUser, userProfile, logout, isAdmin, isSuperAdmin, isTelecaller } = useAuth();
@@ -36,15 +36,15 @@ export const TelecallerLayout = () => {
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  // Security Guard: Telecaller Workspace is strictly isolated for Telecallers.
-  // Admins can manage telecallers from the Admin Panel, but cannot occupy the Telecaller workspace.
-  useEffect(() => {
-    if (isAdmin || isSuperAdmin) {
-      navigate('/admin/dashboard', { replace: true });
-    }
-  }, [isAdmin, isSuperAdmin, navigate]);
+  const isBasenameTelecaller = window.location.pathname.startsWith('/telecaller') && !location.pathname.startsWith('/telecaller');
+  const prefix = isBasenameTelecaller ? '' : (location.pathname.startsWith('/telecaller') ? '/telecaller' : '');
 
-  const isActive = (path) => location.pathname === path;
+  const isActive = (path) => {
+    if (location.pathname === path) return true;
+    if (path.startsWith('/telecaller/') && location.pathname === path.replace('/telecaller', '')) return true;
+    if (!path.startsWith('/telecaller') && location.pathname === `/telecaller${path}`) return true;
+    return false;
+  };
 
   // Filter metrics strictly for this telecaller
   const telecallerUid = currentUser?.uid || '';
@@ -52,8 +52,6 @@ export const TelecallerLayout = () => {
   const todayStr = new Date().toISOString().split('T')[0];
   const myTodayCount = myLeads.filter(l => l.nextFollowUp === todayStr && l.leadStatus !== 'Admitted').length;
   const myOverdueCount = myLeads.filter(l => l.nextFollowUp && l.nextFollowUp < todayStr && l.leadStatus !== 'Admitted').length;
-
-  const prefix = location.pathname.startsWith('/telecaller') ? '/telecaller' : '';
 
   // Strictly display counselor details (Never display admin/superadmin credentials in telecaller workspace)
   const counselorName = userProfile?.role === 'telecaller'
@@ -69,45 +67,45 @@ export const TelecallerLayout = () => {
 
   const handleLogout = async () => {
     await logout();
-    navigate(prefix ? `${prefix}/login` : '/login');
+    navigate(isBasenameTelecaller ? '/login' : (prefix ? `${prefix}/login` : '/login'));
   };
 
   const navItems = [
     {
       category: 'calling',
       title: isMarathi ? 'माझे डॅशबोर्ड (Dashboard)' : 'My Dashboard',
-      path: `${prefix}/dashboard` || '/dashboard',
+      path: prefix ? `${prefix}/dashboard` : '/dashboard',
       icon: LayoutDashboard
     },
     {
       category: 'calling',
       title: isMarathi ? 'कॉल व्यवस्थापन (Calls)' : 'Call Management',
-      path: `${prefix}/calls` || '/calls',
+      path: prefix ? `${prefix}/calls` : '/calls',
       icon: PhoneCall
     },
     {
       category: 'calling',
       title: isMarathi ? 'फॉलो-अप कॅलेंडर (Calendar)' : 'Follow-up Calendar',
-      path: `${prefix}/calendar` || '/calendar',
+      path: prefix ? `${prefix}/calendar` : '/calendar',
       icon: Calendar
     },
     {
       category: 'calling',
       title: isMarathi ? 'शाळा भेट नियोजन (Visits)' : 'Campus Visits',
-      path: `${prefix}/visits` || '/visits',
+      path: prefix ? `${prefix}/visits` : '/visits',
       icon: Building2
     },
     {
       category: 'leads',
       title: isMarathi ? 'माझ्या लीड्स (My Leads)' : 'My Assigned Leads',
-      path: `${prefix}/leads` || '/leads',
+      path: prefix ? `${prefix}/leads` : '/leads',
       icon: Users,
       badge: myLeads.length > 0 ? `${myLeads.length}` : null
     },
     {
       category: 'leads',
       title: isMarathi ? 'आजचे फॉलो-अप्स (Today)' : "Today's Follow-ups",
-      path: `${prefix}/follow-ups`,
+      path: prefix ? `${prefix}/follow-ups` : '/follow-ups',
       icon: Clock,
       badge: myTodayCount > 0 ? `${myTodayCount}` : null,
       badgeColor: 'amber'
@@ -115,25 +113,25 @@ export const TelecallerLayout = () => {
     {
       category: 'leads',
       title: isMarathi ? 'कॉल हिस्ट्री (Call History)' : 'Call History',
-      path: `${prefix}/history` || '/history',
+      path: prefix ? `${prefix}/history` : '/history',
       icon: History
     },
     {
       category: 'account',
       title: isMarathi ? 'सूचना व अलर्ट्स' : 'Notifications',
-      path: `${prefix}/notifications` || '/notifications',
+      path: prefix ? `${prefix}/notifications` : '/notifications',
       icon: Bell
     },
     {
       category: 'account',
       title: isMarathi ? 'माझी प्रोफाइल (My Profile)' : 'My Profile',
-      path: `${prefix}/profile` || '/profile',
+      path: prefix ? `${prefix}/profile` : '/profile',
       icon: User
     },
     {
       category: 'account',
       title: isMarathi ? 'पासवर्ड बदला (Password)' : 'Change Password',
-      path: `${prefix}/change-password` || '/change-password',
+      path: prefix ? `${prefix}/change-password` : '/change-password',
       icon: KeyRound
     }
   ];
@@ -264,10 +262,10 @@ export const TelecallerLayout = () => {
         {/* Telecaller Profile Card in Sidebar Footer */}
         <div className="p-3 bg-slate-950/90 border-t border-slate-800/80">
           <Link
-            to={`${prefix}/profile`}
+            to={prefix ? `${prefix}/profile` : '/profile'}
             onClick={() => setSidebarOpen(false)}
             className={`flex items-center gap-2.5 p-2 rounded-xl transition-all ${
-              isActive(`${prefix}/profile`)
+              isActive(prefix ? `${prefix}/profile` : '/profile')
                 ? 'bg-emerald-600 text-white shadow-md'
                 : 'bg-white/4 hover:bg-white/8 text-slate-200 border border-white/6'
             }`}
@@ -368,12 +366,12 @@ export const TelecallerLayout = () => {
             <NotificationCenter isTelecaller={true} />
 
             {(isAdmin || isSuperAdmin) && (
-              <Link
-                to="/admin/dashboard"
+              <a
+                href={`${getAdminPanelUrl()}/admin/dashboard`}
                 className="hidden md:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-gurukul-navy-950 text-white hover:bg-gurukul-navy-900 transition-colors shadow-xs shrink-0"
               >
                 <span>{isMarathi ? 'अ‍ॅडमिन पॅनेल' : 'Admin Panel'}</span>
-              </Link>
+              </a>
             )}
 
             <Badge variant="Telecaller" className="shrink-0">

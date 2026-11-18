@@ -44,17 +44,31 @@ const TelecallerNotificationsPage = () => {
   );
 };
 
+// Safe Cross-App Exit: Escapes telecaller-panel to the actual Admin Panel
+const CrossAppAdminRedirect = () => {
+  React.useEffect(() => {
+    window.location.replace('/admin/dashboard');
+  }, []);
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-slate-50">
+      <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-gurukul-saffron-500"></div>
+    </div>
+  );
+};
+
 export const AppRoutes = () => {
   return (
     <Routes>
       {/* 1. Telecaller Dedicated Login & Registration */}
       <Route path="/login" element={<TelecallerLoginPage />} />
       <Route path="/register" element={<TelecallerRegisterPage />} />
+      <Route path="/telecaller/login" element={<TelecallerLoginPage />} />
+      <Route path="/telecaller/register" element={<TelecallerRegisterPage />} />
 
-      {/* 2. Protected Telecaller Workspace (Strictly for Telecallers only) */}
+      {/* 2. Protected Telecaller Workspace (Accessible to Telecallers, Admin & Super Admin) */}
       <Route
         element={
-          <ProtectedRoute allowedRoles={['telecaller']}>
+          <ProtectedRoute allowedRoles={['telecaller', 'admin', 'super_admin', 'superadmin']}>
             <TelecallerLayout />
           </ProtectedRoute>
         }
@@ -72,11 +86,26 @@ export const AppRoutes = () => {
         <Route path="/notifications" element={<TelecallerNotificationsPage />} />
         <Route path="/profile" element={<TelecallerProfilePage />} />
         <Route path="/change-password" element={<TelecallerChangePasswordPage />} />
+
+        {/* Alias routes supporting /telecaller/* URLs to prevent any 404 or redirect bounce */}
+        <Route path="/telecaller" element={<Navigate to="/dashboard" replace />} />
+        <Route path="/telecaller/dashboard" element={<TelecallerDashboardPage />} />
+        <Route path="/telecaller/leads" element={<TelecallerLeadsPage />} />
+        <Route path="/telecaller/leads/:leadId" element={<TelecallerLeadDetailsPage />} />
+        <Route path="/telecaller/calls" element={<TelecallerCallsPage />} />
+        <Route path="/telecaller/calendar" element={<TelecallerCalendarPage />} />
+        <Route path="/telecaller/visits" element={<TelecallerVisitsPage />} />
+        <Route path="/telecaller/campus-visits" element={<Navigate to="/visits" replace />} />
+        <Route path="/telecaller/follow-ups" element={<TelecallerFollowUpsPage />} />
+        <Route path="/telecaller/history" element={<TelecallerFollowUpsPage />} />
+        <Route path="/telecaller/notifications" element={<TelecallerNotificationsPage />} />
+        <Route path="/telecaller/profile" element={<TelecallerProfilePage />} />
+        <Route path="/telecaller/change-password" element={<TelecallerChangePasswordPage />} />
       </Route>
 
-      {/* Security Fallback: Block any direct CMS/Admin URL attempts and redirect */}
-      <Route path="/admin/*" element={<Navigate to="/dashboard" replace />} />
-      <Route path="/cms/*" element={<Navigate to="/dashboard" replace />} />
+      {/* Security Fallback: Cleanly redirect any Admin/CMS attempts out to the Admin Panel */}
+      <Route path="/admin/*" element={<CrossAppAdminRedirect />} />
+      <Route path="/cms/*" element={<CrossAppAdminRedirect />} />
       <Route path="*" element={<Navigate to="/dashboard" replace />} />
     </Routes>
   );
