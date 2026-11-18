@@ -54,6 +54,26 @@ export const StaffPage = () => {
   // Official Gurukul Bhose Staff Members
   const staffMembers = [
     {
+      id: 'staff-milind-shinde',
+      category: 'leadership',
+      name: isMarathi ? 'मिलिंद शिंदे' : 'Milind Shinde',
+      role: isMarathi ? 'प्रशासन प्रमुख (Admin)' : 'Administrator (Campus Admin)',
+      qualification: isMarathi ? 'संस्था प्रशासन व व्यवस्थापन' : 'Institutional Administration & Management',
+      experience: isMarathi ? 'प्रशासन व संस्था व्यवस्थापन' : 'Campus Administration & Leadership',
+      dept: isMarathi ? 'गुरुकुल संकुल प्रशासन' : 'Gurukul Campus Administration',
+      bio: isMarathi 
+        ? 'गुरुकुल भोसे सैनिक पॅटर्न निवासी संकुलाचे सर्वांगीण प्रशासन, विद्यार्थी शिस्त, निवास व्यवस्था आणि संस्थात्मक नियोजन यांचे प्रमुख व्यवस्थापन.'
+        : 'Heading overall administration, student discipline, residential hostel logistics, and institutional operations at Gurukul Bhose Sainik Pattern Residential Complex.',
+      specialties: [
+        isMarathi ? 'संस्था प्रशासन' : 'Campus Administration',
+        isMarathi ? 'सैनिक शिस्त व नियोजन' : 'Discipline & Operations',
+        isMarathi ? 'पालक व विद्यार्थी संपर्क' : 'Parent & Student Relations'
+      ],
+      image: '/images/staff/milind-shinde.png',
+      icon: Shield,
+      accentColor: 'from-amber-600 to-orange-600'
+    },
+    {
       id: 'staff-priyanka-shinde',
       category: 'academics',
       name: isMarathi ? 'प्रा. प्रियांका साहेबराव शिंदे' : 'Prof. Priyanka Sahebrao Shinde',
@@ -220,6 +240,27 @@ export const StaffPage = () => {
       image: '/images/staff/pandurang-lavand.jpg',
       icon: GraduationCap,
       accentColor: 'from-blue-600 to-indigo-700'
+    },
+    {
+      id: 'staff-azharuddin-dhawade',
+      category: 'academics',
+      name: isMarathi ? 'अझरुद्दीन एम. धवाडे' : 'Azharuddin M. Dhawade',
+      role: isMarathi ? 'सूक्ष्मजीवशास्त्र व जीवशास्त्र प्राध्यापक' : 'Faculty of Microbiology & Biology',
+      qualification: 'M.Sc. (Microbiology)',
+      experience: isMarathi ? 'अनुभव - १७ वर्षे' : '17 Years Experience',
+      dept: isMarathi ? 'सायन्स अकॅडमी व ज्युनिअर कॉलेज' : 'Science Academy & Junior College',
+      bio: isMarathi 
+        ? 'सूक्ष्मजीवशास्त्र (Microbiology) व जीवशास्त्र (Biology) अध्यापनाचा १७ वर्षांचा समृद्ध अनुभव. NEET व बोर्ड परीक्षेसाठी सखोल संकल्पनाधिष्ठित तयारी, डायग्रामॅटिक प्रेझेन्टेशन आणि प्रॅक्टिकल सायन्स मार्गदर्शन.'
+        : 'Seasoned educator with 17 years of rich teaching experience in Microbiology and Biology. Specialized in NEET preparation, diagrammatic precision, cellular biology, and medical entrance mentorship.',
+      specialties: [
+        isMarathi ? 'M.Sc. (Microbiology)' : 'M.Sc. (Microbiology)',
+        isMarathi ? '१७ वर्षे प्रदीर्घ अनुभव' : '17 Years Experience',
+        isMarathi ? 'NEET बायोलॉजी सराव' : 'NEET Biology Prep',
+        isMarathi ? 'सूक्ष्मजीवशास्त्र लॅब' : 'Microbiology Lab'
+      ],
+      image: '/images/staff/azharuddin-dhawade.png',
+      icon: FlaskConical,
+      accentColor: 'from-emerald-600 to-teal-700'
     }
   ];
 
