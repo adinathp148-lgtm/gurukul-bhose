@@ -30,12 +30,12 @@ export default defineConfig({
   build: {
     outDir: path.resolve(__dirname, '../../dist/admin'),
     emptyOutDir: false, // Don't wipe /telecaller subfolder if built
-    chunkSizeWarningLimit: 900,
+    chunkSizeWarningLimit: 1200,
     rollupOptions: {
       output: {
         manualChunks: {
           'vendor-react': ['react', 'react-dom', 'react-router-dom', 'react-helmet-async'],
-          'vendor-firebase': ['firebase/app', 'firebase/auth', 'firebase/firestore', 'firebase/storage'],
+          'vendor-firebase': ['firebase/app', 'firebase/auth', 'firebase/firestore', 'firebase/storage', 'firebase/functions'],
           'vendor-icons': ['lucide-react']
         }
       }

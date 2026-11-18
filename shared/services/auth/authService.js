@@ -1,6 +1,8 @@
 import { 
   auth, 
   db, 
+  functions,
+  httpsCallable,
   signInWithEmailAndPassword, 
   signOut, 
   onAuthStateChanged,
@@ -408,11 +410,11 @@ export const createTelecallerAccount = async (telecallerData) => {
   if (isConfigured && db) {
     try {
       // If Cloud Functions are deployed, we call the callable function
-      const { getFunctions, httpsCallable } = await import('firebase/functions');
-      const functions = getFunctions();
-      const createFn = httpsCallable(functions, 'createTelecaller');
-      const result = await createFn({ ...telecallerData, employeeId: finalEmpId });
-      return result.data;
+      if (functions && typeof httpsCallable === 'function') {
+        const createFn = httpsCallable(functions, 'createTelecaller');
+        const result = await createFn({ ...telecallerData, employeeId: finalEmpId });
+        return result.data;
+      }
     } catch (fnErr) {
       console.warn('Cloud Function invocation failed, applying direct Firestore transaction fallback:', fnErr);
       
@@ -725,11 +727,11 @@ export const updateTelecallerStatus = async (userId, newStatus) => {
 
   if (isConfigured && db) {
     try {
-      const { getFunctions, httpsCallable } = await import('firebase/functions');
-      const functions = getFunctions();
-      const statusFn = httpsCallable(functions, 'updateTelecallerStatus');
-      const res = await statusFn({ userId, status: newStatus, role, approvedByAdmin: isApproved });
-      return res.data;
+      if (functions && typeof httpsCallable === 'function') {
+        const statusFn = httpsCallable(functions, 'updateTelecallerStatus');
+        const res = await statusFn({ userId, status: newStatus, role, approvedByAdmin: isApproved });
+        return res.data;
+      }
     } catch (err) {
       console.warn('Cloud Function status update fallback:', err);
       await updateDoc(doc(db, 'users', userId), { 
@@ -778,11 +780,11 @@ export const updateTelecallerStatus = async (userId, newStatus) => {
 export const updateTelecallerProfile = async (userId, updates) => {
   if (isConfigured && db) {
     try {
-      const { getFunctions, httpsCallable } = await import('firebase/functions');
-      const functions = getFunctions();
-      const updateFn = httpsCallable(functions, 'updateTelecallerProfile');
-      const res = await updateFn({ userId, updates });
-      return res.data;
+      if (functions && typeof httpsCallable === 'function') {
+        const updateFn = httpsCallable(functions, 'updateTelecallerProfile');
+        const res = await updateFn({ userId, updates });
+        return res.data;
+      }
     } catch (err) {
       console.warn('Cloud function profile update fallback:', err);
       await setDoc(doc(db, 'telecaller_profiles', userId), updates, { merge: true });

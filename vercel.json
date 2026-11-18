@@ -2,6 +2,7 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
+  "cleanUrls": true,
   "rewrites": [
     {
       "source": "/telecaller",
@@ -20,6 +21,14 @@
       "destination": "/admin/index.html"
     },
     {
+      "source": "/super-admin",
+      "destination": "/admin/index.html"
+    },
+    {
+      "source": "/super-admin/:match*",
+      "destination": "/admin/index.html"
+    },
+    {
       "source": "/login",
       "destination": "/admin/index.html"
     },
@@ -28,7 +37,43 @@
       "destination": "/admin/index.html"
     },
     {
-      "source": "/super-admin/login",
+      "source": "/dashboard",
+      "destination": "/admin/index.html"
+    },
+    {
+      "source": "/cms",
+      "destination": "/admin/index.html"
+    },
+    {
+      "source": "/cms/:match*",
+      "destination": "/admin/index.html"
+    },
+    {
+      "source": "/enquiries",
+      "destination": "/admin/index.html"
+    },
+    {
+      "source": "/leads",
+      "destination": "/admin/index.html"
+    },
+    {
+      "source": "/leads/:match*",
+      "destination": "/admin/index.html"
+    },
+    {
+      "source": "/telecallers",
+      "destination": "/admin/index.html"
+    },
+    {
+      "source": "/telecallers/:match*",
+      "destination": "/admin/index.html"
+    },
+    {
+      "source": "/admissions",
+      "destination": "/admin/index.html"
+    },
+    {
+      "source": "/follow-ups",
       "destination": "/admin/index.html"
     },
     {

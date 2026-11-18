@@ -15,6 +15,17 @@ function copyDir(src, dest) {
   fs.cpSync(src, dest, { recursive: true, force: true });
 }
 
+function copyDirContents(src, dest) {
+  if (!fs.existsSync(src)) return;
+  fs.mkdirSync(dest, { recursive: true });
+  const entries = fs.readdirSync(src, { withFileTypes: true });
+  for (const entry of entries) {
+    const srcPath = path.join(src, entry.name);
+    const destPath = path.join(dest, entry.name);
+    fs.cpSync(srcPath, destPath, { recursive: true, force: true });
+  }
+}
+
 async function buildPublic() {
   console.log(`\n========================================`);
   console.log(`[BUILD 1/3] Building Public Website...`);
@@ -60,18 +71,18 @@ function syncDist() {
 
   // Ensure Public Website files exist at root of dist (so Vercel serves public website at /)
   if (fs.existsSync(distPublic)) {
-    copyDir(distPublic, distDir);
+    copyDirContents(distPublic, distDir);
     console.log('✓ Synced dist/public -> dist/ (Root Vercel Output)');
   }
 
   // Ensure assets from admin and telecaller are also present in dist/assets
   if (fs.existsSync(path.join(distAdmin, 'assets'))) {
-    copyDir(path.join(distAdmin, 'assets'), distAssets);
+    copyDirContents(path.join(distAdmin, 'assets'), distAssets);
     console.log('✓ Merged dist/admin/assets -> dist/assets');
   }
 
   if (fs.existsSync(path.join(distTelecaller, 'assets'))) {
-    copyDir(path.join(distTelecaller, 'assets'), distAssets);
+    copyDirContents(path.join(distTelecaller, 'assets'), distAssets);
     console.log('✓ Merged dist/telecaller/assets -> dist/assets');
   }
 }
