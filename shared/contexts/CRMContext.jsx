@@ -100,6 +100,44 @@ import {
 } from '../services/firestore/systemService';
 import { saveCMSNotice, deleteCMSNotice } from '../services/firestore/cmsService';
 
+const DEMO_LEAD_IDS = new Set(['lead-101', 'lead-102', 'lead-103', 'lead-104']);
+const DEMO_MOBILES = new Set(['9822012345', '9423098765', '9881122334', '9765432100']);
+const DEMO_PARENT_NAMES = new Set(['सुरेश विठ्ठल जाधव', 'तानाजी मारुती सावंत', 'राजेंद्र महादेव कुलकर्णी', 'संतोष बाळू माने']);
+const DEMO_STUDENT_NAMES = new Set(['रोहन सुरेश जाधव', 'आदित्य तानाजी सावंत', 'पार्थ राजेंद्र कुलकर्णी', 'ओंकार संतोष माने']);
+
+export const isDemoLead = (l) => {
+  if (!l) return false;
+  if (DEMO_LEAD_IDS.has(l.id) || DEMO_LEAD_IDS.has(l.leadId)) return true;
+  if (DEMO_MOBILES.has(l.mobileNumber) || DEMO_MOBILES.has(l.parentMobile) || DEMO_MOBILES.has(l.whatsappNumber)) return true;
+  if (DEMO_PARENT_NAMES.has(l.parentName)) return true;
+  if (DEMO_STUDENT_NAMES.has(l.studentName)) return true;
+  return false;
+};
+
+export const isDemoAdmission = (a) => {
+  if (!a) return false;
+  if (a.id === 'adm-2026-001' || a.admissionId === 'adm-2026-001') return true;
+  if (isDemoLead(a)) return true;
+  return false;
+};
+
+export const isDemoVisit = (v) => {
+  if (!v) return false;
+  if (v.id === 'visit-2026-001' || v.id === 'visit-2026-002' || v.visitId === 'visit-2026-001' || v.visitId === 'visit-2026-002') return true;
+  if (DEMO_MOBILES.has(v.parentMobile) || DEMO_MOBILES.has(v.contactNumber) || DEMO_MOBILES.has(v.mobileNumber)) return true;
+  if (DEMO_PARENT_NAMES.has(v.parentName)) return true;
+  if (DEMO_STUDENT_NAMES.has(v.studentName)) return true;
+  return false;
+};
+
+export const isDemoApplication = (app) => {
+  if (!app) return false;
+  if (app.id === 'app-2026-001' || app.id === 'app-2026-002' || app.applicationId === 'app-2026-001' || app.applicationId === 'app-2026-002') return true;
+  if (app.applicationNumber === 'APP-2026-000001' || app.applicationNumber === 'APP-2026-000002') return true;
+  if (isDemoLead(app)) return true;
+  return false;
+};
+
 const CRMContext = createContext(null);
 
 export const useCRM = () => {
@@ -115,13 +153,23 @@ export const CRMProvider = ({ children }) => {
   
   // 1. Core State
   const [leads, setLeads] = useState(() => {
-    const saved = localStorage.getItem('gurukul_crm_leads');
-    return saved ? JSON.parse(saved) : demoLeads;
+    try {
+      const saved = localStorage.getItem('gurukul_crm_leads');
+      if (saved) {
+        return JSON.parse(saved).filter(l => !isDemoLead(l));
+      }
+    } catch (e) {}
+    return [];
   });
 
   const [followUps, setFollowUps] = useState(() => {
-    const saved = localStorage.getItem('gurukul_crm_followups');
-    return saved ? JSON.parse(saved) : demoFollowUps;
+    try {
+      const saved = localStorage.getItem('gurukul_crm_followups');
+      if (saved) {
+        return JSON.parse(saved).filter(f => !isDemoLead(f));
+      }
+    } catch (e) {}
+    return [];
   });
 
   const [calls, setCalls] = useState(() => {
@@ -140,8 +188,13 @@ export const CRMProvider = ({ children }) => {
   });
 
   const [admissions, setAdmissions] = useState(() => {
-    const saved = localStorage.getItem('gurukul_crm_admissions');
-    return saved ? JSON.parse(saved) : demoAdmissions;
+    try {
+      const saved = localStorage.getItem('gurukul_crm_admissions');
+      if (saved) {
+        return JSON.parse(saved).filter(a => !isDemoAdmission(a));
+      }
+    } catch (e) {}
+    return [];
   });
 
   const [telecallers, setTelecallers] = useState(() => {
@@ -186,8 +239,13 @@ export const CRMProvider = ({ children }) => {
   });
 
   const [visits, setVisits] = useState(() => {
-    const saved = localStorage.getItem('gurukul_crm_campus_visits');
-    return saved ? JSON.parse(saved) : demoCampusVisits;
+    try {
+      const saved = localStorage.getItem('gurukul_crm_campus_visits');
+      if (saved) {
+        return JSON.parse(saved).filter(v => !isDemoVisit(v));
+      }
+    } catch (e) {}
+    return [];
   });
 
   const [visitSettings, setVisitSettings] = useState(() => {
@@ -201,8 +259,13 @@ export const CRMProvider = ({ children }) => {
   });
 
   const [admissionApplications, setAdmissionApplications] = useState(() => {
-    const saved = localStorage.getItem('gurukul_crm_admission_applications');
-    return saved ? JSON.parse(saved) : demoAdmissionApplications;
+    try {
+      const saved = localStorage.getItem('gurukul_crm_admission_applications');
+      if (saved) {
+        return JSON.parse(saved).filter(app => !isDemoApplication(app));
+      }
+    } catch (e) {}
+    return [];
   });
 
   const [admissionStageHistory, setAdmissionStageHistory] = useState(() => {
@@ -234,6 +297,41 @@ export const CRMProvider = ({ children }) => {
     const saved = localStorage.getItem('gurukul_audit_logs');
     return saved ? JSON.parse(saved) : [];
   });
+
+  // One-time localStorage demo data sanitizer
+  useEffect(() => {
+    try {
+      const keysToFilter = [
+        ['gurukul_crm_leads', isDemoLead],
+        ['gurukul_crm_followups', isDemoLead],
+        ['gurukul_crm_admissions', isDemoAdmission],
+        ['gurukul_crm_campus_visits', isDemoVisit],
+        ['gurukul_crm_admission_applications', isDemoApplication]
+      ];
+      keysToFilter.forEach(([key, filterFn]) => {
+        const raw = localStorage.getItem(key);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (Array.isArray(parsed)) {
+            const clean = parsed.filter(item => !filterFn(item));
+            localStorage.setItem(key, JSON.stringify(clean));
+          }
+        }
+      });
+      ['gurukul_crm_telecallers', 'gurukul_stored_telecallers', 'gurukul_registered_telecallers'].forEach(key => {
+        const raw = localStorage.getItem(key);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (Array.isArray(parsed)) {
+            const clean = parsed.filter(t => !isDemoTelecaller(t));
+            localStorage.setItem(key, JSON.stringify(clean));
+          }
+        }
+      });
+    } catch (e) {
+      console.warn("Storage sanitization notice:", e);
+    }
+  }, []);
 
   // Local storage synchronization
   useEffect(() => { localStorage.setItem('gurukul_crm_leads', JSON.stringify(leads)); }, [leads]);
@@ -270,7 +368,7 @@ export const CRMProvider = ({ children }) => {
           status: d.data().status || d.data().leadStatus || 'New',
           mobileNumber: d.data().normalizedMobile || d.data().mobile || d.data().mobileNumber,
           assignedTelecallerId: d.data().assignedTo || d.data().assignedTelecallerId
-        }));
+        })).filter(l => !isDemoLead(l));
         setLeads(firestoreEnquiries);
       }
     }, (err) => {
