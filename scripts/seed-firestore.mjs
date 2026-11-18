@@ -8,6 +8,7 @@
  */
 
 import { initializeApp, getApps } from 'firebase/app';
+import { getAuth, signInWithEmailAndPassword } from 'firebase/auth';
 import { 
   getFirestore, 
   doc, 
@@ -88,6 +89,20 @@ import {
 async function seedDatabase() {
   const app = getApps().length > 0 ? getApps()[0] : initializeApp(firebaseConfig);
   const db = getFirestore(app);
+
+  const adminEmail = process.env.SEED_ADMIN_EMAIL || process.env.ADMIN_EMAIL;
+  const adminPassword = process.env.SEED_ADMIN_PASSWORD || process.env.ADMIN_PASSWORD;
+
+  if (adminEmail && adminPassword) {
+    try {
+      const auth = getAuth(app);
+      console.log(`🔑 Signing in as admin: ${adminEmail}...`);
+      await signInWithEmailAndPassword(auth, adminEmail, adminPassword);
+      console.log('✅ Admin authenticated successfully.\n');
+    } catch (authErr) {
+      console.warn(`⚠️ Admin authentication note: ${authErr.message}\n`);
+    }
+  }
 
   console.log('⏳ Seeding Website CMS and initial data to Firestore...\n');
 
@@ -287,8 +302,8 @@ async function seedDatabase() {
         id: g.id,
         title: g.title,
         category: g.category || 'कॅम्पस',
-        imageUrl: g.image,
-        image: g.image,
+        imageUrl: g.imageUrl || g.image || '',
+        image: g.imageUrl || g.image || '',
         caption: g.title,
         displayOrder: idx + 1,
         status: 'published',
@@ -370,10 +385,30 @@ async function seedDatabase() {
     console.log('  ✔ leads / enquiries (sample CRM leads)');
     console.log('====================================================\n');
   } catch (err) {
-    console.error('\n❌ ERROR pushing data to Firestore:', err);
-    console.error('\nTips:');
-    console.error('1. Verify your VITE_FIREBASE_* credentials in .env.');
-    console.error('2. Ensure your Firestore Security Rules permit write access, or sign in as Admin.');
+    console.error('\n❌ ERROR pushing data to Firestore:', err?.message || err);
+    if (err?.code === 'permission-denied' || String(err).includes('PERMISSION_DENIED')) {
+      console.error('\n🔒 FIRESTORE SECURITY RULES BLOCKED THE WRITE (PERMISSION_DENIED)');
+      console.error('========================================================================');
+      console.error('The Firestore database has security rules set to locked (deny all writes).');
+      console.error('To allow initial seeding, follow these 3 quick steps in Firebase Console:');
+      console.error('1. Open Firebase Console -> Firestore Database -> "Rules" tab.');
+      console.error('2. Temporarily replace the rules with:');
+      console.error('   rules_version = \'2\';');
+      console.error('   service cloud.firestore {');
+      console.error('     match /databases/{database}/documents {');
+      console.error('       match /{document=**} {');
+      console.error('         allow read, write: if true;');
+      console.error('       }');
+      console.error('     }');
+      console.error('   }');
+      console.error('3. Click "Publish", then re-run: npm run seed:firestore');
+      console.error('4. After seeding completes, paste the production rules from firestore.rules and Publish.');
+      console.error('========================================================================\n');
+    } else {
+      console.error('\nTips:');
+      console.error('1. Verify your VITE_FIREBASE_* credentials in .env.');
+      console.error('2. Ensure your Firestore Security Rules permit write access, or sign in as Admin.');
+    }
     process.exit(1);
   }
 }

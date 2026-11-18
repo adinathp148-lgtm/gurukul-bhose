@@ -1,9 +1,9 @@
 {
   "projects": {
-    "default": "gurukulbhose"
+    "default": "gurukul-bhose-5ad08"
   },
   "targets": {
-    "gurukulbhose": {
+    "gurukul-bhose-5ad08": {
       "hosting": {
         "public": [
           "gurukul-bhose-web"
