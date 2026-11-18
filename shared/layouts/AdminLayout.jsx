@@ -15,7 +15,6 @@ import {
   ExternalLink, 
   Bell, 
   Shield, 
-  ChevronRight, 
   ChevronDown, 
   Flame, 
   Headset, 
@@ -58,16 +57,6 @@ export const AdminLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [cmsOpen, setCmsOpen] = useState(() => location.pathname.startsWith('/admin/cms'));
   const [visitsOpen, setVisitsOpen] = useState(() => location.pathname.startsWith('/admin/visit') || location.pathname.startsWith('/admin/campus-visit'));
-
-  const rawAdminName = userProfile?.fullName || userProfile?.displayName || userProfile?.name || currentUser?.fullName || currentUser?.displayName;
-  const adminEmail = userProfile?.email || currentUser?.email || '';
-  const adminName = (rawAdminName && !rawAdminName.toLowerCase().includes('super admin') && rawAdminName !== 'Administrator')
-    ? rawAdminName
-    : ((adminEmail.toLowerCase().includes('adinath')) ? 'Adinath Powar' : (rawAdminName || (isMarathi ? 'प्रशासक' : 'Administrator')));
-  const adminInitial = (adminName.trim().charAt(0) || 'A').toUpperCase();
-  const adminRoleLabel = isSuperAdmin 
-    ? (isMarathi ? 'मुख्य प्रशासक (Super Admin)' : 'Super Admin')
-    : (isMarathi ? 'शाळा प्रशासक (Admin)' : 'School Admin');
 
   const isActive = (path) => location.pathname === path;
 
@@ -490,39 +479,9 @@ export const AdminLayout = () => {
           })}
         </nav>
 
-        {/* Pinned User Profile & Quick Actions Footer */}
-        <div className="p-3.5 border-t border-slate-800/80 bg-gurukul-navy-950/95 space-y-2.5 shrink-0">
-          <Link
-            to="/admin/profile"
-            onClick={() => setSidebarOpen(false)}
-            className={`group flex items-center gap-3 p-2.5 rounded-xl transition-all outline-none focus:outline-none ${
-              location.pathname === '/admin/profile'
-                ? 'bg-gurukul-saffron-500/20 text-white border border-gurukul-saffron-500/30 shadow-xs'
-                : 'text-slate-300 hover:text-white hover:bg-slate-800/60 border border-transparent'
-            }`}
-          >
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-gurukul-saffron-500 to-amber-600 text-white font-bold text-sm flex items-center justify-center shrink-0 shadow-sm ring-1 ring-white/10">
-              {adminInitial}
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-bold text-white truncate leading-tight">
-                {adminName}
-              </p>
-              <div className="flex items-center gap-1.5 mt-1">
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
-                <p className="text-xs text-slate-400 truncate">
-                  {adminRoleLabel}
-                </p>
-              </div>
-            </div>
-            <ChevronRight className={`w-4 h-4 shrink-0 transition-all ${
-              location.pathname === '/admin/profile'
-                ? 'text-gurukul-saffron-300'
-                : 'text-slate-500 group-hover:text-slate-300 group-hover:translate-x-0.5'
-            }`} />
-          </Link>
-
-          <div className="flex items-center gap-2 pt-1.5 border-t border-slate-800/60">
+        {/* Quick Actions Footer */}
+        <div className="p-3.5 border-t border-slate-800/80 bg-gurukul-navy-950/95 shrink-0">
+          <div className="flex items-center gap-2">
             <a
               href={getPublicWebsiteUrl()}
               target="_blank"
