@@ -58,14 +58,17 @@ export const CMSSEOPage = () => {
     }
   }, [seoSettings]);
 
+  const safeCourses = Array.isArray(courses) ? courses : [];
+  const safePages = Array.isArray(pages) ? pages : [];
+
   // Compute published pages and courses for sitemap
   const publishedCourses = useMemo(() => {
-    return (courses || []).filter(c => c.status !== 'draft');
-  }, [courses]);
+    return safeCourses.filter(c => c.status !== 'draft');
+  }, [safeCourses]);
 
   const publishedPages = useMemo(() => {
-    return (pages || []).filter(p => p.status !== 'draft');
-  }, [pages]);
+    return safePages.filter(p => p.status !== 'draft');
+  }, [safePages]);
 
   const dynamicSitemapXml = useMemo(() => {
     const baseUrl = (formData.canonicalUrl || 'https://gurukulbhose.com').replace(/\/$/, '');
@@ -396,7 +399,7 @@ ${urls}
             <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 text-center">
               <span className="text-[10px] uppercase font-bold text-slate-400 block">मसुदा (वगळलेले)</span>
               <span className="text-lg font-black text-amber-600">
-                {(courses.length - publishedCourses.length) + (pages.length - publishedPages.length)}
+                {(safeCourses.length - publishedCourses.length) + (safePages.length - publishedPages.length)}
               </span>
             </div>
           </div>

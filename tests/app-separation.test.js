@@ -156,3 +156,22 @@ test('7. Telecaller Workspace & Profile Access: Robust Routing and Loop Preventi
   const layoutContent = fs.readFileSync(telecallerLayoutFile, 'utf8');
   assert.doesNotMatch(layoutContent, /navigate\('\/admin\/dashboard'/);
 });
+
+test('8. Telecaller Portal Entry: Telecaller Portal Link opens Login Form first', () => {
+  const navbarFile = path.join(projectRoot, 'shared', 'components', 'layout', 'Navbar.jsx');
+  const navbarContent = fs.readFileSync(navbarFile, 'utf8');
+
+  // Verify Navbar crmUrls telecaller points directly to login form
+  assert.match(navbarContent, /telecaller:\s*`\$\{telecallerBaseUrl\}\/login`/, 'Telecaller Portal link must open Login form first');
+
+  // Verify apps/telecaller-panel passes loginPath="/login" to ProtectedRoute
+  const telecallerRoutesFile = path.join(projectRoot, 'apps', 'telecaller-panel', 'src', 'routes', 'AppRoutes.jsx');
+  const routesContent = fs.readFileSync(telecallerRoutesFile, 'utf8');
+  assert.match(routesContent, /loginPath="\/login"/, 'Telecaller workspace must configure loginPath="/login"');
+
+  // Verify ProtectedRoute supports loginPath prop and telecaller route detection
+  const protectedRouteFile = path.join(projectRoot, 'shared', 'routes', 'ProtectedRoute.jsx');
+  const prContent = fs.readFileSync(protectedRouteFile, 'utf8');
+  assert.match(prContent, /loginPath\s*=\s*null/, 'ProtectedRoute must support loginPath parameter');
+  assert.match(prContent, /if\s*\(loginPath\)\s*\{\s*return\s*<Navigate to=\{loginPath\}/, 'ProtectedRoute must honor loginPath');
+});

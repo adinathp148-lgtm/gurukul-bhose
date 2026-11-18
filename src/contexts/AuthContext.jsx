@@ -67,34 +67,38 @@ export const AuthProvider = ({ children }) => {
             const idTokenResult = await firebaseUser.getIdTokenResult(false);
             const customRole = idTokenResult.claims.role;
 
-            // Read Firestore Profile with parallelized lookups
-            let profileData = null;
+            // Read Firestore Profile with parallelized lookups across users, admins, and telecaller_profiles
+            let profileData = {};
             try {
-              // 1. Check users, telecaller_profiles, and admins concurrently by UID
               const [userSnap, teleSnap, adminSnap] = await Promise.all([
                 getDoc(doc(db, 'users', firebaseUser.uid)).catch(() => null),
                 getDoc(doc(db, 'telecaller_profiles', firebaseUser.uid)).catch(() => null),
                 getDoc(doc(db, 'admins', firebaseUser.uid)).catch(() => null)
               ]);
 
-              if (userSnap && userSnap.exists()) {
-                profileData = { ...(teleSnap && teleSnap.exists() ? teleSnap.data() : {}), ...userSnap.data() };
-              } else if (teleSnap && teleSnap.exists()) {
-                profileData = teleSnap.data();
-              } else if (adminSnap && adminSnap.exists()) {
-                profileData = adminSnap.data();
-              } else {
-                // 2. Concurrently check email lookups if UID doc wasn't found
-                const [uSnap, aSnap] = await Promise.all([
-                  getDocs(query(collection(db, 'users'), where('email', '==', firebaseUser.email))).catch(() => null),
-                  getDocs(query(collection(db, 'admins'), where('email', '==', firebaseUser.email))).catch(() => null)
+              const docData = {
+                ...(adminSnap?.exists() ? adminSnap.data() : {}),
+                ...(teleSnap?.exists() ? teleSnap.data() : {}),
+                ...(userSnap?.exists() ? userSnap.data() : {})
+              };
+
+              let emailData = {};
+              if (!docData.fullName || !docData.phone) {
+                const emailList = Array.from(new Set([firebaseUser.email, firebaseUser.email?.toLowerCase()].filter(Boolean)));
+                const [uSnap, aSnap, tSnap] = await Promise.all([
+                  getDocs(query(collection(db, 'users'), where('email', 'in', emailList))).catch(() => null),
+                  getDocs(query(collection(db, 'admins'), where('email', 'in', emailList))).catch(() => null),
+                  getDocs(query(collection(db, 'telecaller_profiles'), where('email', 'in', emailList))).catch(() => null)
                 ]);
-                if (uSnap && !uSnap.empty) {
-                  profileData = uSnap.docs[0].data();
-                } else if (aSnap && !aSnap.empty) {
-                  profileData = aSnap.docs[0].data();
-                }
+
+                emailData = {
+                  ...(aSnap && !aSnap.empty ? aSnap.docs[0].data() : {}),
+                  ...(tSnap && !tSnap.empty ? tSnap.docs[0].data() : {}),
+                  ...(uSnap && !uSnap.empty ? uSnap.docs[0].data() : {})
+                };
               }
+
+              profileData = { ...emailData, ...docData };
             } catch (readErr) {
               console.warn('Could not read user profile from Firestore:', readErr);
             }
@@ -110,34 +114,51 @@ export const AuthProvider = ({ children }) => {
 
             const normalizedRole = determineUserRole({
               customRole,
-              profileData: profileData || (existingStoredRole ? { role: existingStoredRole } : null),
+              profileData: Object.keys(profileData).length > 0 ? profileData : (existingStoredRole ? { role: existingStoredRole } : null),
               email: firebaseUser.email,
               portalHint: existingStoredRole || null
             });
 
-            // Self-heal: ensure admin record exists in 'users' collection
+            // Name resolution
+            const rawFullName = profileData?.fullName || profileData?.displayName || firebaseUser.displayName;
+            const resolvedFullName = (rawFullName && !rawFullName.toLowerCase().includes('super admin') && rawFullName !== 'Administrator')
+              ? rawFullName
+              : ((firebaseUser.email?.toLowerCase().includes('adinath')) ? 'Adinath Powar' : (rawFullName || firebaseUser.email?.split('@')[0] || 'User'));
+
+            // Self-heal: ensure admin record exists in 'users' and 'admins' collection
             if (normalizedRole === 'admin' || normalizedRole === 'super_admin' || normalizedRole === 'superadmin') {
               try {
-                await setDoc(doc(db, 'users', firebaseUser.uid), {
+                const adminPayload = {
                   uid: firebaseUser.uid,
                   email: firebaseUser.email,
-                  displayName: profileData?.fullName || profileData?.displayName || firebaseUser.displayName || firebaseUser.email.split('@')[0],
+                  fullName: resolvedFullName,
+                  displayName: resolvedFullName,
                   role: normalizedRole === 'superadmin' ? 'super_admin' : normalizedRole,
                   status: 'active',
                   updatedAt: new Date().toISOString()
-                }, { merge: true });
+                };
+                await Promise.all([
+                  setDoc(doc(db, 'users', firebaseUser.uid), adminPayload, { merge: true }),
+                  setDoc(doc(db, 'admins', firebaseUser.uid), adminPayload, { merge: true })
+                ]);
               } catch (syncErr) {
                 console.warn('Auto-heal users doc error:', syncErr);
               }
             }
 
             const profile = {
+              ...profileData,
               uid: firebaseUser.uid,
               email: firebaseUser.email,
-              displayName: profileData?.fullName || profileData?.displayName || firebaseUser.displayName || firebaseUser.email.split('@')[0],
+              fullName: resolvedFullName,
+              displayName: resolvedFullName,
               role: normalizedRole,
               employeeId: profileData?.employeeId || '',
-              phone: profileData?.phone || '',
+              phone: profileData?.phone || profileData?.mobileNumber || '',
+              whatsappNumber: profileData?.whatsappNumber || profileData?.phone || '',
+              address: profileData?.address || '',
+              designation: profileData?.designation || (normalizedRole.includes('admin') ? 'Principal & Executive Director' : 'Admission Counselor'),
+              profileImage: profileData?.profileImage || null,
               status: profileData?.status || 'active',
               isActive: profileData?.status !== 'inactive'
             };
@@ -191,19 +212,58 @@ export const AuthProvider = ({ children }) => {
 
   // Refresh profile
   const refreshUserProfile = async () => {
-    if (!currentUser?.uid) return;
+    const userToRefresh = currentUser || userProfile;
+    if (!userToRefresh?.uid && !userToRefresh?.email) return;
     if (isConfigured && db) {
       try {
-        const [userSnap, teleSnap] = await Promise.all([
-          getDoc(doc(db, 'users', currentUser.uid)).catch(() => null),
-          getDoc(doc(db, 'telecaller_profiles', currentUser.uid)).catch(() => null)
+        const uid = userToRefresh.uid;
+        const email = userToRefresh.email;
+
+        const [userSnap, teleSnap, adminSnap] = await Promise.all([
+          uid ? getDoc(doc(db, 'users', uid)).catch(() => null) : null,
+          uid ? getDoc(doc(db, 'telecaller_profiles', uid)).catch(() => null) : null,
+          uid ? getDoc(doc(db, 'admins', uid)).catch(() => null) : null
         ]);
-        const mergedData = {
-          ...(teleSnap && teleSnap.exists() ? teleSnap.data() : {}),
-          ...(userSnap && userSnap.exists() ? userSnap.data() : {})
+
+        const docData = {
+          ...(adminSnap?.exists() ? adminSnap.data() : {}),
+          ...(teleSnap?.exists() ? teleSnap.data() : {}),
+          ...(userSnap?.exists() ? userSnap.data() : {})
         };
+
+        let emailData = {};
+        if (email && (!docData.fullName || Object.keys(docData).length === 0)) {
+          const emailList = Array.from(new Set([email, email.toLowerCase()].filter(Boolean)));
+          const [uSnap, aSnap, tSnap] = await Promise.all([
+            getDocs(query(collection(db, 'users'), where('email', 'in', emailList))).catch(() => null),
+            getDocs(query(collection(db, 'admins'), where('email', 'in', emailList))).catch(() => null),
+            getDocs(query(collection(db, 'telecaller_profiles'), where('email', 'in', emailList))).catch(() => null)
+          ]);
+          emailData = {
+            ...(aSnap && !aSnap.empty ? aSnap.docs[0].data() : {}),
+            ...(tSnap && !tSnap.empty ? tSnap.docs[0].data() : {}),
+            ...(uSnap && !uSnap.empty ? uSnap.docs[0].data() : {})
+          };
+        }
+
+        const mergedData = { ...emailData, ...docData };
         if (Object.keys(mergedData).length > 0) {
-          const updated = { ...currentUser, ...mergedData };
+          const rawName = mergedData.fullName || mergedData.displayName || userToRefresh.displayName;
+          const resolvedName = (rawName && !rawName.toLowerCase().includes('super admin') && rawName !== 'Administrator')
+            ? rawName
+            : ((email?.toLowerCase().includes('adinath')) ? 'Adinath Powar' : (rawName || 'User'));
+
+          const updated = {
+            ...userToRefresh,
+            ...mergedData,
+            fullName: resolvedName,
+            displayName: resolvedName,
+            phone: mergedData.phone || mergedData.mobileNumber || userToRefresh.phone || '',
+            whatsappNumber: mergedData.whatsappNumber || mergedData.phone || userToRefresh.whatsappNumber || '',
+            address: mergedData.address || userToRefresh.address || '',
+            designation: mergedData.designation || userToRefresh.designation || '',
+            profileImage: mergedData.profileImage || userToRefresh.profileImage || null
+          };
           setCurrentUser(updated);
           setUserProfile(updated);
           localStorage.setItem('gurukul_active_user', JSON.stringify(updated));
@@ -222,17 +282,8 @@ export const AuthProvider = ({ children }) => {
     } else if (roleType === 'admin') {
       target = demoUsers.find(u => u.role === 'admin') || demoUsers[1];
     } else if (roleType === 'telecaller') {
-      target = demoUsers.find(u => u.role === 'telecaller') || {
-        uid: "tc-sachin-101",
-        email: "telecaller1@gurukulbhose.com",
-        displayName: "सचिन पाटील (कौन्सिलर)",
-        fullName: "Sachin Patil",
-        role: "telecaller",
-        employeeId: "TC-101",
-        phone: "9850123451",
-        status: "active",
-        isActive: true
-      };
+      target = demoUsers.find(u => u.role === 'telecaller') || null;
+      if (!target) return;
     }
     setCurrentUser(target);
     setUserProfile(target);

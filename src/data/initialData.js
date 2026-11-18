@@ -559,25 +559,31 @@ export const demoUsers = [
   {
     uid: "superadmin-001",
     email: "superadmin@gurukulbhose.com",
-    displayName: "Super Administrator",
+    fullName: "Adinath Powar",
+    displayName: "Adinath Powar",
     role: "superadmin",
     phone: "9850449800",
+    designation: "Principal & Executive Director",
     isActive: true
   },
   {
     uid: "admin-001",
     email: "admin@gurukulbhose.com",
-    displayName: "Principal / School Admin",
+    fullName: "Adinath Powar",
+    displayName: "Adinath Powar",
     role: "admin",
     phone: "9850449808",
+    designation: "School Administrator",
     isActive: true
   },
   {
     uid: "admin-adinath",
     email: "adinathp148@gmail.com",
-    displayName: "Adinath Patil (School Admin)",
+    fullName: "Adinath Powar",
+    displayName: "Adinath Powar",
     role: "admin",
     phone: "9850449800",
+    designation: "School Administrator",
     isActive: true
   }
 ];

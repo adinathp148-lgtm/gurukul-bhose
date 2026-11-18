@@ -21,6 +21,7 @@ import { uploadMediaFile, validateUploadFile } from '../../../services/storage/m
 
 export const CMSCoursesPage = () => {
   const { courses, saveCourse, deleteCourse, loading } = useCMS();
+  const safeCourses = Array.isArray(courses) ? courses : [];
 
   const [isEditing, setIsEditing] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -42,7 +43,7 @@ export const CMSCoursesPage = () => {
     shortDescription: '',
     fullDescription: '',
     status: 'published',
-    displayOrder: courses.length + 1,
+    displayOrder: safeCourses.length + 1,
     seoTitle: '',
     seoDescription: '',
     features: ['सैनिक पॅटर्न निवासी दिनचर्या', 'तज्ज्ञ शिक्षकांचे मार्गदर्शन', 'नियमित सराव व परीक्षा']
@@ -54,7 +55,7 @@ export const CMSCoursesPage = () => {
     const newCourse = {
       ...defaultCourse,
       courseId: `course_${Date.now()}`,
-      displayOrder: courses.length + 1
+      displayOrder: safeCourses.length + 1
     };
     setFormData(newCourse);
     setIsEditing(true);
@@ -189,7 +190,7 @@ export const CMSCoursesPage = () => {
     }
   };
 
-  const sortedCourses = [...courses].sort((a, b) => (Number(a.displayOrder) || 0) - (Number(b.displayOrder) || 0));
+  const sortedCourses = [...safeCourses].sort((a, b) => (Number(a.displayOrder) || 0) - (Number(b.displayOrder) || 0));
 
   const filteredCourses = sortedCourses.filter(c => {
     const matchesSearch = c.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||

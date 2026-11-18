@@ -40,7 +40,7 @@ export const Navbar = ({ showAdminLink = true }) => {
 
   const crmUrls = {
     admin: `${adminBaseUrl}/admin/leads`,
-    telecaller: `${telecallerBaseUrl}/leads`,
+    telecaller: `${telecallerBaseUrl}/login`,
     login: `${adminBaseUrl}/admin/login`
   };
 

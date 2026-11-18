@@ -2,7 +2,7 @@ import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 
-export const ProtectedRoute = ({ children, allowedRoles = [] }) => {
+export const ProtectedRoute = ({ children, allowedRoles = [], loginPath = null }) => {
   const { currentUser, role, isSuperAdmin, isAdmin, loading } = useAuth();
   const location = useLocation();
 
@@ -14,12 +14,17 @@ export const ProtectedRoute = ({ children, allowedRoles = [] }) => {
     );
   }
 
-  const isTelecallerRoute = window.location.pathname.startsWith('/telecaller') || location.pathname.startsWith('/telecaller');
+  const isTelecallerRoute = window.location.pathname.startsWith('/telecaller') || 
+                            location.pathname.startsWith('/telecaller') ||
+                            (typeof window !== 'undefined' && window.location.port === '3002');
   const isBasenameTelecaller = window.location.pathname.startsWith('/telecaller') && !location.pathname.startsWith('/telecaller');
   const isSuperAdminRoute = window.location.pathname.startsWith('/super-admin') || location.pathname.startsWith('/super-admin');
 
   // Not authenticated: redirect to appropriate login based on intended route
   if (!currentUser) {
+    if (loginPath) {
+      return <Navigate to={loginPath} state={{ from: location }} replace />;
+    }
     if (isSuperAdminRoute) {
       return <Navigate to="/super-admin/login" state={{ from: location }} replace />;
     }

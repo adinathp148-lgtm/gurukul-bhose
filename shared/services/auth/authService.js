@@ -138,39 +138,38 @@ export const loginWithEmail = async (email, password, portalHint = null) => {
       const tokenResult = await cred.user.getIdTokenResult();
       const customRole = tokenResult.claims.role;
 
-      // Also fetch Firestore user profile
-      let profile = null;
+      // Parallelized lookup across users, admins, and telecaller_profiles
+      let profile = {};
       try {
-        const userDoc = await getDoc(doc(db, 'users', cred.user.uid));
-        if (userDoc.exists()) {
-          profile = userDoc.data();
-        } else {
-          // Check legacy admins collection
-          const adminDoc = await getDoc(doc(db, 'admins', cred.user.uid));
-          if (adminDoc.exists()) {
-            profile = adminDoc.data();
-          } else {
-            // Check users collection by email query
-            const uq = query(collection(db, 'users'), where('email', '==', cred.user.email));
-            const uSnap = await getDocs(uq);
-            if (!uSnap.empty) {
-              profile = uSnap.docs[0].data();
-            } else {
-              // Check admins collection by email query
-              const aq = query(collection(db, 'admins'), where('email', '==', cred.user.email));
-              const aSnap = await getDocs(aq);
-              if (!aSnap.empty) {
-                profile = aSnap.docs[0].data();
-              } else {
-                // Check telecaller_profiles collection
-                const teleDoc = await getDoc(doc(db, 'telecaller_profiles', cred.user.uid));
-                if (teleDoc.exists()) {
-                  profile = teleDoc.data();
-                }
-              }
-            }
-          }
+        const [userDoc, adminDoc, teleDoc] = await Promise.all([
+          getDoc(doc(db, 'users', cred.user.uid)).catch(() => null),
+          getDoc(doc(db, 'admins', cred.user.uid)).catch(() => null),
+          getDoc(doc(db, 'telecaller_profiles', cred.user.uid)).catch(() => null)
+        ]);
+
+        const docData = {
+          ...(adminDoc?.exists() ? adminDoc.data() : {}),
+          ...(teleDoc?.exists() ? teleDoc.data() : {}),
+          ...(userDoc?.exists() ? userDoc.data() : {})
+        };
+
+        let emailData = {};
+        if (!docData.fullName || !docData.phone) {
+          const emailList = Array.from(new Set([cred.user.email, normalizedEmail].filter(Boolean)));
+          const [uSnap, aSnap, tSnap] = await Promise.all([
+            getDocs(query(collection(db, 'users'), where('email', 'in', emailList))).catch(() => null),
+            getDocs(query(collection(db, 'admins'), where('email', 'in', emailList))).catch(() => null),
+            getDocs(query(collection(db, 'telecaller_profiles'), where('email', 'in', emailList))).catch(() => null)
+          ]);
+
+          emailData = {
+            ...(aSnap && !aSnap.empty ? aSnap.docs[0].data() : {}),
+            ...(tSnap && !tSnap.empty ? tSnap.docs[0].data() : {}),
+            ...(uSnap && !uSnap.empty ? uSnap.docs[0].data() : {})
+          };
         }
+
+        profile = { ...emailData, ...docData };
       } catch (e) {
         console.warn('Could not read user profile from Firestore:', e);
       }
@@ -182,14 +181,40 @@ export const loginWithEmail = async (email, password, portalHint = null) => {
         portalHint
       });
 
-      // Self-heal: Ensure this user's document exists in 'users' collection with correct admin role
+      // Name resolution
+      const rawFullName = profile?.fullName || profile?.displayName || cred.user.displayName;
+      const resolvedFullName = (rawFullName && !rawFullName.toLowerCase().includes('super admin') && rawFullName !== 'Administrator')
+        ? rawFullName
+        : ((normalizedEmail.includes('adinath')) ? 'Adinath Powar' : (rawFullName || normalizedEmail.split('@')[0]));
+
+      // Update Firebase Auth user displayName if missing or mismatch
+      try {
+        if (resolvedFullName && (!cred.user.displayName || cred.user.displayName !== resolvedFullName)) {
+          const { updateProfile } = await import('firebase/auth');
+          await updateProfile(cred.user, { displayName: resolvedFullName }).catch(() => {});
+        }
+      } catch (e) {}
+
+      // Self-heal: Ensure this user's document exists in 'users' collection with correct admin role and resolved name
       if (role === 'admin' || role === 'super_admin' || role === 'superadmin') {
         try {
           const userDocRef = doc(db, 'users', cred.user.uid);
           await setDoc(userDocRef, {
             uid: cred.user.uid,
             email: cred.user.email,
-            displayName: profile?.fullName || profile?.displayName || cred.user.displayName || email.split('@')[0],
+            fullName: resolvedFullName,
+            displayName: resolvedFullName,
+            role: role === 'superadmin' ? 'super_admin' : role,
+            status: 'active',
+            updatedAt: new Date().toISOString()
+          }, { merge: true });
+
+          const adminDocRef = doc(db, 'admins', cred.user.uid);
+          await setDoc(adminDocRef, {
+            uid: cred.user.uid,
+            email: cred.user.email,
+            fullName: resolvedFullName,
+            displayName: resolvedFullName,
             role: role === 'superadmin' ? 'super_admin' : role,
             status: 'active',
             updatedAt: new Date().toISOString()
@@ -215,12 +240,18 @@ export const loginWithEmail = async (email, password, portalHint = null) => {
       }
 
       const user = {
+        ...profile,
         uid: cred.user.uid,
         email: cred.user.email,
-        displayName: profile?.fullName || profile?.displayName || cred.user.displayName || email.split('@')[0],
+        fullName: resolvedFullName,
+        displayName: resolvedFullName,
         role,
         employeeId: profile?.employeeId || '',
-        phone: profile?.phone || '',
+        phone: profile?.phone || profile?.mobileNumber || '',
+        whatsappNumber: profile?.whatsappNumber || profile?.phone || '',
+        address: profile?.address || '',
+        designation: profile?.designation || (role.includes('admin') ? 'Principal & Executive Director' : 'Admission Counselor'),
+        profileImage: profile?.profileImage || null,
         isActive: profile?.status ? profile.status === 'active' : true,
         claims: tokenResult.claims
       };
@@ -490,11 +521,17 @@ export const registerTelecaller = async (telecallerData) => {
       const userCredential = await createUserWithEmailAndPassword(auth, normalizedEmail, password);
       const uid = userCredential.user.uid;
 
+      try {
+        const { updateProfile } = await import('firebase/auth');
+        await updateProfile(userCredential.user, { displayName: fullName }).catch(() => {});
+      } catch (e) {}
+
       if (db) {
         // 1. Create User Document with pending status & pending_applicant role
         await setDoc(doc(db, 'users', uid), {
           uid,
           fullName,
+          displayName: fullName,
           email: normalizedEmail,
           phone: mobileNumber,
           role: 'pending_applicant',
@@ -509,8 +546,10 @@ export const registerTelecaller = async (telecallerData) => {
         // 2. Create Telecaller Profile Document
         await setDoc(doc(db, 'telecaller_profiles', uid), {
           userId: uid,
+          uid,
           employeeId: empId,
           fullName,
+          displayName: fullName,
           email: normalizedEmail,
           phone: mobileNumber,
           whatsappNumber: whatsappNumber || mobileNumber,
@@ -906,7 +945,7 @@ export const updateAdminProfile = async (userId, updates) => {
     phone: updates.phone,
     designation: updates.designation || 'Administrator',
     profileImage: updates.profileImage || null,
-    updatedAt: serverTimestamp ? serverTimestamp() : new Date().toISOString()
+    updatedAt: new Date().toISOString()
   };
 
   // Remove undefined fields
@@ -914,14 +953,25 @@ export const updateAdminProfile = async (userId, updates) => {
 
   if (isConfigured && db && userId) {
     try {
-      await updateDoc(doc(db, 'users', userId), allowedUpdates);
+      await setDoc(doc(db, 'users', userId), allowedUpdates, { merge: true });
       try {
-        await updateDoc(doc(db, 'admins', userId), allowedUpdates);
+        await setDoc(doc(db, 'admins', userId), allowedUpdates, { merge: true });
       } catch (e) {}
     } catch (err) {
       console.warn('Could not update Firestore user document directly, using fallback:', err.message);
     }
   }
+
+  // Update Firebase Auth user displayName if accessible
+  try {
+    if (auth?.currentUser && allowedUpdates.fullName) {
+      const { updateProfile } = await import('firebase/auth');
+      await updateProfile(auth.currentUser, { 
+        displayName: allowedUpdates.fullName,
+        photoURL: allowedUpdates.profileImage || null 
+      }).catch(() => {});
+    }
+  } catch (e) {}
 
   // Update localStorage session
   const activeUser = JSON.parse(localStorage.getItem('gurukul_active_user') || '{}');
@@ -1086,6 +1136,11 @@ export const registerAdminAccount = async ({ fullName, email, mobileNumber, desi
       const userCredential = await createUserWithEmailAndPassword(auth, normalizedEmail, password);
       uid = userCredential.user.uid;
 
+      try {
+        const { updateProfile } = await import('firebase/auth');
+        await updateProfile(userCredential.user, { displayName: fullName }).catch(() => {});
+      } catch (e) {}
+
       if (db) {
         // Save in users collection
         await setDoc(doc(db, 'users', uid), {
@@ -1106,6 +1161,7 @@ export const registerAdminAccount = async ({ fullName, email, mobileNumber, desi
         await setDoc(doc(db, 'admins', uid), {
           uid,
           fullName,
+          displayName: fullName,
           email: normalizedEmail,
           phone: mobileNumber || '',
           designation: designation || 'School Administrator',

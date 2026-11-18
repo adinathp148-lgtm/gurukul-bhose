@@ -324,11 +324,11 @@ export const CMSDashboardPage = () => {
           </Link>
         </div>
 
-        {activityLogs.length === 0 ? (
+        {(!activityLogs || activityLogs.length === 0) ? (
           <p className="text-xs text-slate-400 py-4 text-center">अद्याप कोणतीही ॲक्टिव्हिटी नोंद झालेली नाही.</p>
         ) : (
           <div className="space-y-3">
-            {activityLogs.slice(0, 5).map((log, idx) => (
+            {(activityLogs || []).slice(0, 5).map((log, idx) => (
               <div key={idx} className="flex items-start justify-between text-xs py-2 border-b border-slate-50 last:border-0">
                 <div className="flex items-start gap-2.5">
                   <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase shrink-0 ${

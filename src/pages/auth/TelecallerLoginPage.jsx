@@ -1,13 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { PhoneCall, Lock, Mail, ArrowRight, AlertCircle, CheckCircle2, UserCheck, UserPlus } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { Button } from '../../components/common/Button';
 import { Modal } from '../../components/common/Modal';
+import { getAdminPanelUrl, getPublicWebsiteUrl } from '../../services/navigation/navigationUrls';
 
 export const TelecallerLoginPage = () => {
-  const { login, requestPasswordReset } = useAuth();
+  const { currentUser, login, requestPasswordReset } = useAuth();
   const { isMarathi } = useLanguage();
   const navigate = useNavigate();
   const location = useLocation();
@@ -24,10 +25,19 @@ export const TelecallerLoginPage = () => {
   const [resetEmail, setResetEmail] = useState('');
   const [resetStatus, setResetStatus] = useState({ loading: false, message: null, error: null });
 
+  const adminBaseUrl = getAdminPanelUrl();
+  const publicWebsiteUrl = getPublicWebsiteUrl();
+
   const isBasenameTelecaller = window.location.pathname.startsWith('/telecaller') && !location.pathname.startsWith('/telecaller');
   const registerPath = isBasenameTelecaller ? '/register' : (location.pathname.startsWith('/telecaller') ? '/telecaller/register' : '/register');
 
-  const from = location.state?.from?.pathname || (isBasenameTelecaller ? '/dashboard' : '/telecaller/dashboard');
+  // Auto-redirect if already logged in as active telecaller
+  useEffect(() => {
+    if (currentUser && currentUser.role === 'telecaller' && currentUser.status === 'active') {
+      const dest = isBasenameTelecaller ? '/dashboard' : '/telecaller/dashboard';
+      navigate(dest, { replace: true });
+    }
+  }, [currentUser, isBasenameTelecaller, navigate]);
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -43,8 +53,9 @@ export const TelecallerLoginPage = () => {
           navigate('/admin/dashboard', { replace: true });
         }
       } else {
-        const dest = isBasenameTelecaller ? '/dashboard' : '/telecaller/dashboard';
-        navigate(dest, { replace: true });
+        const targetDest = location.state?.from?.pathname || (isBasenameTelecaller ? '/dashboard' : '/telecaller/dashboard');
+        const safeDest = targetDest.includes('/login') ? (isBasenameTelecaller ? '/dashboard' : '/telecaller/dashboard') : targetDest;
+        navigate(safeDest, { replace: true });
       }
     } else {
       setError(res.error || 'लॉगिन अयशस्वी झाले. कृपया ईमेल आणि पासवर्ड तपासा.');
@@ -182,37 +193,6 @@ export const TelecallerLoginPage = () => {
           </Button>
         </form>
 
-        {/* Quick Demo Counselor Login */}
-        <div className="mt-4 p-3 bg-slate-50 border border-slate-200/80 rounded-2xl text-xs space-y-2">
-          <p className="text-[10px] font-black uppercase tracking-wider text-slate-500">
-            {isMarathi ? 'डेमो समुपदेशक लॉगिन (Quick Login)' : 'Quick Demo Counselor Login'}
-          </p>
-          <div className="grid grid-cols-2 gap-2">
-            <button
-              type="button"
-              onClick={() => {
-                setEmail('telecaller1@gurukulbhose.com');
-                setPassword('Gurukul#2026');
-              }}
-              className="p-2 text-left rounded-xl border border-emerald-200 bg-emerald-50/70 hover:bg-emerald-100 transition-colors"
-            >
-              <span className="font-bold text-emerald-950 block text-[11px] truncate">सचिन पाटील</span>
-              <span className="text-[10px] text-emerald-700 block font-mono">TC-101</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setEmail('telecaller2@gurukulbhose.com');
-                setPassword('Gurukul#2026');
-              }}
-              className="p-2 text-left rounded-xl border border-teal-200 bg-teal-50/70 hover:bg-teal-100 transition-colors"
-            >
-              <span className="font-bold text-teal-950 block text-[11px] truncate">पूजा शिंदे</span>
-              <span className="text-[10px] text-teal-700 block font-mono">TC-102</span>
-            </button>
-          </div>
-        </div>
-
         {/* New Telecaller Registration Callout */}
         <div className="mt-5 p-3.5 rounded-2xl bg-emerald-50/70 border border-emerald-200/80 flex items-center justify-between gap-3 text-xs">
           <div>
@@ -233,12 +213,12 @@ export const TelecallerLoginPage = () => {
         </div>
 
         <div className="mt-6 pt-5 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
-          <Link to="/admin/login" className="hover:text-emerald-600 font-semibold">
+          <a href={`${adminBaseUrl}/admin/login`} className="hover:text-emerald-600 font-semibold transition-colors">
             {isMarathi ? '← ॲडमिन पोर्टल' : '← Admin Portal'}
-          </Link>
-          <Link to="/" className="hover:text-emerald-600 font-semibold">
+          </a>
+          <a href={publicWebsiteUrl} className="hover:text-emerald-600 font-semibold transition-colors">
             {isMarathi ? 'मुख्य वेबसाईट' : 'Main Website'}
-          </Link>
+          </a>
         </div>
       </div>
 

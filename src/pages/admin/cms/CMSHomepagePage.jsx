@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { uploadMediaFile } from '../../../services/storage/mediaUploadService';
 import { Button } from '../../../components/common/Button';
+import { heroSlides as initialSlides } from '../../../data/initialData';
 
 // Helper to normalize slide properties across different schema versions
 const normalizeSlide = (slide, index) => ({
@@ -60,7 +61,7 @@ export const CMSHomepagePage = () => {
   const [hasInitialized, setHasInitialized] = useState(false);
 
   // Local form states
-  const [slides, setSlides] = useState(() => (homepageData?.heroSlides || []).map(normalizeSlide));
+  const [slides, setSlides] = useState(() => (homepageData?.heroSlides || initialSlides || []).map(normalizeSlide));
   const [welcome, setWelcome] = useState(() => homepageData?.welcomeSection || {
     heading: '',
     introText: '',

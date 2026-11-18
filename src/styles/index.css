@@ -116,6 +116,16 @@
   .custom-scrollbar::-webkit-scrollbar-thumb:hover {
     background: rgba(255, 255, 255, 0.25);
   }
+
+  /* Prevent browser focus-visible outline showing bright white border on sidebar items */
+  aside a:focus,
+  aside a:focus-visible,
+  aside button:focus,
+  aside button:focus-visible,
+  aside div:focus,
+  aside div:focus-visible {
+    outline: none !important;
+  }
 }
 
 @layer utilities {

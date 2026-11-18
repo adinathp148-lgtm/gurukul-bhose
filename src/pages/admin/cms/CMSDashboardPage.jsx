@@ -24,7 +24,6 @@ import {
   ArrowRight
 } from 'lucide-react';
 import { Badge } from '../../../components/common/Badge';
-import { useLanguage } from '../../../contexts/LanguageContext';
 
 export const CMSDashboardPage = () => {
   const { 
@@ -39,111 +38,110 @@ export const CMSDashboardPage = () => {
     loading 
   } = useCMS();
   const { userProfile, role } = useAuth();
-  const { isMarathi } = useLanguage();
 
   const cmsModules = [
     {
-      title: isMarathi ? 'मुख्यपृष्ठ व्यवस्थापन (Homepage)' : 'Homepage Manager',
-      desc: isMarathi ? 'हिरो बॅनर्स, स्वागत संदेश, वैशिष्ट्ये व प्रवेश CTA' : 'Hero sliders, welcome banner, highlights, and CTA buttons',
+      title: 'मुख्यपृष्ठ व्यवस्थापन (Homepage)',
+      desc: 'हिरो बॅनर्स, स्वागत संदेश, वैशिष्ट्ये व प्रवेश CTA',
       path: '/admin/cms/homepage',
       icon: Home,
-      count: isMarathi ? `${homepageData?.heroSlides?.length || 3} बॅनर्स` : `${homepageData?.heroSlides?.length || 3} Banners`,
+      count: `${homepageData?.heroSlides?.length || 3} बॅनर्स`,
       color: 'bg-orange-50 text-orange-600 border-orange-200'
     },
     {
-      title: isMarathi ? 'पेज मॅनेजमेंट (Pages CMS)' : 'Pages CMS Manager',
-      desc: isMarathi ? 'सर्व मुख्य पेजेसचे कंटेंट ब्लॉक्स व मजकूर संपादन' : 'Edit content blocks, copy, and sections for all public pages',
+      title: 'पेज मॅनेजमेंट (Pages CMS)',
+      desc: 'सर्व मुख्य पेजेसचे कंटेंट ब्लॉक्स व मजकूर संपादन',
       path: '/admin/cms/pages',
       icon: Layers,
-      count: isMarathi ? `${pages?.length || 8} पेजेस` : `${pages?.length || 8} Pages`,
+      count: `${pages?.length || 8} पेजेस`,
       color: 'bg-blue-50 text-blue-600 border-blue-200'
     },
     {
-      title: isMarathi ? 'आमच्याबद्दल (About Us)' : 'About Us Page',
-      desc: isMarathi ? 'संस्थेचा इतिहास, ध्येय, नेतृत्व, यश व पायाभूत सुविधा' : 'History, vision, leadership, awards, and infrastructure',
+      title: 'आमच्याबद्दल (About Us)',
+      desc: 'संस्थेचा इतिहास, ध्येय, नेतृत्व, यश व पायाभूत सुविधा',
       path: '/admin/cms/about',
       icon: Info,
-      count: isMarathi ? 'सक्रिय' : 'Active',
+      count: 'सक्रिय',
       color: 'bg-indigo-50 text-indigo-600 border-indigo-200'
     },
     {
-      title: isMarathi ? 'शैक्षणिक विभाग (Programs)' : 'Academic Programs',
-      desc: isMarathi ? 'विद्यामंदिर, जुनिअर कॉलेज व अकॅडमीज माहिती' : 'Vidyamandir school, Junior College and specialty academies',
+      title: 'शैक्षणिक विभाग (Programs)',
+      desc: 'विद्यामंदिर, जुनिअर कॉलेज व अकॅडमीज माहिती',
       path: '/admin/cms/programs',
       icon: GraduationCap,
-      count: isMarathi ? '५ विभाग' : '5 Divisions',
+      count: '५ विभाग',
       color: 'bg-amber-50 text-amber-600 border-amber-200'
     },
     {
-      title: isMarathi ? 'कोर्सेस मॅनेजमेंट (Courses)' : 'Courses & Syllabus',
-      desc: isMarathi ? 'अभ्यासक्रम तपशील, पात्रता, कालावधी व प्रवेश' : 'Curriculum details, eligibility, duration and intake capacity',
+      title: 'कोर्सेस मॅनेजमेंट (Courses)',
+      desc: 'अभ्यासक्रम तपशील, पात्रता, कालावधी व प्रवेश',
       path: '/admin/cms/courses',
       icon: BookOpen,
-      count: isMarathi ? `${courses?.length || 0} कोर्सेस` : `${courses?.length || 0} Courses`,
+      count: `${courses?.length || 0} कोर्सेस`,
       color: 'bg-emerald-50 text-emerald-600 border-emerald-200'
     },
     {
-      title: isMarathi ? 'फोटो गॅलरी (Gallery)' : 'Photo Gallery',
-      desc: isMarathi ? 'कॅम्पस, स्नेहसंमेलन व उपक्रम छायाचित्रे अपलोड' : 'Upload campus, ground drills, ceremonies, and event pictures',
+      title: 'फोटो गॅलरी (Gallery)',
+      desc: 'कॅम्पस, स्नेहसंमेलन व उपक्रम छायाचित्रे अपलोड',
       path: '/admin/cms/gallery',
       icon: ImageIcon,
-      count: isMarathi ? `${gallery?.length || 0} फोटो` : `${gallery?.length || 0} Photos`,
+      count: `${gallery?.length || 0} फोटो`,
       color: 'bg-rose-50 text-rose-600 border-rose-200'
     },
     {
-      title: isMarathi ? 'व्हिडिओ दालन (Videos)' : 'Video Gallery',
-      desc: isMarathi ? 'YouTube व्हिडिओ, टूअर्स व सांस्कृतिक कार्यक्रम' : 'YouTube campus tours, physical ground drills and cultural videos',
+      title: 'व्हिडिओ दालन (Videos)',
+      desc: 'YouTube व्हिडिओ, टूअर्स व सांस्कृतिक कार्यक्रम',
       path: '/admin/cms/videos',
       icon: Video,
-      count: isMarathi ? `${videos?.length || 0} व्हिडिओ` : `${videos?.length || 0} Videos`,
+      count: `${videos?.length || 0} व्हिडिओ`,
       color: 'bg-red-50 text-red-600 border-red-200'
     },
     {
-      title: isMarathi ? 'सूचना पत्रक (Notices & Bulletins)' : 'Notice Board Circulars',
-      desc: isMarathi ? 'महत्त्वाच्या सूचना, प्रवेश नोटिसा व PDF सर्क्युलर्स' : 'Publish official notices, admissions alerts and PDF downloads',
+      title: 'सूचना पत्रक (Notices & Bulletins)',
+      desc: 'महत्त्वाच्या सूचना, प्रवेश नोटिसा व PDF सर्क्युलर्स',
       path: '/admin/cms/notices',
       icon: Bell,
-      count: isMarathi ? `${notices?.length || 0} सूचना` : `${notices?.length || 0} Circulars`,
+      count: `${notices?.length || 0} सूचना`,
       color: 'bg-yellow-50 text-yellow-700 border-yellow-200'
     },
     {
-      title: isMarathi ? 'कॅम्पस सुविधा (Facilities)' : 'Campus Facilities',
-      desc: isMarathi ? 'लॅब, ग्राउंड, हॉस्टेल, मेस व डिफेन्स सुविधा' : 'Computer labs, obstacle grounds, hostels, mess and shooting range',
+      title: 'कॅम्पस सुविधा (Facilities)',
+      desc: 'लॅब, ग्राउंड, हॉस्टेल, मेस व डिफेन्स सुविधा',
       path: '/admin/cms/facilities',
       icon: Building2,
-      count: isMarathi ? `${facilities?.length || 0} सुविधा` : `${facilities?.length || 0} Facilities`,
+      count: `${facilities?.length || 0} सुविधा`,
       color: 'bg-teal-50 text-teal-600 border-teal-200'
     },
     {
-      title: isMarathi ? 'कॅम्पस संपर्क (Contact Info)' : 'Contact & Address Info',
-      desc: isMarathi ? 'पत्ता, फोन, WhatsApp, नकाशे व कामकाजाची वेळ' : 'Campus address, phone lines, WhatsApp numbers, map directions',
+      title: 'कॅम्पस संपर्क (Contact Info)',
+      desc: 'पत्ता, फोन, WhatsApp, नकाशे व कामकाजाची वेळ',
       path: '/admin/cms/contact',
       icon: Phone,
-      count: isMarathi ? 'अद्ययावत' : 'Up to date',
+      count: 'अद्ययावत',
       color: 'bg-purple-50 text-purple-600 border-purple-200'
     },
     {
-      title: isMarathi ? 'SEO व मेटा टॅग्ज (SEO Manager)' : 'SEO Metadata Manager',
-      desc: isMarathi ? 'गुगल सर्च टायटल्स, मेटा डिस्क्रिप्शन्स व साइटमॅप' : 'Google search page titles, meta descriptions, canonical URLs',
+      title: 'SEO व मेटा टॅग्ज (SEO Manager)',
+      desc: 'गुगल सर्च टायटल्स, मेटा डिस्क्रिप्शन्स व साइटमॅप',
       path: '/admin/cms/seo',
       icon: Search,
-      count: isMarathi ? 'सक्रिय' : 'Active',
+      count: 'सक्रिय',
       color: 'bg-cyan-50 text-cyan-600 border-cyan-200'
     },
     {
-      title: isMarathi ? 'वेबसाईट सेटिंग्स (Settings)' : 'Website Settings',
-      desc: isMarathi ? 'लोगो, नोटीस बार, मेंटेनन्स मोड व कॉपीराइट' : 'Logos, top ticker announcement, maintenance mode, footer links',
+      title: 'वेबसाईट सेटिंग्स (Settings)',
+      desc: 'लोगो, नोटीस बार, मेंटेनन्स मोड व कॉपीराइट',
       path: '/admin/cms/settings',
       icon: Settings,
-      count: isMarathi ? 'सिस्टम' : 'System',
+      count: 'सिस्टम',
       color: 'bg-slate-100 text-slate-700 border-slate-300'
     },
     {
-      title: isMarathi ? 'कंटेंट ॲक्टिव्हिटी लॉग (Activity Logs)' : 'Audit Activity Logs',
-      desc: isMarathi ? 'बदल, अपडेट्स व डिलीशनचा संपूर्ण ऑडिट ट्रेल' : 'Full immutable audit trail of content edits and updates',
+      title: 'कंटेंट ॲक्टिव्हिटी लॉग (Activity Logs)',
+      desc: 'बदल, अपडेट्स व डिलीशनचा संपूर्ण ऑडिट ट्रेल',
       path: '/admin/cms/activity-logs',
       icon: History,
-      count: isMarathi ? `${activityLogs?.length || 0} नोंदी` : `${activityLogs?.length || 0} Logs`,
+      count: `${activityLogs?.length || 0} नोंदी`,
       color: 'bg-slate-50 text-slate-800 border-slate-200'
     }
   ];
@@ -158,17 +156,13 @@ export const CMSDashboardPage = () => {
               <span className="px-3 py-1 rounded-full bg-gurukul-saffron-500/20 text-gurukul-saffron-300 text-xs font-bold border border-gurukul-saffron-500/30">
                 Phase 4 • Dynamic Website CMS
               </span>
-              <span className="text-xs text-slate-400">
-                {isMarathi ? 'लॉगिन' : 'Signed in as'}: {userProfile?.name || 'Administrator'} ({role})
-              </span>
+              <span className="text-xs text-slate-400">लॉगिन: {userProfile?.name || 'Administrator'} ({role})</span>
             </div>
             <h1 className="text-2xl sm:text-3xl font-black">
-              {isMarathi ? 'वेबसाईट कंटेंट मॅनेजमेंट सिस्टीम (CMS Hub)' : 'Website Content Management System (CMS Hub)'}
+              वेबसाईट कंटेंट मॅनेजमेंट सिस्टीम (CMS Hub)
             </h1>
             <p className="text-sm text-slate-300 mt-1 max-w-2xl">
-              {isMarathi 
-                ? 'गुरुकुल भोसे अधिकृत वेबसाईटचा मजकूर, बॅनर्स, फोटो, कोर्सेस, व्हिडिओ आणि सूचना थेट येथून नियंत्रित करा.' 
-                : 'Directly manage website text, hero banners, photo galleries, academic courses, videos and circulars.'}
+              गुरुकुल भोसे अधिकृत वेबसाईटचा मजकूर, बॅनर्स, फोटो, कोर्सेस, व्हिडिओ आणि सूचना थेट येथून नियंत्रित करा.
             </p>
           </div>
 
@@ -180,7 +174,7 @@ export const CMSDashboardPage = () => {
               className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold border border-white/20 transition-all"
             >
               <ExternalLink className="w-4 h-4" />
-              <span>{isMarathi ? 'लाईव्ह वेबसाईट पहा' : 'View Live Website'}</span>
+              <span>लाईव्ह वेबसाईट पहा</span>
             </a>
           </div>
         </div>
@@ -189,24 +183,24 @@ export const CMSDashboardPage = () => {
       {/* Metrics Row */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-          <span className="text-xs text-slate-500 font-semibold block">{isMarathi ? 'एकूण कोर्सेस' : 'Total Courses'}</span>
+          <span className="text-xs text-slate-500 font-semibold block">एकूण कोर्सेस</span>
           <span className="text-2xl font-black text-gurukul-navy-900 mt-1 block">{courses?.length || 0}</span>
-          <span className="text-[11px] text-emerald-600 font-semibold">{isMarathi ? 'सर्व प्रकाशित' : 'Published'}</span>
+          <span className="text-[11px] text-emerald-600 font-semibold">सर्व प्रकाशित</span>
         </div>
         <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-          <span className="text-xs text-slate-500 font-semibold block">{isMarathi ? 'गॅलरी छायाचित्रे' : 'Gallery Photos'}</span>
+          <span className="text-xs text-slate-500 font-semibold block">गॅलरी छायाचित्रे</span>
           <span className="text-2xl font-black text-gurukul-navy-900 mt-1 block">{gallery?.length || 0}</span>
-          <span className="text-[11px] text-blue-600 font-semibold">{isMarathi ? 'अद्ययावत श्रेणी' : 'Updated'}</span>
+          <span className="text-[11px] text-blue-600 font-semibold">अद्ययावत श्रेणी</span>
         </div>
         <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-          <span className="text-xs text-slate-500 font-semibold block">{isMarathi ? 'सक्रिय सूचना' : 'Active Notices'}</span>
+          <span className="text-xs text-slate-500 font-semibold block">सक्रिय सूचना</span>
           <span className="text-2xl font-black text-gurukul-navy-900 mt-1 block">{notices?.length || 0}</span>
-          <span className="text-[11px] text-amber-600 font-semibold">{isMarathi ? 'महत्त्वाच्या सूचना समाविष्ट' : 'Important Alerts'}</span>
+          <span className="text-[11px] text-amber-600 font-semibold">महत्त्वाच्या सूचना समाविष्ट</span>
         </div>
         <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-          <span className="text-xs text-slate-500 font-semibold block">{isMarathi ? 'कंटेंट ऑडिट नोंदी' : 'Audit Logs'}</span>
+          <span className="text-xs text-slate-500 font-semibold block">कंटेंट ऑडिट नोंदी</span>
           <span className="text-2xl font-black text-gurukul-navy-900 mt-1 block">{activityLogs?.length || 0}</span>
-          <span className="text-[11px] text-purple-600 font-semibold">{isMarathi ? 'सर्व बदल सुरक्षित' : 'All Changes Tracked'}</span>
+          <span className="text-[11px] text-purple-600 font-semibold">सर्व बदल सुरक्षित</span>
         </div>
       </div>
 
@@ -217,13 +211,11 @@ export const CMSDashboardPage = () => {
             <div className="flex items-center gap-2">
               <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
               <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                <span>{isMarathi ? 'वेबसाईट व Vercel रिअल-टाईम सिंक' : 'Live Website & Vercel Sync'}</span>
+                <span>वेबसाईट व Vercel रिअल-टाईम सिंक (Live Website & Vercel Sync)</span>
               </h3>
             </div>
             <p className="text-xs text-slate-300 max-w-3xl leading-relaxed">
-              {isMarathi 
-                ? 'ॲडमिन पॅनेलमधून फोटो, व्हिडिओ आणि सूचना अपडेट केल्यावर त्या लगेच मुख्य वेबसाईटवर (/gallery, /videos, /notices) अपडेट होतात. हे बदल Vercel वर कायमस्वरूपी पुश करण्यासाठी खालील १-कमांड सिंक वापरा.'
-                : 'Updates made by Admin for photos, videos, and notices immediately reflect on the live website. To permanently keep them on Vercel deployments, run the 1-command sync below.'}
+              ॲडमिन पॅनेलमधून फोटो, व्हिडिओ आणि सूचना अपडेट केल्यावर त्या लगेच मुख्य वेबसाईटवर (<span className="text-gurukul-saffron-300 font-mono">/gallery</span>, <span className="text-gurukul-saffron-300 font-mono">/videos</span>, <span className="text-gurukul-saffron-300 font-mono">/notices</span>) अपडेट होतात. हे बदल Vercel वर कायमस्वरूपी पुश करण्यासाठी खालील १-कमांड सिंक वापरा.
             </p>
           </div>
 
@@ -247,7 +239,7 @@ export const CMSDashboardPage = () => {
               className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-bold text-slate-200 border border-slate-700 transition-colors"
               title="सध्याचा CMS डेटा JSON फॉरमॅटमध्ये डाऊनलोड करा"
             >
-              <span>{isMarathi ? 'डेटा बॅकअप (JSON)' : 'Backup (JSON)'}</span>
+              <span>डेटा बॅकअप (JSON)</span>
             </button>
             <a
               href="/"
@@ -256,22 +248,22 @@ export const CMSDashboardPage = () => {
               className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-gurukul-saffron-500 hover:bg-gurukul-saffron-600 text-xs font-bold text-white shadow-md transition-all"
             >
               <ExternalLink className="w-3.5 h-3.5" />
-              <span>{isMarathi ? 'लाईव्ह वेबसाईट पहा' : 'View Live Site'}</span>
+              <span>लाईव्ह वेबसाईट पहा</span>
             </a>
           </div>
         </div>
 
         <div className="mt-4 pt-4 border-t border-slate-800/80 grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
           <div className="bg-slate-800/50 p-3 rounded-xl border border-slate-700/50">
-            <span className="text-slate-400 font-bold block mb-0.5">{isMarathi ? '१. फोटो गॅलरी (Photos)' : '1. Photo Gallery'}</span>
-            <span className="text-emerald-400 font-medium">{isMarathi ? 'बदल आपोआप रिअल-टाईम दिसेल' : 'Auto Real-time update'}</span>
+            <span className="text-slate-400 font-bold block mb-0.5">१. फोटो गॅलरी (Photos)</span>
+            <span className="text-emerald-400 font-medium">बदल आपोआप रिअल-टाईम दिसेल</span>
           </div>
           <div className="bg-slate-800/50 p-3 rounded-xl border border-slate-700/50">
-            <span className="text-slate-400 font-bold block mb-0.5">{isMarathi ? '२. व्हिडिओ दालन (Videos)' : '2. Video Gallery'}</span>
-            <span className="text-emerald-400 font-medium">{isMarathi ? 'YouTube सुरक्षित चालू होईल' : 'Embed safe player'}</span>
+            <span className="text-slate-400 font-bold block mb-0.5">२. व्हिडिओ दालन (Videos)</span>
+            <span className="text-emerald-400 font-medium">YouTube एम्बेड सुरक्षित चालू होईल</span>
           </div>
           <div className="bg-slate-800/50 p-3 rounded-xl border border-slate-700/50">
-            <span className="text-slate-400 font-bold block mb-0.5">{isMarathi ? '३. Vercel १-कमांड डिप्लॉय' : '3. Vercel Deploy'}</span>
+            <span className="text-slate-400 font-bold block mb-0.5">३. Vercel १-कमांड डिप्लॉय</span>
             <span className="text-gurukul-saffron-300 font-mono text-[11px]">npm run deploy</span>
           </div>
         </div>
@@ -281,7 +273,7 @@ export const CMSDashboardPage = () => {
       <div>
         <h2 className="text-base font-bold text-slate-800 mb-4 flex items-center gap-2">
           <FileEdit className="w-4 h-4 text-gurukul-saffron-500" />
-          <span>{isMarathi ? 'वेबसाईट संपादन मॉड्यूल्स (All CMS Modules)' : 'All Website CMS Modules'}</span>
+          <span>वेबसाईट संपादन मॉड्यूल्स (All CMS Modules)</span>
         </h2>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -332,11 +324,11 @@ export const CMSDashboardPage = () => {
           </Link>
         </div>
 
-        {activityLogs.length === 0 ? (
+        {(!activityLogs || activityLogs.length === 0) ? (
           <p className="text-xs text-slate-400 py-4 text-center">अद्याप कोणतीही ॲक्टिव्हिटी नोंद झालेली नाही.</p>
         ) : (
           <div className="space-y-3">
-            {activityLogs.slice(0, 5).map((log, idx) => (
+            {(activityLogs || []).slice(0, 5).map((log, idx) => (
               <div key={idx} className="flex items-start justify-between text-xs py-2 border-b border-slate-50 last:border-0">
                 <div className="flex items-start gap-2.5">
                   <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase shrink-0 ${

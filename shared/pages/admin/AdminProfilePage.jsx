@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage } from '../../contexts/LanguageContext';
+import { db, doc, getDoc, collection, query, where, getDocs, setDoc, isConfigured } from '../../firebase/config';
 import {
   User,
   Mail,
@@ -15,7 +16,8 @@ import {
   Save,
   Camera,
   X,
-  BadgeCheck
+  BadgeCheck,
+  RefreshCw
 } from 'lucide-react';
 import { Button } from '../../components/common/Button';
 import { Modal } from '../../components/common/Modal';
@@ -24,17 +26,30 @@ import { updateAdminProfile, changeUserPassword } from '../../services/auth/auth
 
 export const AdminProfilePage = () => {
   const { isMarathi } = useLanguage();
-  const { currentUser, userProfile, role, isSuperAdmin, logout } = useAuth();
+  const { currentUser, userProfile, role, isSuperAdmin, logout, refreshUserProfile } = useAuth();
   const navigate = useNavigate();
 
+  const getInitialName = () => {
+    const raw = userProfile?.fullName || userProfile?.displayName || currentUser?.fullName || currentUser?.displayName;
+    if (raw && !raw.toLowerCase().includes('super admin') && raw !== 'Administrator') {
+      return raw;
+    }
+    const email = userProfile?.email || currentUser?.email || '';
+    if (email.toLowerCase().includes('adinath')) {
+      return 'Adinath Powar';
+    }
+    return raw || 'Adinath Powar';
+  };
+
   const [formData, setFormData] = useState({
-    fullName: userProfile?.displayName || userProfile?.fullName || 'Administrator',
+    fullName: getInitialName(),
     email: currentUser?.email || userProfile?.email || 'admin@gurukulbhose.com',
-    phone: userProfile?.phone || '+91 9850449800',
-    designation: userProfile?.designation || (isSuperAdmin ? 'Principal & Executive Director' : 'Admission Department Head'),
+    phone: userProfile?.phone || userProfile?.mobileNumber || currentUser?.phone || '+91 9850449800',
+    designation: userProfile?.designation || (isSuperAdmin ? 'Principal & Executive Director' : 'School Administrator'),
     profileImage: userProfile?.profileImage || null
   });
 
+  const [fetchingLive, setFetchingLive] = useState(false);
   const [saving, setSaving] = useState(false);
   const [passwordModalOpen, setPasswordModalOpen] = useState(false);
   const [newPassword, setNewPassword] = useState('');
@@ -42,6 +57,94 @@ export const AdminProfilePage = () => {
   const [passwordLoading, setPasswordLoading] = useState(false);
   const [feedbackMsg, setFeedbackMsg] = useState(null);
   const [errorMsg, setErrorMsg] = useState(null);
+
+  // Live Firestore Data Connection on mount and when user session changes
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadLiveProfileFromFirestore = async () => {
+      const active = userProfile || currentUser;
+      const email = active?.email;
+      const uid = active?.uid;
+
+      // Initial populate from Auth Context
+      let currentResolvedName = active?.fullName || active?.displayName;
+      if (!currentResolvedName || currentResolvedName.toLowerCase().includes('super admin') || currentResolvedName === 'Administrator') {
+        if (email?.toLowerCase().includes('adinath')) {
+          currentResolvedName = 'Adinath Powar';
+        }
+      }
+
+      if (isMounted) {
+        setFormData(prev => ({
+          ...prev,
+          fullName: currentResolvedName || prev.fullName || 'Adinath Powar',
+          email: email || prev.email,
+          phone: active?.phone || active?.mobileNumber || prev.phone,
+          designation: active?.designation || prev.designation,
+          profileImage: active?.profileImage || prev.profileImage
+        }));
+      }
+
+      // Fetch live record from Cloud Firestore
+      if (isConfigured && db && (uid || email)) {
+        setFetchingLive(true);
+        try {
+          const [userSnap, adminSnap] = await Promise.all([
+            uid ? getDoc(doc(db, 'users', uid)).catch(() => null) : null,
+            uid ? getDoc(doc(db, 'admins', uid)).catch(() => null) : null
+          ]);
+
+          let firestoreData = {
+            ...(adminSnap?.exists() ? adminSnap.data() : {}),
+            ...(userSnap?.exists() ? userSnap.data() : {})
+          };
+
+          // If UID doc was not found or has missing name/phone, query by email
+          if (email && (!firestoreData.fullName || !firestoreData.phone)) {
+            const emailList = Array.from(new Set([email, email.toLowerCase()].filter(Boolean)));
+            const [uSnap, aSnap] = await Promise.all([
+              getDocs(query(collection(db, 'users'), where('email', 'in', emailList))).catch(() => null),
+              getDocs(query(collection(db, 'admins'), where('email', 'in', emailList))).catch(() => null)
+            ]);
+
+            firestoreData = {
+              ...(aSnap && !aSnap.empty ? aSnap.docs[0].data() : {}),
+              ...(uSnap && !uSnap.empty ? uSnap.docs[0].data() : {}),
+              ...firestoreData
+            };
+          }
+
+          if (isMounted && Object.keys(firestoreData).length > 0) {
+            let firestoreName = firestoreData.fullName || firestoreData.displayName;
+            if (!firestoreName || firestoreName.toLowerCase().includes('super admin') || firestoreName === 'Administrator') {
+              if (email?.toLowerCase().includes('adinath')) {
+                firestoreName = 'Adinath Powar';
+              }
+            }
+
+            setFormData(prev => ({
+              fullName: firestoreName || prev.fullName || 'Adinath Powar',
+              email: firestoreData.email || email || prev.email,
+              phone: firestoreData.phone || firestoreData.mobileNumber || prev.phone,
+              designation: firestoreData.designation || prev.designation || 'Principal & Executive Director',
+              profileImage: firestoreData.profileImage || prev.profileImage
+            }));
+          }
+        } catch (fetchErr) {
+          console.warn('Live Firestore profile fetch error:', fetchErr);
+        } finally {
+          if (isMounted) setFetchingLive(false);
+        }
+      }
+    };
+
+    loadLiveProfileFromFirestore();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [currentUser, userProfile]);
 
   // Avatar presets for quick selection
   const avatarPresets = [
@@ -63,6 +166,30 @@ export const AdminProfilePage = () => {
       designation: formData.designation,
       profileImage: formData.profileImage
     });
+
+    // Also write directly to Firestore users and admins docs
+    if (isConfigured && db && uid) {
+      try {
+        const updatePayload = {
+          fullName: formData.fullName,
+          displayName: formData.fullName,
+          phone: formData.phone,
+          designation: formData.designation,
+          profileImage: formData.profileImage,
+          updatedAt: new Date().toISOString()
+        };
+        await Promise.all([
+          setDoc(doc(db, 'users', uid), updatePayload, { merge: true }),
+          setDoc(doc(db, 'admins', uid), updatePayload, { merge: true })
+        ]);
+      } catch (err) {
+        console.warn('Direct Firestore setDoc in AdminProfilePage:', err);
+      }
+    }
+
+    if (refreshUserProfile) {
+      await refreshUserProfile();
+    }
 
     setSaving(false);
     if (res.success) {

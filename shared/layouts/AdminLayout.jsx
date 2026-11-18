@@ -59,11 +59,22 @@ export const AdminLayout = () => {
   const [cmsOpen, setCmsOpen] = useState(() => location.pathname.startsWith('/admin/cms'));
   const [visitsOpen, setVisitsOpen] = useState(() => location.pathname.startsWith('/admin/visit') || location.pathname.startsWith('/admin/campus-visit'));
 
+  const adminName = userProfile?.fullName || userProfile?.displayName || userProfile?.name || currentUser?.displayName || currentUser?.email?.split('@')[0] || (isMarathi ? 'प्रशासक' : 'Administrator');
+  const adminInitial = (adminName.trim().charAt(0) || 'A').toUpperCase();
+  const adminRoleLabel = isSuperAdmin 
+    ? (isMarathi ? 'मुख्य प्रशासक (Super Admin)' : 'Super Admin')
+    : (isMarathi ? 'शाळा प्रशासक (Admin)' : 'School Admin');
+
   const isActive = (path) => location.pathname === path;
 
   const handleLogout = async () => {
-    await logout();
-    navigate('/login');
+    try {
+      await logout();
+      navigate('/login');
+    } catch (error) {
+      console.error('Logout error:', error);
+      navigate('/login');
+    }
   };
 
   // Exactly ordered 14 Navigation Items with Category Partitioning
@@ -205,42 +216,45 @@ export const AdminLayout = () => {
 
       {/* Sidebar */}
       <aside 
-        className={`fixed top-0 bottom-0 left-0 z-50 w-64 bg-gradient-to-b from-gurukul-navy-950 via-[#0a1928] to-gurukul-navy-950 text-slate-200 border-r border-slate-800/80 flex flex-col transition-transform duration-300 ease-in-out lg:translate-x-0 ${
+        className={`fixed top-0 bottom-0 left-0 z-50 w-72 bg-gradient-to-b from-gurukul-navy-950 via-[#0a1928] to-gurukul-navy-950 text-slate-200 border-r border-slate-800/80 flex flex-col transition-transform duration-300 ease-in-out lg:translate-x-0 ${
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
         {/* Brand header */}
-        <div className="h-17 px-4 border-b border-slate-800/90 flex items-center justify-between bg-gurukul-navy-950/70">
-          <Link to="/admin/dashboard" className="flex items-center gap-2.5 group">
-            <img 
-              src="/gurukul-logo.png" 
-              alt="गुरुकुल भोसे" 
-              className="w-9 h-9 object-contain bg-white/10 rounded-xl p-0.5 shadow shrink-0 group-hover:scale-105 transition-transform" 
-            />
-            <div>
-              <div className="flex items-center gap-1.5">
-                <h2 className="font-black text-white text-sm tracking-tight">
+        <div className="h-20 px-4 border-b border-slate-800/80 flex items-center justify-between bg-gurukul-navy-950/90 shrink-0">
+          <Link to="/admin/dashboard" className="flex items-center gap-3 group min-w-0">
+            <div className="w-12 h-12 rounded-xl bg-white p-1.5 shadow-md ring-1 ring-white/20 shrink-0 flex items-center justify-center group-hover:scale-105 transition-transform">
+              <img 
+                src="/gurukul-logo.png" 
+                alt="गुरुकुल भोसे" 
+                className="w-full h-full object-contain" 
+              />
+            </div>
+            <div className="min-w-0">
+              <div className="flex items-center gap-2">
+                <h2 className="font-black text-white text-[15px] sm:text-base tracking-tight truncate leading-tight">
                   {isMarathi ? 'गुरुकुल भोसे' : 'Gurukul Bhose'}
                 </h2>
-                <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-sm bg-gurukul-saffron-500 text-white uppercase tracking-wider">
+                <span className="text-[10px] font-black px-2 py-0.5 rounded-md bg-gradient-to-r from-gurukul-saffron-500 to-amber-500 text-white uppercase tracking-wider shrink-0 shadow-sm border border-amber-400/30">
                   ADMIN CRM
                 </span>
               </div>
-              <p className="text-[10px] text-gurukul-saffron-400 font-semibold leading-tight mt-0.5">
+              <p className="text-[11.5px] text-gurukul-saffron-400 font-semibold leading-tight mt-1 truncate">
                 {isMarathi ? 'प्रशासकीय नियंत्रण कक्ष' : 'School Admin Portal'}
               </p>
             </div>
           </Link>
           <button 
             onClick={() => setSidebarOpen(false)}
-            className="lg:hidden p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
+            className="lg:hidden p-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
+            aria-label="Close navigation"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Navigation list */}
-        <nav className="flex-1 px-3 py-3.5 space-y-1 overflow-y-auto custom-scrollbar">
+        <nav className="flex-1 px-3.5 py-3 space-y-1 overflow-y-auto custom-scrollbar">
           {allowedNavItems.map((item, idx) => {
             const Icon = item.icon;
             const isCMS = item.path === '/admin/cms';
@@ -254,6 +268,8 @@ export const AdminLayout = () => {
             const showCategoryHeader = idx === 0 || allowedNavItems[idx - 1].category !== item.category;
 
             if (isCMS) {
+              const isExact = location.pathname === '/admin/cms';
+              const hasChildActive = active && !isExact;
               const cmsSubItems = [
                 { title: isMarathi ? 'डॅशबोर्ड (CMS Hub)' : 'CMS Hub', path: '/admin/cms' },
                 { title: isMarathi ? 'मुख्यपृष्ठ (Homepage)' : 'Homepage', path: '/admin/cms/homepage' },
@@ -272,46 +288,51 @@ export const AdminLayout = () => {
               ];
 
               return (
-                <div key="cms_group" className="space-y-1">
+                <div key="cms_group" className="space-y-0.5">
                   {showCategoryHeader && (
-                    <p className="text-[10px] uppercase font-black tracking-widest text-gurukul-saffron-400/90 px-3 pt-3 pb-1">
-                      {categoryTitles[item.category]}
-                    </p>
+                    <div className={`px-3 ${idx === 0 ? 'pt-2' : 'pt-5'} pb-1.5`}>
+                      <p className="text-[11px] uppercase font-black tracking-wider text-gurukul-saffron-400 select-none">
+                        {categoryTitles[item.category]}
+                      </p>
+                    </div>
                   )}
                   <div
-                    className={`flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold cursor-pointer transition-all ${
-                      active
-                        ? 'bg-gradient-to-r from-gurukul-saffron-600 to-gurukul-saffron-500 text-white shadow-md shadow-orange-950/40'
-                        : 'text-slate-300 hover:bg-white/6 hover:text-white'
+                    className={`group flex items-center justify-between px-3.5 py-2.5 rounded-xl text-[13.5px] sm:text-sm font-semibold cursor-pointer transition-all outline-none focus:outline-none ${
+                      isExact
+                        ? 'bg-gradient-to-r from-gurukul-saffron-600 to-gurukul-saffron-500 text-white shadow-md shadow-orange-950/40 font-bold'
+                        : hasChildActive
+                        ? 'bg-slate-800/80 text-white border-l-2 border-gurukul-saffron-400 font-bold'
+                        : 'text-slate-300 hover:bg-slate-800/70 hover:text-white'
                     }`}
-                    onClick={() => setCmsOpen(!cmsOpen)}
-                  >
-                    <Link
-                      to="/admin/cms"
-                      onClick={(e) => {
-                        e.stopPropagation();
+                    onClick={() => {
+                      if (!active) {
+                        setCmsOpen(true);
+                        navigate('/admin/cms');
                         setSidebarOpen(false);
-                      }}
-                      className="flex items-center gap-3 flex-1 min-w-0"
-                    >
-                      <Icon className={`w-4 h-4 shrink-0 ${active ? 'text-white' : 'text-slate-400'}`} />
+                      } else {
+                        setCmsOpen(!cmsOpen);
+                      }
+                    }}
+                  >
+                    <div className="flex items-center gap-3 flex-1 min-w-0 outline-none focus:outline-none">
+                      <Icon className={`w-5 h-5 shrink-0 transition-colors ${active ? 'text-white' : 'text-slate-400 group-hover:text-slate-200'}`} />
                       <span className="truncate">{item.title}</span>
-                    </Link>
+                    </div>
                     <button
                       type="button"
                       onClick={(e) => {
                         e.stopPropagation();
                         setCmsOpen(!cmsOpen);
                       }}
-                      className="p-1 hover:text-white"
+                      className="p-1 rounded-md text-slate-400 hover:text-white transition-colors outline-none focus:outline-none"
                       aria-label="Toggle CMS Submenu"
                     >
-                      <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${cmsOpen ? 'rotate-180' : ''}`} />
+                      <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${cmsOpen ? 'rotate-180' : ''}`} />
                     </button>
                   </div>
 
                   {cmsOpen && (
-                    <div className="pl-5 pr-1 py-1 space-y-0.5 border-l-2 border-gurukul-saffron-500/30 ml-3.5">
+                    <div className="mt-1 ml-4 pl-3.5 py-1.5 space-y-1 border-l-2 border-slate-700/80">
                       {cmsSubItems.map((sub) => {
                         const subActive = location.pathname === sub.path;
                         return (
@@ -319,13 +340,18 @@ export const AdminLayout = () => {
                             key={sub.path}
                             to={sub.path}
                             onClick={() => setSidebarOpen(false)}
-                            className={`block px-2.5 py-1.5 rounded-lg text-[11px] font-semibold transition-all ${
+                            className={`group flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] transition-all outline-none focus:outline-none ${
                               subActive
-                                ? 'bg-orange-500/20 text-gurukul-saffron-300 font-bold border-l-2 border-gurukul-saffron-400 pl-2'
-                                : 'text-slate-400 hover:text-white hover:bg-white/5'
+                                ? 'bg-gurukul-saffron-500/20 text-gurukul-saffron-300 font-bold shadow-xs'
+                                : 'text-slate-400 hover:text-white hover:bg-slate-800/50 font-medium'
                             }`}
                           >
-                            {sub.title}
+                            <span className={`w-2 h-2 rounded-full transition-all shrink-0 ${
+                              subActive
+                                ? 'bg-gurukul-saffron-400 ring-2 ring-gurukul-saffron-400/30'
+                                : 'bg-slate-600 group-hover:bg-slate-400'
+                            }`} />
+                            <span className="truncate">{sub.title}</span>
                           </Link>
                         );
                       })}
@@ -336,6 +362,8 @@ export const AdminLayout = () => {
             }
 
             if (isVisits) {
+              const isExact = location.pathname === '/admin/campus-visits';
+              const hasChildActive = active && !isExact;
               const visitSubItems = [
                 { title: isMarathi ? 'सर्व भेटी यादी (Visits List)' : 'Visits List', path: '/admin/campus-visits' },
                 { title: isMarathi ? 'स्वागत कक्ष (Visit Desk Check-In)' : 'Visit Desk Check-In', path: '/admin/visit-desk' },
@@ -344,46 +372,51 @@ export const AdminLayout = () => {
               ];
 
               return (
-                <div key="visits_group" className="space-y-1">
+                <div key="visits_group" className="space-y-0.5">
                   {showCategoryHeader && (
-                    <p className="text-[10px] uppercase font-black tracking-widest text-gurukul-saffron-400/90 px-3 pt-3 pb-1">
-                      {categoryTitles[item.category]}
-                    </p>
+                    <div className={`px-3 ${idx === 0 ? 'pt-2' : 'pt-5'} pb-1.5`}>
+                      <p className="text-[11px] uppercase font-black tracking-wider text-gurukul-saffron-400 select-none">
+                        {categoryTitles[item.category]}
+                      </p>
+                    </div>
                   )}
                   <div
-                    className={`flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold cursor-pointer transition-all ${
-                      active
-                        ? 'bg-gradient-to-r from-gurukul-saffron-600 to-gurukul-saffron-500 text-white shadow-md shadow-orange-950/40'
-                        : 'text-slate-300 hover:bg-white/6 hover:text-white'
+                    className={`group flex items-center justify-between px-3.5 py-2.5 rounded-xl text-[13.5px] sm:text-sm font-semibold cursor-pointer transition-all outline-none focus:outline-none ${
+                      isExact
+                        ? 'bg-gradient-to-r from-gurukul-saffron-600 to-gurukul-saffron-500 text-white shadow-md shadow-orange-950/40 font-bold'
+                        : hasChildActive
+                        ? 'bg-slate-800/80 text-white border-l-2 border-gurukul-saffron-400 font-bold'
+                        : 'text-slate-300 hover:bg-slate-800/70 hover:text-white'
                     }`}
-                    onClick={() => setVisitsOpen(!visitsOpen)}
-                  >
-                    <Link
-                      to="/admin/campus-visits"
-                      onClick={(e) => {
-                        e.stopPropagation();
+                    onClick={() => {
+                      if (!active) {
+                        setVisitsOpen(true);
+                        navigate('/admin/campus-visits');
                         setSidebarOpen(false);
-                      }}
-                      className="flex items-center gap-3 flex-1 min-w-0"
-                    >
-                      <Icon className={`w-4 h-4 shrink-0 ${active ? 'text-white' : 'text-slate-400'}`} />
+                      } else {
+                        setVisitsOpen(!visitsOpen);
+                      }
+                    }}
+                  >
+                    <div className="flex items-center gap-3 flex-1 min-w-0 outline-none focus:outline-none">
+                      <Icon className={`w-5 h-5 shrink-0 transition-colors ${active ? 'text-white' : 'text-slate-400 group-hover:text-slate-200'}`} />
                       <span className="truncate">{item.title}</span>
-                    </Link>
+                    </div>
                     <button
                       type="button"
                       onClick={(e) => {
                         e.stopPropagation();
                         setVisitsOpen(!visitsOpen);
                       }}
-                      className="p-1 hover:text-white"
+                      className="p-1 rounded-md text-slate-400 hover:text-white transition-colors outline-none focus:outline-none"
                       aria-label="Toggle Visits Submenu"
                     >
-                      <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${visitsOpen ? 'rotate-180' : ''}`} />
+                      <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${visitsOpen ? 'rotate-180' : ''}`} />
                     </button>
                   </div>
 
                   {visitsOpen && (
-                    <div className="pl-5 pr-1 py-1 space-y-0.5 border-l-2 border-gurukul-saffron-500/30 ml-3.5">
+                    <div className="mt-1 ml-4 pl-3.5 py-1.5 space-y-1 border-l-2 border-slate-700/80">
                       {visitSubItems.map((sub) => {
                         const subActive = location.pathname === sub.path;
                         return (
@@ -391,13 +424,18 @@ export const AdminLayout = () => {
                             key={sub.path}
                             to={sub.path}
                             onClick={() => setSidebarOpen(false)}
-                            className={`block px-2.5 py-1.5 rounded-lg text-[11px] font-semibold transition-all ${
+                            className={`group flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] transition-all outline-none focus:outline-none ${
                               subActive
-                                ? 'bg-orange-500/20 text-gurukul-saffron-300 font-bold border-l-2 border-gurukul-saffron-400 pl-2'
-                                : 'text-slate-400 hover:text-white hover:bg-white/5'
+                                ? 'bg-gurukul-saffron-500/20 text-gurukul-saffron-300 font-bold shadow-xs'
+                                : 'text-slate-400 hover:text-white hover:bg-slate-800/50 font-medium'
                             }`}
                           >
-                            {sub.title}
+                            <span className={`w-2 h-2 rounded-full transition-all shrink-0 ${
+                              subActive
+                                ? 'bg-gurukul-saffron-400 ring-2 ring-gurukul-saffron-400/30'
+                                : 'bg-slate-600 group-hover:bg-slate-400'
+                            }`} />
+                            <span className="truncate">{sub.title}</span>
                           </Link>
                         );
                       })}
@@ -408,28 +446,36 @@ export const AdminLayout = () => {
             }
 
             return (
-              <div key={item.path} className="space-y-1">
+              <div key={item.path} className="space-y-0.5">
                 {showCategoryHeader && (
-                  <p className="text-[10px] uppercase font-black tracking-widest text-gurukul-saffron-400/90 px-3 pt-3 pb-1">
-                    {categoryTitles[item.category]}
-                  </p>
+                  <div className={`px-3 ${idx === 0 ? 'pt-2' : 'pt-5'} pb-1.5`}>
+                    <p className="text-[11px] uppercase font-black tracking-wider text-gurukul-saffron-400 select-none">
+                      {categoryTitles[item.category]}
+                    </p>
+                  </div>
                 )}
                 <Link
                   to={item.path}
                   onClick={() => setSidebarOpen(false)}
-                  className={`flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold transition-all ${
+                  className={`group flex items-center justify-between px-3.5 py-2.5 rounded-xl text-[13.5px] sm:text-sm font-semibold transition-all outline-none focus:outline-none ${
                     active
-                      ? 'bg-gradient-to-r from-gurukul-saffron-600 to-gurukul-saffron-500 text-white shadow-md shadow-orange-950/40'
-                      : 'text-slate-300 hover:bg-white/6 hover:text-white'
+                      ? 'bg-gradient-to-r from-gurukul-saffron-600 to-gurukul-saffron-500 text-white shadow-md shadow-orange-950/40 font-bold'
+                      : 'text-slate-300 hover:bg-slate-800/70 hover:text-white'
                   }`}
                 >
                   <div className="flex items-center gap-3 min-w-0">
-                    <Icon className={`w-4 h-4 shrink-0 ${active ? 'text-white' : 'text-slate-400'}`} />
+                    <Icon className={`w-5 h-5 shrink-0 transition-colors ${active ? 'text-white' : 'text-slate-400 group-hover:text-slate-200'}`} />
                     <span className="truncate">{item.title}</span>
                   </div>
                   {item.badge && (
-                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 ${
-                      active ? 'bg-white/20 text-white' : 'bg-gurukul-saffron-500/20 text-gurukul-saffron-400'
+                    <span className={`text-[11px] font-bold px-2.5 py-0.5 rounded-full shrink-0 ${
+                      active
+                        ? 'bg-white/20 text-white'
+                        : item.badgeColor === 'rose'
+                        ? 'bg-rose-500/20 text-rose-300 border border-rose-500/30'
+                        : item.badgeColor === 'amber'
+                        ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
+                        : 'bg-gurukul-saffron-500/20 text-gurukul-saffron-300 border border-gurukul-saffron-500/30'
                     }`}>
                       {item.badge}
                     </span>
@@ -439,10 +485,66 @@ export const AdminLayout = () => {
             );
           })}
         </nav>
+
+        {/* Pinned User Profile & Quick Actions Footer */}
+        <div className="p-3.5 border-t border-slate-800/80 bg-gurukul-navy-950/95 space-y-2.5 shrink-0">
+          <Link
+            to="/admin/profile"
+            onClick={() => setSidebarOpen(false)}
+            className={`group flex items-center gap-3 p-2.5 rounded-xl transition-all outline-none focus:outline-none ${
+              location.pathname === '/admin/profile'
+                ? 'bg-gurukul-saffron-500/20 text-white border border-gurukul-saffron-500/30 shadow-xs'
+                : 'text-slate-300 hover:text-white hover:bg-slate-800/60 border border-transparent'
+            }`}
+          >
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-gurukul-saffron-500 to-amber-600 text-white font-bold text-sm flex items-center justify-center shrink-0 shadow-sm ring-1 ring-white/10">
+              {adminInitial}
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-bold text-white truncate leading-tight">
+                {adminName}
+              </p>
+              <div className="flex items-center gap-1.5 mt-1">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
+                <p className="text-xs text-slate-400 truncate">
+                  {adminRoleLabel}
+                </p>
+              </div>
+            </div>
+            <ChevronRight className={`w-4 h-4 shrink-0 transition-all ${
+              location.pathname === '/admin/profile'
+                ? 'text-gurukul-saffron-300'
+                : 'text-slate-500 group-hover:text-slate-300 group-hover:translate-x-0.5'
+            }`} />
+          </Link>
+
+          <div className="flex items-center gap-2 pt-1.5 border-t border-slate-800/60">
+            <a
+              href={getPublicWebsiteUrl()}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-semibold text-slate-300 hover:text-white hover:bg-slate-800/70 rounded-lg transition-colors outline-none focus:outline-none"
+              title={isMarathi ? 'शाळा वेबसाईट उघडा' : 'View School Website'}
+            >
+              <ExternalLink className="w-3.5 h-3.5 text-gurukul-saffron-400 shrink-0" />
+              <span className="truncate">{isMarathi ? 'वेबसाईट' : 'Website'}</span>
+            </a>
+
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-semibold text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 rounded-lg transition-colors outline-none focus:outline-none"
+              title={isMarathi ? 'लॉगआउट करा' : 'Sign out'}
+            >
+              <LogOut className="w-3.5 h-3.5 shrink-0" />
+              <span className="truncate">{isMarathi ? 'लॉगआउट' : 'Logout'}</span>
+            </button>
+          </div>
+        </div>
       </aside>
 
       {/* Main Content Area */}
-      <div className="lg:pl-64 flex flex-col min-h-screen min-w-0 w-full">
+      <div className="lg:pl-72 flex flex-col min-h-screen min-w-0 w-full">
         {/* Top bar with authentic Gurukul Website branding */}
         <header className="h-14 sm:h-15 lg:h-16 bg-white/95 backdrop-blur-md border-b border-slate-200/90 sticky top-0 z-30 px-3 sm:px-5 lg:px-6 flex items-center justify-between shadow-xs w-full min-w-0">
           <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">

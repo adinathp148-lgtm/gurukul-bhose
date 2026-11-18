@@ -42,7 +42,8 @@ import {
   updateCMSSEOSettings,
   getCMSActivityLogs,
   logCMSActivity,
-  pushInitialDataToFirestore
+  pushInitialDataToFirestore,
+  initialPagesList
 } from '../services/firestore/cmsService';
 
 import { useAuth } from './AuthContext';
@@ -71,10 +72,46 @@ export const CMSProvider = ({ children }) => {
     }
   });
 
-  const [homepageData, setHomepageData] = useState(null);
-  const [pages, setPages] = useState([]);
-  const [aboutData, setAboutData] = useState(null);
-  const [programs, setPrograms] = useState([]);
+  const [homepageData, setHomepageData] = useState(() => {
+    try {
+      const saved = localStorage.getItem('gurukul_cms_homepage');
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  });
+  const [pages, setPages] = useState(() => {
+    try {
+      const saved = localStorage.getItem('gurukul_cms_pages');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch {
+      // ignore
+    }
+    return Array.isArray(initialPagesList) ? initialPagesList : [];
+  });
+  const [aboutData, setAboutData] = useState(() => {
+    try {
+      const saved = localStorage.getItem('gurukul_cms_about');
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  });
+  const [programs, setPrograms] = useState(() => {
+    try {
+      const saved = localStorage.getItem('gurukul_cms_programs');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch {
+      // ignore
+    }
+    return [];
+  });
   const [courses, setCourses] = useState(() => {
     try {
       const saved = localStorage.getItem('gurukul_cms_courses');
@@ -194,21 +231,7 @@ export const CMSProvider = ({ children }) => {
   const loadAllCMSData = async () => {
     setLoading(true);
     try {
-      const [
-        hp,
-        pgs,
-        abt,
-        prgs,
-        crs,
-        gal,
-        vids,
-        nts,
-        facs,
-        cnt,
-        sett,
-        seo,
-        logs
-      ] = await Promise.all([
+      const results = await Promise.allSettled([
         getHomepageCMSData(),
         getCMSPages(),
         getAboutCMSData(),
@@ -224,19 +247,42 @@ export const CMSProvider = ({ children }) => {
         getCMSActivityLogs(30)
       ]);
 
-      setHomepageData(hp);
-      setPages(pgs);
-      setAboutData(abt);
-      setPrograms(prgs);
-      setCourses(crs);
-      setGallery(Array.isArray(gal) && gal.length > 0 ? gal : (prev => (Array.isArray(prev) && prev.length > 0 ? prev : [])));
-      setVideos(vids);
-      setNotices(nts);
-      setFacilities(facs);
-      setContactInfo(cnt);
-      setWebsiteSettings(sett);
-      setSeoSettings(seo);
-      setActivityLogs(logs);
+      const val = (idx, fallback = null) => {
+        const item = results[idx];
+        return (item && item.status === 'fulfilled' && item.value !== undefined && item.value !== null)
+          ? item.value
+          : fallback;
+      };
+
+      const hp = val(0, null);
+      const pgs = val(1, initialPagesList);
+      const abt = val(2, null);
+      const prgs = val(3, []);
+      const crs = val(4, []);
+      const gal = val(5, []);
+      const vids = val(6, []);
+      const nts = val(7, []);
+      const facs = val(8, []);
+      const cnt = val(9, null);
+      const sett = val(10, null);
+      const seo = val(11, null);
+      const logs = val(12, []);
+
+      if (hp) setHomepageData(hp);
+      if (Array.isArray(pgs) && pgs.length > 0) setPages(pgs);
+      if (abt) setAboutData(abt);
+      if (Array.isArray(prgs) && prgs.length > 0) setPrograms(prgs);
+      if (Array.isArray(crs) && crs.length > 0) setCourses(crs);
+      if (Array.isArray(gal) && gal.length > 0) {
+        setGallery(gal);
+      }
+      if (Array.isArray(vids) && vids.length > 0) setVideos(vids);
+      if (Array.isArray(nts) && nts.length > 0) setNotices(nts);
+      if (Array.isArray(facs) && facs.length > 0) setFacilities(facs);
+      if (cnt) setContactInfo(cnt);
+      if (sett) setWebsiteSettings(sett);
+      if (seo) setSeoSettings(seo);
+      if (Array.isArray(logs)) setActivityLogs(logs);
 
       if (cnt) {
         setInstitution(prev => ({ ...prev, ...cnt }));
@@ -421,20 +467,20 @@ export const CMSProvider = ({ children }) => {
   };
 
   const value = {
-    institution,
+    institution: institution || initialInfo,
     homepageData,
-    pages,
+    pages: Array.isArray(pages) ? pages : initialPagesList,
     aboutData,
-    programs,
-    courses,
+    programs: Array.isArray(programs) ? programs : [],
+    courses: Array.isArray(courses) ? courses : [],
     gallery: Array.isArray(gallery) ? gallery : [],
-    videos,
-    notices,
-    facilities,
+    videos: Array.isArray(videos) ? videos : [],
+    notices: Array.isArray(notices) ? notices : [],
+    facilities: Array.isArray(facilities) ? facilities : [],
     contactInfo,
     websiteSettings,
     seoSettings,
-    activityLogs,
+    activityLogs: Array.isArray(activityLogs) ? activityLogs : [],
     loading,
     refreshAll: loadAllCMSData,
     updateHomepage,

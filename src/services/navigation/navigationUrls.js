@@ -77,6 +77,9 @@ export const getTelecallerPanelUrl = () => {
 
   // 1. Localhost development: telecaller panel
   if (hostname === 'localhost' || hostname === '127.0.0.1') {
+    if (window.location.port === '3002') {
+      return `${window.location.origin}/telecaller`;
+    }
     return 'http://localhost:3001/telecaller';
   }
 

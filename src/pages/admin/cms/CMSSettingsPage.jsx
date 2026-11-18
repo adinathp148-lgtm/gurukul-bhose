@@ -47,12 +47,21 @@ export const CMSSettingsPage = () => {
 
   useEffect(() => {
     if (websiteSettings) {
+      const isMaint = typeof websiteSettings.maintenanceMode === 'object'
+        ? Boolean(websiteSettings.maintenanceMode?.enabled)
+        : Boolean(websiteSettings.maintenanceMode);
+
       setFormData(prev => ({
         ...prev,
         ...websiteSettings,
+        websiteName: websiteSettings.websiteName || websiteSettings.websiteTitle || prev.websiteName,
+        maintenanceMode: isMaint,
+        maintenanceMessage: websiteSettings.maintenanceMessage || websiteSettings.maintenanceMode?.message || prev.maintenanceMessage,
         announcementBar: {
           ...prev.announcementBar,
-          ...(websiteSettings.announcementBar || {})
+          ...(websiteSettings.announcementBar || {}),
+          buttonText: websiteSettings.announcementBar?.buttonText || websiteSettings.announcementBar?.linkText || prev.announcementBar.buttonText,
+          link: websiteSettings.announcementBar?.link || websiteSettings.announcementBar?.linkUrl || prev.announcementBar.link
         }
       }));
     }

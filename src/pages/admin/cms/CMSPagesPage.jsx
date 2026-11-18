@@ -321,7 +321,7 @@ export const CMSPagesPage = () => {
                     <span>लाईव्ह प्रिव्ह्यू मोड (Live Public Preview)</span>
                   </span>
                   <span className="text-xs text-slate-500">
-                    URL: <strong>{formData.slug.startsWith('/') ? formData.slug : `/${formData.slug}`}</strong>
+                    URL: <strong>{(formData.slug || '').startsWith('/') ? formData.slug : `/${formData.slug || ''}`}</strong>
                   </span>
                 </div>
 
@@ -450,7 +450,7 @@ export const CMSPagesPage = () => {
                       <input
                         type="text"
                         required
-                        value={formData.slug.replace(/^\//, '')}
+                        value={(formData.slug || '').replace(/^\//, '')}
                         onChange={(e) => setFormData(prev => ({ ...prev, slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-') }))}
                         placeholder="vidyamandir"
                         className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-r-xl text-sm font-mono focus:bg-white outline-none"
@@ -851,7 +851,7 @@ export const CMSPagesPage = () => {
                       </div>
                     </td>
                     <td className="px-5 py-4 font-mono text-slate-500">
-                      {page.slug.startsWith('/') ? page.slug : `/${page.slug}`}
+                      {(page.slug || '').startsWith('/') ? page.slug : `/${page.slug || ''}`}
                     </td>
                     <td className="px-5 py-4 font-semibold text-slate-600">
                       {page.blocks?.length || 0} ब्लॉक्स
@@ -873,7 +873,7 @@ export const CMSPagesPage = () => {
                     <td className="px-5 py-4 text-right">
                       <div className="flex items-center justify-end gap-2">
                         <Link
-                          to={page.slug.startsWith('/') ? page.slug : `/${page.slug}`}
+                          to={(page.slug || '').startsWith('/') ? page.slug : `/${page.slug || ''}`}
                           target="_blank"
                           className="p-1.5 text-slate-500 hover:text-gurukul-navy-900 rounded-lg hover:bg-slate-100"
                           title="वेबसाईटवर पहा"

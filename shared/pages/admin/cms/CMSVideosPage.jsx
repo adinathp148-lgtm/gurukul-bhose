@@ -23,6 +23,7 @@ import { getPublicWebsiteUrl } from '../../../services/navigation/navigationUrls
 
 export const CMSVideosPage = () => {
   const { videos, saveVideo, deleteVideo } = useCMS();
+  const safeVideos = Array.isArray(videos) ? videos : [];
 
   const [showModal, setShowModal] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -42,7 +43,7 @@ export const CMSVideosPage = () => {
     thumbnailUrl: '',
     thumbnail: '',
     category: 'कॅम्पस टूअर',
-    displayOrder: videos.length + 1,
+    displayOrder: safeVideos.length + 1,
     status: 'published',
     publishedAt: new Date().toISOString()
   };

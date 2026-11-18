@@ -162,7 +162,7 @@ export const AdminRegisterPage = () => {
                 required
                 value={formData.fullName}
                 onChange={handleChange}
-                placeholder={isMarathi ? 'उदा. सचिन पाटील / Adinath Patil' : 'e.g. Adinath Patil'}
+                placeholder={isMarathi ? 'उदा. आदिनाथ पवार / Adinath Powar' : 'e.g. Adinath Powar'}
                 className="w-full text-xs pl-9 pr-3 py-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-gurukul-saffron-500 focus:outline-none"
               />
             </div>

@@ -82,7 +82,7 @@ export const AppRoutes = () => {
       <Route
         path="/telecaller"
         element={
-          <ProtectedRoute allowedRoles={['telecaller', 'admin', 'super_admin', 'superadmin']}>
+          <ProtectedRoute allowedRoles={['telecaller', 'admin', 'super_admin', 'superadmin']} loginPath="/telecaller/login">
             <TelecallerLayout />
           </ProtectedRoute>
         }
