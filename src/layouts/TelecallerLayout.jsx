@@ -137,7 +137,7 @@ export const TelecallerLayout = () => {
   ];
 
   const categoryTitles = {
-    calling: isMarathi ? 'कॉलिंग व कार्यक्षेत्र' : 'CALLING & SCHEDULE',
+    calling: isMarathi ? 'कॉलिंग व वेळापत्रक' : 'CALLING & SCHEDULE',
     leads: isMarathi ? 'माझ्या लीड्स व फॉलो-अप्स' : 'MY LEADS & TASKS',
     account: isMarathi ? 'खाते व सेटिंग्ज' : 'ACCOUNT & SETTINGS'
   };
@@ -154,67 +154,45 @@ export const TelecallerLayout = () => {
 
       {/* Telecaller Sidebar */}
       <aside 
-        className={`fixed top-0 bottom-0 left-0 z-50 w-64 bg-gradient-to-b from-gurukul-navy-950 via-[#0a1928] to-gurukul-navy-950 text-slate-200 border-r border-slate-800/80 flex flex-col transition-transform duration-300 ease-in-out lg:translate-x-0 ${
+        className={`fixed top-0 bottom-0 left-0 z-50 w-72 bg-gradient-to-b from-gurukul-navy-950 via-[#0a1928] to-gurukul-navy-950 text-slate-200 border-r border-slate-800/80 flex flex-col transition-transform duration-300 ease-in-out lg:translate-x-0 ${
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
-        {/* Brand header with authentic Gurukul Bhose logo */}
-        <div className="h-17 px-4 border-b border-slate-800/90 flex items-center justify-between bg-gurukul-navy-950/70">
-          <Link to="/" className="flex items-center gap-2.5 group">
-            <img 
-              src="/gurukul-logo.png" 
-              alt="गुरुकुल भोसे" 
-              className="w-9 h-9 object-contain bg-white/10 rounded-xl p-0.5 shadow shrink-0 group-hover:scale-105 transition-transform" 
-            />
-            <div>
-              <div className="flex items-center gap-1.5">
-                <h2 className="font-black text-white text-sm tracking-tight">
+        {/* Brand header */}
+        <div className="h-20 px-4 border-b border-slate-800/80 flex items-center justify-between bg-gurukul-navy-950/90 shrink-0">
+          <Link to={prefix ? `${prefix}/dashboard` : '/dashboard'} className="flex items-center gap-3 group min-w-0">
+            <div className="w-12 h-12 rounded-xl bg-white p-1.5 shadow-md ring-1 ring-white/20 shrink-0 flex items-center justify-center group-hover:scale-105 transition-transform">
+              <img 
+                src="/gurukul-logo.png" 
+                alt="गुरुकुल भोसे" 
+                className="w-full h-full object-contain" 
+              />
+            </div>
+            <div className="min-w-0">
+              <div className="flex items-center gap-2">
+                <h2 className="font-black text-white text-[15px] sm:text-base tracking-tight truncate leading-tight">
                   {isMarathi ? 'गुरुकुल भोसे' : 'Gurukul Bhose'}
                 </h2>
-                <span className="text-[9px] font-bold px-1.5 py-0.2 rounded-sm bg-emerald-600 text-white uppercase tracking-wider">
-                  Counselor
+                <span className="text-[10px] font-black px-2 py-0.5 rounded-md bg-gradient-to-r from-emerald-600 to-teal-600 text-white uppercase tracking-wider shrink-0 shadow-sm border border-emerald-400/30">
+                  COUNSELOR
                 </span>
               </div>
-              <p className="text-[10px] text-emerald-400 font-semibold leading-tight mt-0.5">
+              <p className="text-[11.5px] text-emerald-400 font-semibold leading-tight mt-1 truncate">
                 {isMarathi ? 'समुपदेशक कार्यक्षेत्र' : 'Counselor Workspace'}
               </p>
             </div>
           </Link>
           <button 
             onClick={() => setSidebarOpen(false)}
-            className="lg:hidden p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
+            className="lg:hidden p-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
+            aria-label="Close navigation"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        {/* User Card */}
-        <div className="px-3.5 py-3 bg-slate-900/60 border-b border-slate-800/70">
-          <div className="flex items-center gap-3">
-            <div className="w-8.5 h-8.5 rounded-full bg-emerald-950/90 border-2 border-emerald-500/50 flex items-center justify-center font-bold text-xs text-emerald-300 shrink-0">
-              {counselorInitial}
-            </div>
-            <div className="overflow-hidden min-w-0">
-              <p className="text-xs font-bold text-white truncate">
-                {counselorName}
-              </p>
-              <div className="flex items-center gap-1.5 mt-0.5">
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                <span className="text-[10px] uppercase font-bold text-emerald-400 tracking-wider">
-                  {isMarathi ? 'सक्रिय समुपदेशक' : 'Active Counselor'}
-                </span>
-                {employeeId && (
-                  <span className="text-[10px] text-slate-400 font-mono">
-                    ({employeeId})
-                  </span>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-
         {/* Navigation items */}
-        <nav className="flex-1 px-3 py-3.5 space-y-1 overflow-y-auto custom-scrollbar">
+        <nav className="flex-1 px-3.5 py-3.5 space-y-1 overflow-y-auto custom-scrollbar">
           {navItems.map((item, idx) => {
             const Icon = item.icon;
             const active = isActive(item.path.split('?')[0]);
@@ -223,25 +201,27 @@ export const TelecallerLayout = () => {
             return (
               <div key={item.path} className="space-y-1">
                 {showCategoryHeader && item.category !== 'admin' && (
-                  <p className="text-[10px] uppercase font-black tracking-widest text-emerald-400/90 px-3 pt-3 pb-1">
-                    {categoryTitles[item.category]}
-                  </p>
+                  <div className={`px-3 ${idx === 0 ? 'pt-2' : 'pt-5'} pb-1.5`}>
+                    <p className="text-[11px] uppercase font-black tracking-wider text-emerald-400 select-none">
+                      {categoryTitles[item.category]}
+                    </p>
+                  </div>
                 )}
                 <Link
                   to={item.path}
                   onClick={() => setSidebarOpen(false)}
-                  className={`flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold transition-all ${
+                  className={`group flex items-center justify-between px-3.5 py-2.5 rounded-xl text-[13.5px] sm:text-sm font-semibold transition-all outline-none focus:outline-none ${
                     active
-                      ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-md shadow-emerald-950/40'
-                      : 'text-slate-300 hover:bg-white/6 hover:text-white'
+                      ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-md shadow-emerald-950/40 font-bold'
+                      : 'text-slate-300 hover:bg-slate-800/70 hover:text-white'
                   }`}
                 >
                   <div className="flex items-center gap-3 min-w-0">
-                    <Icon className={`w-4 h-4 shrink-0 ${active ? 'text-white' : 'text-slate-400'}`} />
+                    <Icon className={`w-5 h-5 shrink-0 transition-colors ${active ? 'text-white' : 'text-slate-400 group-hover:text-slate-200'}`} />
                     <span className="truncate">{item.title}</span>
                   </div>
                   {item.badge && (
-                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 ${
+                    <span className={`text-[11px] font-bold px-2.5 py-0.5 rounded-full shrink-0 shadow-xs ${
                       item.badgeColor === 'rose'
                         ? 'bg-rose-500/20 text-rose-300 border border-rose-500/30'
                         : item.badgeColor === 'amber'
@@ -260,30 +240,34 @@ export const TelecallerLayout = () => {
         </nav>
 
         {/* Footer actions */}
-        <div className="p-3 border-t border-slate-800/80 space-y-1 bg-gurukul-navy-950/80">
-          <a
-            href={getPublicWebsiteUrl()}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center justify-between w-full px-3 py-2 text-xs font-semibold text-slate-300 hover:bg-white/5 hover:text-white rounded-xl transition-colors"
-          >
-            <span className="flex items-center gap-2">
-              <ExternalLink className="w-4 h-4 text-gurukul-saffron-400" />
-              <span>{isMarathi ? 'शाळा वेबसाईट' : 'School Website'}</span>
-            </span>
-          </a>
-          <button
-            onClick={handleLogout}
-            className="flex items-center gap-2 w-full px-3 py-2 text-xs font-semibold text-rose-400 hover:bg-rose-500/10 hover:text-rose-300 rounded-xl transition-colors"
-          >
-            <LogOut className="w-4 h-4" />
-            <span>{isMarathi ? 'लॉगआउट (Logout)' : 'Logout'}</span>
-          </button>
+        <div className="p-3.5 border-t border-slate-800/80 bg-gurukul-navy-950/95 shrink-0">
+          <div className="flex items-center gap-2">
+            <a
+              href={getPublicWebsiteUrl()}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-semibold text-slate-300 hover:text-white hover:bg-slate-800/70 rounded-lg transition-colors outline-none focus:outline-none"
+              title={isMarathi ? 'शाळा वेबसाईट उघडा' : 'View School Website'}
+            >
+              <ExternalLink className="w-3.5 h-3.5 text-gurukul-saffron-400 shrink-0" />
+              <span className="truncate">{isMarathi ? 'वेबसाईट' : 'Website'}</span>
+            </a>
+
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-semibold text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 rounded-lg transition-colors outline-none focus:outline-none"
+              title={isMarathi ? 'लॉगआउट करा' : 'Sign out'}
+            >
+              <LogOut className="w-3.5 h-3.5 shrink-0" />
+              <span className="truncate">{isMarathi ? 'लॉगआउट' : 'Logout'}</span>
+            </button>
+          </div>
         </div>
       </aside>
 
       {/* Main Workspace */}
-      <div className="lg:pl-64 flex flex-col min-h-screen min-w-0 w-full">
+      <div className="lg:pl-72 flex flex-col min-h-screen min-w-0 w-full">
         {/* Top bar with authentic Gurukul Website branding */}
         <header className="h-14 sm:h-15 lg:h-16 bg-white/95 backdrop-blur-md border-b border-slate-200/90 sticky top-0 z-30 px-3 sm:px-5 lg:px-6 flex items-center justify-between shadow-xs w-full min-w-0">
           <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
