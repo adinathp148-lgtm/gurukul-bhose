@@ -261,6 +261,27 @@ export const StaffPage = () => {
       image: '/images/staff/azharuddin-dhawade.png',
       icon: FlaskConical,
       accentColor: 'from-emerald-600 to-teal-700'
+    },
+    {
+      id: 'staff-pandurang-khot',
+      category: 'academics',
+      name: isMarathi ? 'पांडुरंग नामदेव खोत' : 'Pandurang Namdev Khot',
+      role: isMarathi ? 'ज्येष्ठ प्राध्यापक - मेकॅनिकल व तंत्रज्ञान (Senior Faculty)' : 'Senior Faculty of Mechanical & Technical Engineering',
+      qualification: 'B.E. (Mech), M.Tech (Production)',
+      experience: isMarathi ? 'अनुभव - २१ वर्षे' : '21 Years Experience',
+      dept: isMarathi ? 'गुरुकुल ज्युनिअर कॉलेज व सायन्स अकॅडमी' : 'Junior College & Science Academy',
+      bio: isMarathi 
+        ? 'मेकॅनिकल व प्रॉडक्शन इंजिनिअरिंग शाखेतील २१ वर्षांचा प्रदीर्घ व समृद्ध अध्यापन अनुभव. बी.ई. (मेकॅनिकल) व एम.टेक (प्रॉडक्शन) पदवीधारक. व्यावहारिक अभियांत्रिकी तंत्रज्ञान, गणित व भौतिक संकल्पनांचे सखोल मार्गदर्शन आणि विद्यार्थ्यांची उत्कृष्ट गुणवत्ता विकास.'
+        : 'Distinguished educator with 21 years of teaching experience holding B.E. (Mech) and M.Tech (Production). Specialized in practical engineering principles, applied sciences, mechanical systems, and student academic excellence.',
+      specialties: [
+        isMarathi ? 'B.E. (Mech), M.Tech' : 'B.E. (Mech), M.Tech',
+        isMarathi ? '२१ वर्षे प्रदीर्घ अनुभव' : '21 Years Experience',
+        isMarathi ? 'मेकॅनिकल व प्रॉडक्शन तज्ज्ञ' : 'Mechanical & Production Expert',
+        isMarathi ? 'अभियांत्रिकी संकल्पना मार्गदर्शन' : 'Applied Engineering Concepts'
+      ],
+      image: '/images/staff/pandurang-khot.jpg',
+      icon: Award,
+      accentColor: 'from-blue-600 to-cyan-600'
     }
   ];
 
