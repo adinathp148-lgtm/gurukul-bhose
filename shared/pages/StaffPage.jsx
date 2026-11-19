@@ -195,7 +195,7 @@ export const StaffPage = () => {
         isMarathi ? 'ज्येष्ठ विषय तज्ज्ञ' : 'Senior Subject Expert',
         isMarathi ? 'बोर्ड निकाल गुणवत्ता' : 'Board Exam Mentorship'
       ],
-      image: '/images/staff/rekha-jere.jpg',
+      image: '/images/staff/rekha-jere.jpg?v=2',
       icon: Award,
       accentColor: 'from-purple-600 to-indigo-600'
     },
@@ -237,7 +237,7 @@ export const StaffPage = () => {
         isMarathi ? 'ज्येष्ठ विषय मार्गदर्शक' : 'Senior Academic Mentor',
         isMarathi ? 'सैनिक पॅटर्न शिस्त' : 'Discipline & Excellence'
       ],
-      image: '/images/staff/pandurang-lavand.jpg',
+      image: '/images/staff/pandurang-lavand.jpg?v=2',
       icon: GraduationCap,
       accentColor: 'from-blue-600 to-indigo-700'
     },
