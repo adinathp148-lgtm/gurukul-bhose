@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
-import { ZoomIn, X, Image as ImageIcon, Video } from 'lucide-react';
+import { ZoomIn, X, ChevronLeft, ChevronRight, Image as ImageIcon, Video } from 'lucide-react';
 import { SEO } from '../components/common/SEO';
 import { PageHeader } from '../components/common/PageHeader';
 import { GalleryCard } from '../components/cards/GalleryCard';
@@ -75,6 +75,37 @@ export const GalleryPage = () => {
 
   const categories = [...baseCategories, ...extraCategories];
 
+  // Lightbox index calculation & navigation
+  const currentIndex = selectedImage 
+    ? gallery.findIndex(g => (g.id || g.imageId) === (selectedImage.id || selectedImage.imageId))
+    : -1;
+
+  const handlePrev = useCallback((e) => {
+    e?.stopPropagation();
+    if (gallery.length === 0) return;
+    const nextIdx = (currentIndex - 1 + gallery.length) % gallery.length;
+    setSelectedImage(gallery[nextIdx]);
+  }, [currentIndex, gallery]);
+
+  const handleNext = useCallback((e) => {
+    e?.stopPropagation();
+    if (gallery.length === 0) return;
+    const nextIdx = (currentIndex + 1) % gallery.length;
+    setSelectedImage(gallery[nextIdx]);
+  }, [currentIndex, gallery]);
+
+  // Keyboard navigation for Lightbox
+  useEffect(() => {
+    if (!selectedImage) return;
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') setSelectedImage(null);
+      if (e.key === 'ArrowLeft') handlePrev();
+      if (e.key === 'ArrowRight') handleNext();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [selectedImage, handlePrev, handleNext]);
+
   return (
     <div className="space-y-16 pb-16">
       <SEO
@@ -126,7 +157,7 @@ export const GalleryPage = () => {
           ))}
         </div>
 
-        {/* Gallery Grid */}
+        {/* Gallery Grid - Properly Aligned 3-Column Responsive Grid */}
         {loading ? (
           <GridSkeleton count={6} />
         ) : gallery.length === 0 ? (
@@ -137,7 +168,7 @@ export const GalleryPage = () => {
             onAction={() => setActiveCategory('all')}
           />
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 items-stretch">
             {gallery.map((item) => (
               <GalleryCard
                 key={item.id}
@@ -150,37 +181,74 @@ export const GalleryPage = () => {
 
       </section>
 
-      {/* Full-Screen Modal Lightbox */}
+      {/* Full-Screen Modal Lightbox with Controls */}
       {selectedImage && (
         <div 
-          className="fixed inset-0 z-50 bg-black/95 backdrop-blur-md flex items-center justify-center p-4"
+          className="fixed inset-0 z-50 bg-black/95 backdrop-blur-md flex items-center justify-center p-3 sm:p-6"
           onClick={() => setSelectedImage(null)}
         >
+          {/* Close Button */}
           <button
             onClick={() => setSelectedImage(null)}
-            className="absolute top-5 right-5 p-2 rounded-full bg-white/20 text-white hover:bg-white/30 transition-colors z-10"
+            className="absolute top-4 right-4 p-2.5 rounded-full bg-white/20 text-white hover:bg-white/30 transition-colors z-20 shadow-lg"
             aria-label="Close Lightbox"
           >
             <X className="w-6 h-6" />
           </button>
+
+          {/* Previous Arrow Button */}
+          {gallery.length > 1 && (
+            <button
+              onClick={handlePrev}
+              className="absolute left-3 sm:left-6 top-1/2 -translate-y-1/2 p-3 rounded-full bg-black/60 text-white hover:bg-gurukul-saffron-500 transition-colors z-20 shadow-xl border border-white/10"
+              aria-label="Previous Photo"
+            >
+              <ChevronLeft className="w-6 h-6" />
+            </button>
+          )}
+
+          {/* Next Arrow Button */}
+          {gallery.length > 1 && (
+            <button
+              onClick={handleNext}
+              className="absolute right-3 sm:right-6 top-1/2 -translate-y-1/2 p-3 rounded-full bg-black/60 text-white hover:bg-gurukul-saffron-500 transition-colors z-20 shadow-xl border border-white/10"
+              aria-label="Next Photo"
+            >
+              <ChevronRight className="w-6 h-6" />
+            </button>
+          )}
           
+          {/* Modal Container */}
           <div 
-            className="max-w-4xl max-h-[90vh] overflow-hidden rounded-2xl bg-slate-900 border border-slate-800 shadow-2xl"
+            className="relative max-w-5xl w-full max-h-[92vh] overflow-hidden rounded-2xl bg-slate-900 border border-slate-800 shadow-2xl flex flex-col"
             onClick={(e) => e.stopPropagation()}
           >
-            <img
-              src={selectedImage.imageUrl}
-              alt={selectedImage.title}
-              onError={(e) => { e.currentTarget.src = '/images/gallery/sports-training.jpg'; }}
-              className="max-h-[75vh] w-auto max-w-full object-contain mx-auto"
-            />
-            <div className="p-4 text-white bg-slate-950/80">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-gurukul-saffron-400 block">
-                {selectedImage.category}
-              </span>
-              <h3 className="text-sm sm:text-base font-bold mt-0.5">{selectedImage.title}</h3>
-              {selectedImage.caption && (
-                <p className="text-xs text-slate-300 mt-1">{selectedImage.caption}</p>
+            {/* Image Viewer */}
+            <div className="relative flex-1 bg-black flex items-center justify-center overflow-hidden min-h-[300px] max-h-[75vh]">
+              <img
+                src={selectedImage.imageUrl}
+                alt={selectedImage.title}
+                onError={(e) => { e.currentTarget.src = '/images/gallery/campus-slide-1.jpg'; }}
+                className="max-h-[75vh] w-auto max-w-full object-contain mx-auto"
+              />
+            </div>
+
+            {/* Image Details Bar */}
+            <div className="p-4 sm:p-5 text-white bg-slate-950/90 border-t border-slate-800/80 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <div>
+                <span className="text-[11px] font-bold uppercase tracking-wider text-gurukul-saffron-400 block mb-1">
+                  {selectedImage.category}
+                </span>
+                <h3 className="text-base sm:text-lg font-bold">{selectedImage.title}</h3>
+                {selectedImage.caption && (
+                  <p className="text-xs sm:text-sm text-slate-300 mt-1">{selectedImage.caption}</p>
+                )}
+              </div>
+
+              {currentIndex >= 0 && (
+                <div className="text-xs text-slate-400 font-semibold bg-white/10 px-3 py-1.5 rounded-full shrink-0 self-start sm:self-auto">
+                  {currentIndex + 1} / {gallery.length}
+                </div>
               )}
             </div>
           </div>
