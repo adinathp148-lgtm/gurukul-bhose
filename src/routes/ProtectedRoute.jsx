@@ -72,15 +72,28 @@ export const ProtectedRoute = ({ children, allowedRoles = [], loginPath = null }
     });
 
     if (!isAllowed) {
-      // Route access denied: redirect to authorized dashboard
-      if (normalizedRole === 'telecaller') {
-        return <Navigate to={isBasenameTelecaller ? '/dashboard' : '/telecaller/dashboard'} replace />;
+      // Route access denied:
+      // When attempting to access an Admin route without Admin credentials:
+      // Redirect to /admin/login so the user can sign in as Admin, instead of bouncing them to Telecaller CRM!
+      const isAdminRoute = !isTelecallerRoute;
+      if (isAdminRoute) {
+        return (
+          <Navigate 
+            to="/admin/login" 
+            state={{ 
+              from: location,
+              errorMessage: `सध्याचे खाते (${currentUser?.email || normalizedRole}) ॲडमिन पॅनेलसाठी अधिकृत नाही. कृपया ॲडमिन खात्याने लॉगिन करा.`
+            }} 
+            replace 
+          />
+        );
       }
+
+      // If user was attempting to access Telecaller route but is denied:
       if (isBasenameTelecaller) {
-        window.location.replace('/admin/dashboard');
-        return null;
+        return <Navigate to="/login" replace />;
       }
-      return <Navigate to="/admin/dashboard" replace />;
+      return <Navigate to="/telecaller/login" replace />;
     }
   }
 

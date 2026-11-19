@@ -112,11 +112,17 @@ export const AuthProvider = ({ children }) => {
               }
             } catch (e) {}
 
+            // Determine active route portal hint
+            const currentPath = typeof window !== 'undefined' ? window.location.pathname : '';
+            const pathPortalHint = (currentPath.startsWith('/admin') || currentPath.startsWith('/super-admin'))
+              ? 'admin'
+              : (currentPath.startsWith('/telecaller') ? 'telecaller' : null);
+
             const normalizedRole = determineUserRole({
               customRole,
               profileData: Object.keys(profileData).length > 0 ? profileData : (existingStoredRole ? { role: existingStoredRole } : null),
               email: firebaseUser.email,
-              portalHint: existingStoredRole || null
+              portalHint: pathPortalHint || existingStoredRole || null
             });
 
             // Name resolution

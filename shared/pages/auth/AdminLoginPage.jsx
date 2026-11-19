@@ -7,16 +7,23 @@ import { Button } from '../../components/common/Button';
 import { Modal } from '../../components/common/Modal';
 
 export const AdminLoginPage = () => {
-  const { login, requestPasswordReset } = useAuth();
+  const { currentUser, login, logout, requestPasswordReset } = useAuth();
   const { isMarathi } = useLanguage();
   const navigate = useNavigate();
   const location = useLocation();
 
   const [email, setEmail] = useState(location.state?.registeredEmail || '');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState(null);
+  const [error, setError] = useState(location.state?.errorMessage || null);
   const [successMessage, setSuccessMessage] = useState(location.state?.successMessage || null);
   const [loading, setLoading] = useState(false);
+
+  // Auto-redirect if already logged in as active admin
+  useEffect(() => {
+    if (currentUser && (currentUser.role === 'admin' || currentUser.role === 'super_admin' || currentUser.role === 'superadmin') && currentUser.status === 'active') {
+      navigate('/admin/dashboard', { replace: true });
+    }
+  }, [currentUser, navigate]);
 
   // Clear credentials on mount or navigation unless explicitly passed from registration
   useEffect(() => {
@@ -112,6 +119,43 @@ export const AdminLoginPage = () => {
                 </Link>
               </div>
             )}
+          </div>
+        )}
+
+        {/* Telecaller Active Session Notice */}
+        {currentUser && currentUser.role === 'telecaller' && (
+          <div className="mb-5 p-3.5 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 text-xs space-y-2">
+            <div className="flex items-start gap-2">
+              <AlertCircle className="w-4 h-4 shrink-0 text-amber-600 mt-0.5" />
+              <div>
+                <p className="font-bold">
+                  {isMarathi ? 'सध्या टेलिकॉलर खात्याने लॉग इन आहात' : 'Currently signed in as Telecaller'}
+                </p>
+                <p className="text-[11px] text-amber-800 mt-0.5">
+                  {isMarathi 
+                    ? `(${currentUser.email || 'Telecaller'}) ॲडमिन CRM वापरण्यासाठी खाली आपले ॲडमिन लॉगिन करा:` 
+                    : `(${currentUser.email || 'Telecaller'}) Enter your Admin credentials below to access Admin CRM:`}
+                </p>
+              </div>
+            </div>
+            <div className="pt-1.5 border-t border-amber-200/70 flex items-center justify-between">
+              <button
+                type="button"
+                onClick={async () => {
+                  await logout();
+                  setError(null);
+                }}
+                className="font-bold text-amber-800 hover:text-amber-950 underline text-[11px]"
+              >
+                {isMarathi ? 'खाते बदला (लॉगआउट)' : 'Switch Account (Logout)'}
+              </button>
+              <a
+                href="/telecaller/dashboard"
+                className="font-bold text-blue-700 hover:text-blue-900 underline text-[11px]"
+              >
+                {isMarathi ? 'टेलिकॉलर पोर्टलवर जा →' : 'Go to Telecaller Portal →'}
+              </a>
+            </div>
           </div>
         )}
 

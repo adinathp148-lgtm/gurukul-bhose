@@ -4,6 +4,30 @@
   "outputDirectory": "dist",
   "rewrites": [
     {
+      "source": "/telecaller/assets/(.*)",
+      "destination": "/telecaller/assets/$1"
+    },
+    {
+      "source": "/telecaller/gurukul-logo.png",
+      "destination": "/gurukul-logo.png"
+    },
+    {
+      "source": "/telecaller/favicon.(.*)",
+      "destination": "/favicon.$1"
+    },
+    {
+      "source": "/admin/assets/(.*)",
+      "destination": "/assets/$1"
+    },
+    {
+      "source": "/admin/gurukul-logo.png",
+      "destination": "/gurukul-logo.png"
+    },
+    {
+      "source": "/admin/favicon.(.*)",
+      "destination": "/favicon.$1"
+    },
+    {
       "source": "/telecaller",
       "destination": "/telecaller/index.html"
     },

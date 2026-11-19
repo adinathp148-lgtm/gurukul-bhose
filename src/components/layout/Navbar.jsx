@@ -12,7 +12,6 @@ import {
   FlaskConical,
   Activity,
   Monitor,
-  Users,
   Image as ImageIcon,
   Video,
   Headset,
@@ -276,22 +275,6 @@ export const Navbar = ({ showAdminLink = true }) => {
                       </span>
                     </div>
                   </Link>
-
-                  <Link
-                    to="/staff"
-                    onClick={closeMenu}
-                    className="flex items-start gap-3.5 px-4 py-2.5 hover:bg-orange-50/70 border-t border-slate-100/60 transition-colors text-left group"
-                  >
-                    <Users className="w-5 h-5 text-indigo-600 shrink-0 mt-0.5 group-hover:scale-110 transition-transform" />
-                    <div className="text-left flex-1 min-w-0">
-                      <span className="block font-bold text-sm text-slate-900 group-hover:text-gurukul-saffron-600 transition-colors whitespace-nowrap">
-                        {isMarathi ? 'शिक्षक व स्टाफ' : 'Teachers & Staff'}
-                      </span>
-                      <span className="block text-xs text-slate-500 font-medium mt-0.5 whitespace-nowrap">
-                        {isMarathi ? 'अनुभवी, तज्ञ व समर्पित शिक्षक वृंद' : 'Experienced, Expert & Dedicated Faculty'}
-                      </span>
-                    </div>
-                  </Link>
                 </div>
               )}
             </div>
@@ -542,14 +525,6 @@ export const Navbar = ({ showAdminLink = true }) => {
           >
             <span className="w-1.5 h-1.5 rounded-full bg-gurukul-saffron-500 shrink-0" />
             <span className="text-left">{isMarathi ? 'गुरुकुल कम्प्युटर इन्स्टिट्यूट' : 'Gurukul Computer Institute'}</span>
-          </Link>
-          <Link 
-            to="/staff" 
-            onClick={closeMenu}
-            className="flex items-center gap-2.5 pl-6 pr-3 py-2 text-sm font-semibold text-slate-700 hover:text-gurukul-saffron-600 hover:bg-orange-50/50 rounded-lg transition-colors text-left"
-          >
-            <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 shrink-0" />
-            <span className="text-left">{isMarathi ? 'शिक्षक व स्टाफ (Staff)' : 'Teachers & Staff'}</span>
           </Link>
 
           <Link 

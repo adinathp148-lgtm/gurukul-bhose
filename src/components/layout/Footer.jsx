@@ -51,11 +51,11 @@ export const Footer = ({ showStaffLink = true }) => {
   }, [crmMenuOpen]);
 
   const crmUrls = {
-    admin: `${adminBaseUrl}/admin/leads`,
+    admin: `${adminBaseUrl}/admin/dashboard`,
     adminDashboard: `${adminBaseUrl}/admin/dashboard`,
     adminProfile: `${adminBaseUrl}/admin/profile`,
     telecaller: `${telecallerBaseUrl}/login`,
-    telecallerDashboard: telecallerBaseUrl,
+    telecallerDashboard: `${telecallerBaseUrl}/dashboard`,
     login: `${adminBaseUrl}/login`,
     telecallerRegister: `${telecallerBaseUrl}/register`,
     adminRegister: `${adminBaseUrl}/admin/register`
