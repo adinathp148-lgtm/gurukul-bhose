@@ -258,7 +258,7 @@ export const StaffPage = () => {
         isMarathi ? 'NEET बायोलॉजी सराव' : 'NEET Biology Prep',
         isMarathi ? 'सूक्ष्मजीवशास्त्र लॅब' : 'Microbiology Lab'
       ],
-      image: '/images/staff/azharuddin-dhawade.png',
+      image: '/images/staff/azharuddin-dhawade.png?v=20261119c',
       icon: FlaskConical,
       accentColor: 'from-emerald-600 to-teal-700'
     },
