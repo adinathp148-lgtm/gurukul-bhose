@@ -5,7 +5,11 @@
   "rewrites": [
     {
       "source": "/telecaller/assets/(.*)",
-      "destination": "/telecaller/assets/$1"
+      "destination": "/assets/$1"
+    },
+    {
+      "source": "/telecaller/images/(.*)",
+      "destination": "/images/$1"
     },
     {
       "source": "/telecaller/gurukul-logo.png",
@@ -18,6 +22,10 @@
     {
       "source": "/admin/assets/(.*)",
       "destination": "/assets/$1"
+    },
+    {
+      "source": "/admin/images/(.*)",
+      "destination": "/images/$1"
     },
     {
       "source": "/admin/gurukul-logo.png",
