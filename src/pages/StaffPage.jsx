@@ -195,7 +195,7 @@ export const StaffPage = () => {
         isMarathi ? 'ज्येष्ठ विषय तज्ज्ञ' : 'Senior Subject Expert',
         isMarathi ? 'बोर्ड निकाल गुणवत्ता' : 'Board Exam Mentorship'
       ],
-      image: '/images/staff/rekha-jere.jpg?v=2',
+      image: '/images/staff/rekha-jere.jpg?v=20261119b',
       icon: Award,
       accentColor: 'from-purple-600 to-indigo-600'
     },
@@ -279,7 +279,7 @@ export const StaffPage = () => {
         isMarathi ? 'मेकॅनिकल व प्रॉडक्शन तज्ज्ञ' : 'Mechanical & Production Expert',
         isMarathi ? 'अभियांत्रिकी संकल्पना मार्गदर्शन' : 'Applied Engineering Concepts'
       ],
-      image: '/images/staff/pandurang-khot.jpg',
+      image: '/images/staff/pandurang-khot.jpg?v=20261119b',
       icon: Award,
       accentColor: 'from-blue-600 to-cyan-600'
     }
