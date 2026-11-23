@@ -19,7 +19,18 @@ import {
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useCMS } from '../../../contexts/CMSContext';
+import { useLanguage } from '../../../contexts/LanguageContext';
 import { uploadMediaFile, validateUploadFile, isStoragePathInUse } from '../../../services/storage/mediaUploadService';
+
+const GALLERY_CATEGORY_LABELS = {
+  'कॅम्पस (Campus)': { mr: 'कॅम्पस (Campus)', mrShort: 'कॅम्पस', en: 'Campus' },
+  'उपक्रम (Activities)': { mr: 'उपक्रम (Activities)', mrShort: 'उपक्रम', en: 'Activities' },
+  'योगा उपक्रम (Yoga Activities)': { mr: 'योगा उपक्रम (Yoga Activities)', mrShort: 'योगा उपक्रम', en: 'Yoga Activities' },
+  'क्रीडा (Sports)': { mr: 'क्रीडा (Sports)', mrShort: 'क्रीडा', en: 'Sports' },
+  'स्नेहसंमेलन (Gathering)': { mr: 'स्नेहसंमेलन (Gathering)', mrShort: 'स्नेहसंमेलन', en: 'Gathering' },
+  'शैक्षणिक (Academics)': { mr: 'शैक्षणिक (Academics)', mrShort: 'शैक्षणिक', en: 'Academics' },
+  'गुणवंत निकाल (Result)': { mr: 'गुणवंत निकाल (Result)', mrShort: 'गुणवंत निकाल', en: 'Result' }
+};
 
 export const CMSGalleryPage = () => {
   const { 
@@ -31,6 +42,7 @@ export const CMSGalleryPage = () => {
     programs = [],
     loading = false 
   } = useCMS();
+  const { isMarathi } = useLanguage();
 
   const safeGallery = Array.isArray(gallery) ? gallery : [];
 
@@ -45,6 +57,21 @@ export const CMSGalleryPage = () => {
   const [message, setMessage] = useState(null);
   const [customCategoryInput, setCustomCategoryInput] = useState('');
   const [showNewCatInput, setShowNewCatInput] = useState(false);
+
+  const formatCategory = (cat, short = false) => {
+    const str = typeof cat === 'string' ? cat : (isMarathi ? (cat?.mr || cat?.en || '') : (cat?.en || cat?.mr || ''));
+    if (!str) return isMarathi ? 'कॅम्पस' : 'Campus';
+    const mapped = GALLERY_CATEGORY_LABELS[str];
+    if (mapped) {
+      if (isMarathi) return short ? mapped.mrShort : mapped.mr;
+      return mapped.en;
+    }
+    if (!isMarathi) {
+      const parenMatch = str.match(/\(([^)]+)\)/);
+      if (parenMatch) return parenMatch[1];
+    }
+    return short ? str.split(' ')[0] : str;
+  };
 
   const defaultItem = {
     imageId: '',
@@ -125,9 +152,15 @@ export const CMSGalleryPage = () => {
         title: prev.title || file.name.replace(/\.[^/.]+$/, "").replace(/[-_]/g, ' '),
         altText: prev.altText || prev.title || file.name.replace(/\.[^/.]+$/, "")
       }));
-      setMessage({ type: 'success', text: 'फोटो अपलोड झाला.' });
+      setMessage({
+        type: 'success',
+        text: isMarathi ? 'फोटो अपलोड झाला.' : 'Photo uploaded successfully.'
+      });
     } catch (err) {
-      setMessage({ type: 'error', text: err.message || 'फोटो अपलोड करताना त्रुटी आली.' });
+      setMessage({
+        type: 'error',
+        text: err.message || (isMarathi ? 'फोटो अपलोड करताना त्रुटी आली.' : 'Error uploading photo.')
+      });
     } finally {
       setUploading(false);
     }
@@ -176,7 +209,9 @@ export const CMSGalleryPage = () => {
     setShowBatchModal(false);
     setMessage({ 
       type: 'success', 
-      text: `${successCount} फोटो बॅच अपलोड यशस्वीरीत्या पूर्ण झाले!` 
+      text: isMarathi
+        ? `${successCount} फोटो बॅच अपलोड यशस्वीरीत्या पूर्ण झाले!`
+        : `Batch upload completed: ${successCount} photos added successfully!`
     });
   };
 
@@ -184,7 +219,10 @@ export const CMSGalleryPage = () => {
     e.preventDefault();
     const finalUrl = formData.imageUrl || formData.url;
     if (!finalUrl) {
-      setMessage({ type: 'error', text: 'कृपया फोटो निवडा किंवा URL भरा.' });
+      setMessage({
+        type: 'error',
+        text: isMarathi ? 'कृपया फोटो निवडा किंवा URL भरा.' : 'Please select a photo or enter an image URL.'
+      });
       return;
     }
 
@@ -195,10 +233,18 @@ export const CMSGalleryPage = () => {
         url: finalUrl,
         displayOrder: parseInt(formData.displayOrder) || 1
       });
-      setMessage({ type: 'success', text: isEditing ? 'फोटो माहिती अद्यतनित केली!' : 'फोटो गॅलरीमध्ये यशस्वीरीत्या जोडला गेला!' });
+      setMessage({
+        type: 'success',
+        text: isEditing
+          ? (isMarathi ? 'फोटो माहिती अद्यतनित केली!' : 'Photo details updated successfully!')
+          : (isMarathi ? 'फोटो गॅलरीमध्ये यशस्वीरीत्या जोडला गेला!' : 'Photo added to gallery successfully!')
+      });
       setShowUploadModal(false);
     } catch (err) {
-      setMessage({ type: 'error', text: err.message || 'जतन करताना त्रुटी आली.' });
+      setMessage({
+        type: 'error',
+        text: err.message || (isMarathi ? 'जतन करताना त्रुटी आली.' : 'Error saving photo.')
+      });
     }
   };
 
@@ -211,10 +257,15 @@ export const CMSGalleryPage = () => {
       });
       setMessage({ 
         type: 'success', 
-        text: `फोटो स्थिती ${newStatus === 'published' ? 'प्रकाशित' : 'मसुदा'} म्हणून बदलली.` 
+        text: isMarathi
+          ? `फोटो स्थिती ${newStatus === 'published' ? 'प्रकाशित' : 'मसुदा'} म्हणून बदलली.`
+          : `Photo status changed to ${newStatus === 'published' ? 'Published' : 'Draft'}.`
       });
     } catch (err) {
-      setMessage({ type: 'error', text: 'स्थिती बदलताना त्रुटी आली.' });
+      setMessage({
+        type: 'error',
+        text: isMarathi ? 'स्थिती बदलताना त्रुटी आली.' : 'Failed to update status.'
+      });
     }
   };
 
@@ -229,20 +280,32 @@ export const CMSGalleryPage = () => {
 
     if (inUse) {
       const confirmForce = window.confirm(
-        `हा फोटो इतर पानांवर किंवा कोर्सेसमध्ये संदर्भांकित असू शकतो.\nतरीही हा फोटो गॅलरीतून हटवायचा आहे का?`
+        isMarathi
+          ? `हा फोटो इतर पानांवर किंवा कोर्सेसमध्ये संदर्भांकित असू शकतो.\nतरीही हा फोटो गॅलरीतून हटवायचा आहे का?`
+          : `This photo may be referenced on other pages or courses.\nAre you sure you still want to delete it from the gallery?`
       );
       if (!confirmForce) return;
     } else {
-      if (!window.confirm(`तुम्हाला खात्री आहे की "${item.title || 'हा फोटो'}" गॅलरीतून हटवायचा आहे?`)) {
+      if (!window.confirm(
+        isMarathi
+          ? `तुम्हाला खात्री आहे की "${item.title || 'हा फोटो'}" गॅलरीतून हटवायचा आहे?`
+          : `Are you sure you want to delete "${item.title || 'this photo'}" from the gallery?`
+      )) {
         return;
       }
     }
 
     try {
       await deleteGalleryItem(item.imageId || item.id);
-      setMessage({ type: 'success', text: 'फोटो गॅलरीतून काढून टाकला.' });
+      setMessage({
+        type: 'success',
+        text: isMarathi ? 'फोटो गॅलरीतून काढून टाकला.' : 'Photo deleted from gallery.'
+      });
     } catch (err) {
-      setMessage({ type: 'error', text: err.message || 'हटवताना त्रुटी आली.' });
+      setMessage({
+        type: 'error',
+        text: err.message || (isMarathi ? 'हटवताना त्रुटी आली.' : 'Error deleting photo.')
+      });
     }
   };
 
@@ -275,17 +338,19 @@ export const CMSGalleryPage = () => {
           <Link 
             to="/admin/cms" 
             className="p-2 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-lg transition-colors"
-            title="CMS डॅशबोर्डवर परत जा"
+            title={isMarathi ? 'CMS डॅशबोर्डवर परत जा' : 'Back to CMS Dashboard'}
           >
             <ArrowLeft className="w-5 h-5" />
           </Link>
           <div>
             <h1 className="text-2xl font-black text-gurukul-navy-900 flex items-center gap-2">
               <ImageIcon className="w-7 h-7 text-gurukul-saffron-600" />
-              <span>फोटो गॅलरी व्यवस्थापन (Photo Gallery CMS)</span>
+              <span>{isMarathi ? 'फोटो गॅलरी व्यवस्थापन (Photo Gallery CMS)' : 'Photo Gallery Management (CMS)'}</span>
             </h1>
             <p className="text-sm text-slate-500">
-              कॅम्पस, स्नेहसंमेलन, क्रीडा, बॅच अपलोड, कॅप्शन, alt text व क्रम व्यवस्थापित करा.
+              {isMarathi
+                ? 'कॅम्पस, स्नेहसंमेलन, क्रीडा, बॅच अपलोड, कॅप्शन, alt text व क्रम व्यवस्थापित करा.'
+                : 'Manage campus, gathering, and sports photos, batch uploads, captions, alt text, and ordering.'}
             </p>
           </div>
         </div>
@@ -296,10 +361,10 @@ export const CMSGalleryPage = () => {
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-1.5 px-3.5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold text-xs border border-slate-300 transition-all"
-            title="लाईव्ह वेबसाईटवर फोटो गॅलरी पहा"
+            title={isMarathi ? 'लाईव्ह वेबसाईटवर फोटो गॅलरी पहा' : 'View Photo Gallery on Live Website'}
           >
             <Eye className="w-4 h-4 text-gurukul-navy-900" />
-            <span className="hidden sm:inline">लाईव्ह गॅलरी पहा</span>
+            <span className="hidden sm:inline">{isMarathi ? 'लाईव्ह गॅलरी पहा' : 'View Live Gallery'}</span>
           </a>
           <button
             type="button"
@@ -307,7 +372,7 @@ export const CMSGalleryPage = () => {
             className="inline-flex items-center gap-1.5 px-4 py-2.5 bg-gurukul-navy-900 hover:bg-gurukul-navy-950 text-white rounded-xl font-bold text-xs shadow transition-all"
           >
             <Layers className="w-4 h-4 text-gurukul-saffron-400" />
-            <span>बॅच अपलोड (Multiple)</span>
+            <span>{isMarathi ? 'बॅच अपलोड (Multiple)' : 'Batch Upload (Multiple)'}</span>
           </button>
           <button
             type="button"
@@ -315,7 +380,7 @@ export const CMSGalleryPage = () => {
             className="inline-flex items-center gap-1.5 px-4 py-2.5 bg-gurukul-saffron-600 hover:bg-gurukul-saffron-700 text-white rounded-xl font-bold text-xs shadow hover:shadow-md transition-all"
           >
             <Plus className="w-4 h-4" />
-            <span>नवीन फोटो (Single)</span>
+            <span>{isMarathi ? 'नवीन फोटो (Single)' : 'Add Photo (Single)'}</span>
           </button>
         </div>
       </div>
@@ -333,7 +398,9 @@ export const CMSGalleryPage = () => {
       {/* Toolbar: Category Filter & Search */}
       <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
         <div className="flex items-center gap-1.5 flex-wrap">
-          <span className="text-xs font-bold text-slate-500 uppercase mr-1">वर्गवारी:</span>
+          <span className="text-xs font-bold text-slate-500 uppercase mr-1">
+            {isMarathi ? 'वर्गवारी:' : 'Category:'}
+          </span>
           <button
             onClick={() => setSelectedCategory('all')}
             className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${
@@ -342,7 +409,7 @@ export const CMSGalleryPage = () => {
                 : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
             }`}
           >
-            सर्व ({safeGallery.length})
+            {isMarathi ? `सर्व (${safeGallery.length})` : `All (${safeGallery.length})`}
           </button>
           {existingCategories.map(cat => (
             <button
@@ -354,7 +421,7 @@ export const CMSGalleryPage = () => {
                   : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
               }`}
             >
-              {typeof cat === 'string' ? cat.split(' ')[0] : String(cat)}
+              {formatCategory(cat, true)}
             </button>
           ))}
         </div>
@@ -365,7 +432,7 @@ export const CMSGalleryPage = () => {
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="फोटो शोधा..."
+            placeholder={isMarathi ? 'फोटो शोधा...' : 'Search photos...'}
             className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:bg-white outline-none"
           />
         </div>
@@ -377,7 +444,9 @@ export const CMSGalleryPage = () => {
           <form onSubmit={handleSave} className="bg-white rounded-2xl max-w-lg w-full p-6 space-y-4 shadow-2xl animate-in zoom-in-95 my-8">
             <div className="flex items-center justify-between pb-3 border-b border-slate-100">
               <h2 className="text-base font-bold text-gurukul-navy-900">
-                {isEditing ? 'फोटो संपादन (Edit Photo)' : 'नवीन फोटो जोडा (Add Photo to Gallery)'}
+                {isEditing
+                  ? (isMarathi ? 'फोटो संपादन (Edit Photo)' : 'Edit Photo')
+                  : (isMarathi ? 'नवीन फोटो जोडा (Add Photo to Gallery)' : 'Add Photo to Gallery')}
               </h2>
               <button
                 type="button"
@@ -391,7 +460,7 @@ export const CMSGalleryPage = () => {
             {/* Photo preview or uploader */}
             <div className="space-y-2">
               <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
-                फोटो निवडा (Select Photo - Max 5MB) *
+                {isMarathi ? 'फोटो निवडा (Select Photo - Max 5MB) *' : 'Select Photo (Max 5MB) *'}
               </label>
               {(formData.imageUrl || formData.url) ? (
                 <div className="relative rounded-xl overflow-hidden border border-slate-200 h-48 bg-slate-100">
@@ -401,16 +470,20 @@ export const CMSGalleryPage = () => {
                     onClick={() => setFormData(prev => ({ ...prev, url: '', imageUrl: '' }))}
                     className="absolute top-2 right-2 p-1.5 bg-red-600 text-white rounded-lg text-xs font-bold shadow"
                   >
-                    बदला
+                    {isMarathi ? 'बदला' : 'Change'}
                   </button>
                 </div>
               ) : (
                 <label className="flex flex-col items-center justify-center h-40 border-2 border-dashed border-slate-300 hover:border-gurukul-saffron-500 rounded-xl cursor-pointer bg-slate-50 hover:bg-orange-50/30 transition-colors">
                   <Upload className="w-8 h-8 text-gurukul-saffron-600 mb-2" />
                   <span className="text-xs font-bold text-slate-700">
-                    {uploading ? 'अपलोड होत आहे...' : 'फोटो निवडण्यासाठी येथे क्लिक करा'}
+                    {uploading
+                      ? (isMarathi ? 'अपलोड होत आहे...' : 'Uploading...')
+                      : (isMarathi ? 'फोटो निवडण्यासाठी येथे क्लिक करा' : 'Click here to select a photo')}
                   </span>
-                  <span className="text-[10px] text-slate-400 mt-1">JPG, PNG, WebP (५MB पर्यंत)</span>
+                  <span className="text-[10px] text-slate-400 mt-1">
+                    {isMarathi ? 'JPG, PNG, WebP (५MB पर्यंत)' : 'JPG, PNG, WebP (Up to 5MB)'}
+                  </span>
                   <input type="file" accept="image/*" onChange={handleFileSelect} className="hidden" />
                 </label>
               )}
@@ -418,40 +491,40 @@ export const CMSGalleryPage = () => {
 
             <div>
               <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                शीर्षक (Photo Title) *
+                {isMarathi ? 'शीर्षक (Photo Title) *' : 'Photo Title *'}
               </label>
               <input
                 type="text"
                 required
                 value={formData.title}
                 onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-                placeholder="उदा. वार्षिक स्नेहसंमेलन व बक्षीस वितरण"
+                placeholder={isMarathi ? 'उदा. वार्षिक स्नेहसंमेलन व बक्षीस वितरण' : 'e.g. Annual Gathering & Prize Distribution'}
                 className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:bg-white outline-none"
               />
             </div>
 
             <div>
               <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                कॅप्शन (Caption)
+                {isMarathi ? 'कॅप्शन (Caption)' : 'Caption'}
               </label>
               <textarea
                 rows={2}
                 value={formData.caption || ''}
                 onChange={(e) => setFormData(prev => ({ ...prev, caption: e.target.value }))}
-                placeholder="फोटोबद्दल अधिक माहिती किंवा वर्णन..."
+                placeholder={isMarathi ? 'फोटोबद्दल अधिक माहिती किंवा वर्णन...' : 'Additional description or details about the photo...'}
                 className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:bg-white outline-none"
               />
             </div>
 
             <div>
               <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                Alt Text (दृष्टिहीनांसाठी स्क्रीन-रीडर वर्णन)
+                {isMarathi ? 'Alt Text (दृष्टिहीनांसाठी स्क्रीन-रीडर वर्णन)' : 'Alt Text (Screen-reader accessibility description)'}
               </label>
               <input
                 type="text"
                 value={formData.altText || ''}
                 onChange={(e) => setFormData(prev => ({ ...prev, altText: e.target.value }))}
-                placeholder="उदा. गुरुकुल भोसे पटांगणावर परेड सराव करताना विद्यार्थी"
+                placeholder={isMarathi ? 'उदा. गुरुकुल भोसे पटांगणावर परेड सराव करताना विद्यार्थी' : 'e.g. Students practicing parade on Gurukul Bhose campus ground'}
                 className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:bg-white outline-none"
               />
             </div>
@@ -460,14 +533,14 @@ export const CMSGalleryPage = () => {
               <div>
                 <div className="flex items-center justify-between mb-1">
                   <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">
-                    वर्गवारी (Category)
+                    {isMarathi ? 'वर्गवारी (Category)' : 'Category'}
                   </label>
                   <button
                     type="button"
                     onClick={() => setShowNewCatInput(!showNewCatInput)}
                     className="text-[10px] text-gurukul-saffron-600 font-bold hover:underline"
                   >
-                    + नवीन
+                    {isMarathi ? '+ नवीन' : '+ New'}
                   </button>
                 </div>
 
@@ -477,7 +550,7 @@ export const CMSGalleryPage = () => {
                       type="text"
                       value={customCategoryInput}
                       onChange={(e) => setCustomCategoryInput(e.target.value)}
-                      placeholder="नवीन वर्गवारीचे नाव..."
+                      placeholder={isMarathi ? 'नवीन वर्गवारीचे नाव...' : 'New category name...'}
                       className="flex-1 px-2.5 py-1.5 border rounded-lg text-xs"
                     />
                     <button
@@ -485,7 +558,7 @@ export const CMSGalleryPage = () => {
                       onClick={handleAddCustomCategory}
                       className="px-2 py-1.5 bg-gurukul-saffron-500 text-white rounded-lg text-xs font-bold"
                     >
-                      जोडा
+                      {isMarathi ? 'जोडा' : 'Add'}
                     </button>
                   </div>
                 ) : (
@@ -495,7 +568,7 @@ export const CMSGalleryPage = () => {
                     className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:bg-white outline-none"
                   >
                     {existingCategories.map(cat => (
-                      <option key={cat} value={cat}>{cat}</option>
+                      <option key={cat} value={cat}>{formatCategory(cat)}</option>
                     ))}
                   </select>
                 )}
@@ -504,7 +577,7 @@ export const CMSGalleryPage = () => {
               <div className="grid grid-cols-2 gap-2">
                 <div>
                   <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                    क्रम (Order)
+                    {isMarathi ? 'क्रम (Order)' : 'Order'}
                   </label>
                   <input
                     type="number"
@@ -516,15 +589,15 @@ export const CMSGalleryPage = () => {
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                    स्थिती
+                    {isMarathi ? 'स्थिती' : 'Status'}
                   </label>
                   <select
                     value={formData.status || 'published'}
                     onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value }))}
                     className="w-full px-2 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:bg-white outline-none"
                   >
-                    <option value="published">🟢 प्रकाशित</option>
-                    <option value="draft">🟡 मसुदा</option>
+                    <option value="published">{isMarathi ? '🟢 प्रकाशित' : '🟢 Published'}</option>
+                    <option value="draft">{isMarathi ? '🟡 मसुदा' : '🟡 Draft'}</option>
                   </select>
                 </div>
               </div>
@@ -536,7 +609,7 @@ export const CMSGalleryPage = () => {
                 onClick={() => setShowUploadModal(false)}
                 className="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl"
               >
-                रद्द करा
+                {isMarathi ? 'रद्द करा' : 'Cancel'}
               </button>
               <button
                 type="submit"
@@ -544,7 +617,11 @@ export const CMSGalleryPage = () => {
                 className="inline-flex items-center gap-1.5 px-5 py-2.5 bg-gurukul-saffron-600 hover:bg-gurukul-saffron-700 disabled:opacity-50 text-white rounded-xl font-bold text-xs shadow"
               >
                 <Save className="w-4 h-4" />
-                <span>{isEditing ? 'बदल सेव्ह करा' : 'गॅलरीत जोडा'}</span>
+                <span>
+                  {isEditing
+                    ? (isMarathi ? 'बदल सेव्ह करा' : 'Save Changes')
+                    : (isMarathi ? 'गॅलरीत जोडा' : 'Add to Gallery')}
+                </span>
               </button>
             </div>
           </form>
@@ -558,7 +635,7 @@ export const CMSGalleryPage = () => {
             <div className="flex items-center justify-between pb-3 border-b border-slate-100">
               <h2 className="text-base font-bold text-gurukul-navy-900 flex items-center gap-2">
                 <Layers className="w-5 h-5 text-gurukul-saffron-500" />
-                <span>एकाच वेळी अनेक फोटो अपलोड करा (Batch Upload)</span>
+                <span>{isMarathi ? 'एकाच वेळी अनेक फोटो अपलोड करा (Batch Upload)' : 'Batch Upload Multiple Photos'}</span>
               </h2>
               <button
                 type="button"
@@ -570,12 +647,14 @@ export const CMSGalleryPage = () => {
             </div>
 
             <p className="text-xs text-slate-600">
-              आपण कॉम्प्युटरवरून एकाच वेळी अनेक फोटो निवडून थेट Firebase Storage मध्ये सुरक्षित अपलोड करू शकता.
+              {isMarathi
+                ? 'आपण कॉम्प्युटरवरून एकाच वेळी अनेक फोटो निवडून थेट Firebase Storage मध्ये सुरक्षित अपलोड करू शकता.'
+                : 'Select multiple photos at once from your device to upload directly and securely to Firebase Storage.'}
             </p>
 
             <div>
               <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                सर्व फोटोंची वर्गवारी (Category for batch)
+                {isMarathi ? 'सर्व फोटोंची वर्गवारी (Category for batch)' : 'Category for Batch'}
               </label>
               <select
                 value={formData.category}
@@ -583,7 +662,7 @@ export const CMSGalleryPage = () => {
                 className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold"
               >
                 {existingCategories.map(cat => (
-                  <option key={cat} value={cat}>{cat}</option>
+                  <option key={cat} value={cat}>{formatCategory(cat)}</option>
                 ))}
               </select>
             </div>
@@ -592,11 +671,15 @@ export const CMSGalleryPage = () => {
               <Upload className="w-9 h-9 text-gurukul-saffron-600 mb-2" />
               <span className="text-xs font-bold text-slate-800">
                 {uploading 
-                  ? `अपलोड सुरू आहे (${batchProgress.current}/${batchProgress.total})...` 
-                  : 'एकाच वेळी अनेक फोटो निवडण्यासाठी येथे क्लिक करा'}
+                  ? (isMarathi
+                      ? `अपलोड सुरू आहे (${batchProgress.current}/${batchProgress.total})...`
+                      : `Uploading (${batchProgress.current}/${batchProgress.total})...`)
+                  : (isMarathi
+                      ? 'एकाच वेळी अनेक फोटो निवडण्यासाठी येथे क्लिक करा'
+                      : 'Click here to select multiple photos')}
               </span>
               <span className="text-[10px] text-slate-400 mt-1">
-                Ctrl किंवा Shift दाबून एकापेक्षा जास्त फोटो निवडा
+                {isMarathi ? 'Ctrl किंवा Shift दाबून एकापेक्षा जास्त फोटो निवडा' : 'Hold Ctrl or Shift to select multiple photos'}
               </span>
               <input
                 type="file"
@@ -646,10 +729,10 @@ export const CMSGalleryPage = () => {
             <div className="p-4 space-y-1">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold text-gurukul-saffron-600">
-                  {typeof showPreviewModal.category === 'string' ? showPreviewModal.category : (showPreviewModal.category?.mr || 'कॅम्पस')}
+                  {formatCategory(showPreviewModal.category)}
                 </span>
                 <span className="text-[10px] text-slate-400">
-                  क्रम: #{showPreviewModal.displayOrder || 1}
+                  {isMarathi ? 'क्रम:' : 'Order:'} #{showPreviewModal.displayOrder || 1}
                 </span>
               </div>
               <h3 className="text-base font-bold text-gurukul-navy-900">{showPreviewModal.title}</h3>
@@ -669,12 +752,18 @@ export const CMSGalleryPage = () => {
           </div>
           <div className="max-w-md mx-auto space-y-1">
             <h3 className="text-base font-bold text-slate-800">
-              {searchTerm || selectedCategory !== 'all' ? 'कोणतेही फोटो सापडले नाहीत' : 'गॅलरीमध्ये अद्याप फोटो नाहीत'}
+              {searchTerm || selectedCategory !== 'all'
+                ? (isMarathi ? 'कोणतेही फोटो सापडले नाहीत' : 'No photos found')
+                : (isMarathi ? 'गॅलरीमध्ये अद्याप फोटो नाहीत' : 'No photos in the gallery yet')}
             </h3>
             <p className="text-xs text-slate-500">
               {searchTerm || selectedCategory !== 'all' 
-                ? 'कृपया वेगळा शोध शब्द वापरा किंवा वर्गवारी फिल्टर बदला.' 
-                : 'नवीन फोटो जोडण्यासाठी वर दिलेल्या "नवीन फोटो (Single)" किंवा "बॅच अपलोड" बटणावर क्लिक करा.'}
+                ? (isMarathi
+                    ? 'कृपया वेगळा शोध शब्द वापरा किंवा वर्गवारी फिल्टर बदला.'
+                    : 'Try a different search term or adjust the category filter.')
+                : (isMarathi
+                    ? 'नवीन फोटो जोडण्यासाठी वर दिलेल्या "नवीन फोटो (Single)" किंवा "बॅच अपलोड" बटणावर क्लिक करा.'
+                    : 'Click "Add Photo (Single)" or "Batch Upload" above to add new photos.')}
             </p>
           </div>
           <div className="flex items-center justify-center gap-3 pt-2">
@@ -684,7 +773,7 @@ export const CMSGalleryPage = () => {
                 onClick={() => { setSearchTerm(''); setSelectedCategory('all'); }}
                 className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition-colors"
               >
-                फिल्टर काढा (Reset Filter)
+                {isMarathi ? 'फिल्टर काढा' : 'Reset Filter'}
               </button>
             ) : (
               <button
@@ -693,7 +782,7 @@ export const CMSGalleryPage = () => {
                 className="inline-flex items-center gap-1.5 px-4 py-2.5 bg-gurukul-saffron-600 hover:bg-gurukul-saffron-700 text-white rounded-xl text-xs font-bold shadow transition-all"
               >
                 <Plus className="w-4 h-4" />
-                <span>पहिला फोटो जोडा</span>
+                <span>{isMarathi ? 'पहिला फोटो जोडा' : 'Add First Photo'}</span>
               </button>
             )}
           </div>
@@ -708,7 +797,7 @@ export const CMSGalleryPage = () => {
               >
                 <img 
                   src={item.imageUrl || item.url || item.image || '/gurukul-logo.png'} 
-                  alt={item.altText || item.title || 'गॅलरी फोटो'} 
+                  alt={item.altText || item.title || (isMarathi ? 'गॅलरी फोटो' : 'Gallery Photo')} 
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                   onError={(e) => {
                     e.currentTarget.onerror = null;
@@ -717,7 +806,7 @@ export const CMSGalleryPage = () => {
                 />
                 <div className="absolute top-2 left-2 flex items-center gap-1.5">
                   <span className="px-2 py-0.5 rounded-full bg-black/60 text-white text-[10px] font-semibold backdrop-blur-xs">
-                    {typeof item.category === 'string' ? item.category.split(' ')[0] : (item.category?.mr || 'कॅम्पस')}
+                    {formatCategory(item.category, true)}
                   </span>
                   <span className="px-1.5 py-0.5 rounded bg-white/90 text-slate-900 text-[10px] font-bold">
                     #{item.displayOrder || 1}
@@ -734,9 +823,11 @@ export const CMSGalleryPage = () => {
                       ? 'bg-emerald-500 text-white' 
                       : 'bg-amber-400 text-slate-900'
                   }`}
-                  title="स्थिती बदलण्यासाठी क्लिक करा"
+                  title={isMarathi ? 'स्थिती बदलण्यासाठी क्लिक करा' : 'Click to toggle status'}
                 >
-                  {item.status === 'published' ? 'प्रकाशित' : 'मसुदा'}
+                  {item.status === 'published'
+                    ? (isMarathi ? 'प्रकाशित' : 'Published')
+                    : (isMarathi ? 'मसुदा' : 'Draft')}
                 </button>
               </div>
 
@@ -754,7 +845,7 @@ export const CMSGalleryPage = () => {
                       type="button"
                       onClick={() => setShowPreviewModal(item)}
                       className="p-1 text-slate-400 hover:text-gurukul-saffron-600 rounded"
-                      title="प्रिव्ह्यू पहा"
+                      title={isMarathi ? 'प्रिव्ह्यू पहा' : 'Preview'}
                     >
                       <Eye className="w-3.5 h-3.5" />
                     </button>
@@ -762,7 +853,7 @@ export const CMSGalleryPage = () => {
                       type="button"
                       onClick={() => handleOpenEdit(item)}
                       className="p-1 text-slate-400 hover:text-gurukul-navy-900 rounded"
-                      title="संपादन करा"
+                      title={isMarathi ? 'संपादन करा' : 'Edit'}
                     >
                       <Edit2 className="w-3.5 h-3.5" />
                     </button>
@@ -771,7 +862,7 @@ export const CMSGalleryPage = () => {
                     type="button"
                     onClick={() => handleDelete(item)}
                     className="p-1 text-slate-400 hover:text-red-500 transition-colors"
-                    title="काढून टाका"
+                    title={isMarathi ? 'काढून टाका' : 'Delete'}
                   >
                     <Trash2 className="w-3.5 h-3.5 text-red-500" />
                   </button>

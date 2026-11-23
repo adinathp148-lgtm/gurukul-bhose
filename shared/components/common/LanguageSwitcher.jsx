@@ -67,7 +67,7 @@ export const LanguageSwitcher = ({ className = '', compact = false }) => {
         onClick={toggleDropdown}
         aria-haspopup="listbox"
         aria-expanded={isOpen}
-        aria-label="भाषा बदला / Change Language"
+        aria-label={`${currentLabel} — भाषा बदला / Change Language`}
         title="भाषा बदला / Change Language"
         className={`h-8 sm:h-8.5 inline-flex items-center justify-center gap-1.5 px-2 sm:px-2.5 rounded-lg text-xs font-semibold transition-all border shadow-2xs whitespace-nowrap cursor-pointer ${
           isOpen

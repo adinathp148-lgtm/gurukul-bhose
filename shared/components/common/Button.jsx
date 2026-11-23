@@ -19,7 +19,7 @@ export const Button = ({
   const baseStyles = 'inline-flex items-center justify-center font-bold rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed';
 
   const variants = {
-    primary: 'bg-gradient-to-r from-gurukul-saffron-600 to-gurukul-saffron-500 hover:from-gurukul-saffron-500 hover:to-gurukul-saffron-600 text-white focus:ring-gurukul-saffron-400 shadow-xs hover:shadow-md active:scale-[0.99]',
+    primary: 'bg-gradient-to-r from-gurukul-saffron-600 to-gurukul-saffron-700 hover:from-gurukul-saffron-700 hover:to-gurukul-saffron-800 text-white focus:ring-gurukul-saffron-400 shadow-xs hover:shadow-md active:scale-[0.99]',
     secondary: 'bg-gurukul-navy-950 hover:bg-gurukul-navy-900 text-white focus:ring-gurukul-navy-700 shadow-xs hover:shadow-md active:scale-[0.99]',
     outline: 'border border-slate-300 hover:border-gurukul-saffron-500 text-slate-700 hover:text-gurukul-saffron-600 bg-white focus:ring-gurukul-saffron-400 shadow-xs hover:bg-orange-50/40',
     'outline-light': 'border border-white/20 hover:border-white/40 text-white bg-white/10 hover:bg-white/20 focus:ring-gurukul-saffron-400 shadow-xs backdrop-blur-xs',

@@ -79,7 +79,6 @@ export const TalentSearchPage = () => {
         title="गुरुकुल निवासी टॅलेंट सर्च अकॅडमी"
         subtitle="स्कॉलरशिप, नवोदय विद्यालय, सैनिक स्कूल प्रवेश परीक्षा, BDS, NMMS, NTS व SPI विशेष निवासी बॅचेस"
         breadcrumbs={[
-          { label: 'मुख्यपृष्ठ (Home)', link: '/' },
           { label: 'टॅलेंट सर्च अकॅडमी' }
         ]}
       />

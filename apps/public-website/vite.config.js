@@ -30,12 +30,13 @@ export default defineConfig({
   build: {
     outDir: path.resolve(__dirname, '../../dist/public'),
     emptyOutDir: true,
+    sourcemap: true,
     chunkSizeWarningLimit: 1200,
     rollupOptions: {
       output: {
         manualChunks: {
           'vendor-react': ['react', 'react-dom', 'react-router-dom', 'react-helmet-async'],
-          'vendor-firebase': ['firebase/app', 'firebase/auth', 'firebase/firestore', 'firebase/storage', 'firebase/functions'],
+          'vendor-firebase': ['firebase/app', 'firebase/firestore'],
           'vendor-icons': ['lucide-react']
         }
       }

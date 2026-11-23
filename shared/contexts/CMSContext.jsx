@@ -9,44 +9,23 @@ import {
   facilitiesList as initialFacilities
 } from '../data/initialData';
 
-import {
-  getHomepageCMSData,
-  updateHomepageCMSData,
-  getCMSPages,
-  saveCMSPage,
-  getAboutCMSData,
-  updateAboutCMSData,
-  getCMSPrograms,
-  saveCMSProgram,
-  deleteCMSProgram,
-  getCMSCourses,
-  saveCMSCourse,
-  deleteCMSCourse,
-  getCMSGallery,
-  saveCMSGalleryItem,
-  deleteCMSGalleryItem,
-  getCMSVideos,
-  saveCMSVideo,
-  deleteCMSVideo,
-  getCMSNotices,
-  saveCMSNotice,
-  deleteCMSNotice,
-  getCMSFacilities,
-  saveCMSFacility,
-  deleteCMSFacility,
-  getCMSContact,
-  updateCMSContact,
-  getCMSWebsiteSettings,
-  updateCMSWebsiteSettings,
-  getCMSSEOSettings,
-  updateCMSSEOSettings,
-  getCMSActivityLogs,
-  logCMSActivity,
-  pushInitialDataToFirestore,
-  initialPagesList
-} from '../services/firestore/cmsService';
+// Dynamically load cmsService (and Firebase Firestore) on idle/demand so initial
+// public website paint is never blocked by the Firebase SDK bundle.
+let cmsServicePromise = null;
+const loadCmsService = () => {
+  if (!cmsServicePromise) {
+    cmsServicePromise = import('../services/firestore/cmsService');
+  }
+  return cmsServicePromise;
+};
 
-import { useAuth } from './AuthContext';
+const getStoredUser = () => {
+  try {
+    return JSON.parse(localStorage.getItem('gurukul_active_user') || 'null');
+  } catch {
+    return null;
+  }
+};
 
 const CMSContext = createContext(null);
 
@@ -59,8 +38,7 @@ export const useCMS = () => {
 };
 
 export const CMSProvider = ({ children }) => {
-  const auth = useAuth?.() || {};
-  const currentUser = auth.currentUser;
+  const currentUser = getStoredUser();
 
   // Local state initialized with cached / default data
   const [institution, setInstitution] = useState(() => {
@@ -90,7 +68,7 @@ export const CMSProvider = ({ children }) => {
     } catch {
       // ignore
     }
-    return Array.isArray(initialPagesList) ? initialPagesList : [];
+    return [];
   });
   const [aboutData, setAboutData] = useState(() => {
     try {
@@ -227,24 +205,25 @@ export const CMSProvider = ({ children }) => {
   const [activityLogs, setActivityLogs] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Initial load from CMS service
+  // Initial load from CMS service (lazy-loaded to keep initial bundle lean)
   const loadAllCMSData = async () => {
     setLoading(true);
     try {
+      const cms = await loadCmsService();
       const results = await Promise.allSettled([
-        getHomepageCMSData(),
-        getCMSPages(),
-        getAboutCMSData(),
-        getCMSPrograms(),
-        getCMSCourses(),
-        getCMSGallery(),
-        getCMSVideos(),
-        getCMSNotices(),
-        getCMSFacilities(),
-        getCMSContact(),
-        getCMSWebsiteSettings(),
-        getCMSSEOSettings(),
-        getCMSActivityLogs(30)
+        cms.getHomepageCMSData(),
+        cms.getCMSPages(),
+        cms.getAboutCMSData(),
+        cms.getCMSPrograms(),
+        cms.getCMSCourses(),
+        cms.getCMSGallery(),
+        cms.getCMSVideos(),
+        cms.getCMSNotices(),
+        cms.getCMSFacilities(),
+        cms.getCMSContact(),
+        cms.getCMSWebsiteSettings(),
+        cms.getCMSSEOSettings(),
+        cms.getCMSActivityLogs(30)
       ]);
 
       const val = (idx, fallback = null) => {
@@ -255,7 +234,7 @@ export const CMSProvider = ({ children }) => {
       };
 
       const hp = val(0, null);
-      const pgs = val(1, initialPagesList);
+      const pgs = val(1, cms.initialPagesList || []);
       const abt = val(2, null);
       const prgs = val(3, []);
       const crs = val(4, []);
@@ -296,19 +275,43 @@ export const CMSProvider = ({ children }) => {
   };
 
   useEffect(() => {
-    loadAllCMSData();
+    const pathname = typeof window !== 'undefined' ? window.location.pathname : '';
+    const isAdminRoute = pathname.startsWith('/admin') || pathname.startsWith('/super-admin') || pathname.startsWith('/cms');
+    if (isAdminRoute) {
+      loadAllCMSData();
+      return;
+    }
+    // Defer background Firestore CMS sync until after page load settles so
+    // Firebase SDK never competes with critical LCP/TBT on mobile networks.
+    let loaded = false;
+    const triggerSync = () => {
+      if (loaded) return;
+      loaded = true;
+      loadAllCMSData();
+    };
+    const timer = setTimeout(triggerSync, 4500);
+    const onInteract = () => triggerSync();
+    window.addEventListener('pointerdown', onInteract, { once: true, passive: true });
+    window.addEventListener('keydown', onInteract, { once: true, passive: true });
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener('pointerdown', onInteract);
+      window.removeEventListener('keydown', onInteract);
+    };
   }, []);
 
   // 1. Homepage
   const updateHomepage = async (updates) => {
-    const updated = await updateHomepageCMSData(updates, currentUser);
+    const cms = await loadCmsService();
+    const updated = await cms.updateHomepageCMSData(updates, getStoredUser() || currentUser);
     setHomepageData(updated);
     return updated;
   };
 
   // 2. Structured Pages
   const savePage = async (pageData) => {
-    const updated = await saveCMSPage(pageData, currentUser);
+    const cms = await loadCmsService();
+    const updated = await cms.saveCMSPage(pageData, getStoredUser() || currentUser);
     setPages(prev => prev.some(p => p.pageId === updated.pageId)
       ? prev.map(p => p.pageId === updated.pageId ? updated : p)
       : [...prev, updated]
@@ -318,14 +321,16 @@ export const CMSProvider = ({ children }) => {
 
   // 3. About
   const updateAbout = async (updates) => {
-    const updated = await updateAboutCMSData(updates, currentUser);
+    const cms = await loadCmsService();
+    const updated = await cms.updateAboutCMSData(updates, getStoredUser() || currentUser);
     setAboutData(updated);
     return updated;
   };
 
   // 3B. Programs
   const saveProgram = async (programData) => {
-    const updated = await saveCMSProgram(programData, currentUser);
+    const cms = await loadCmsService();
+    const updated = await cms.saveCMSProgram(programData, getStoredUser() || currentUser);
     setPrograms(prev => prev.some(p => p.programId === updated.programId || p.id === updated.id)
       ? prev.map(p => (p.programId === updated.programId || p.id === updated.id) ? updated : p)
       : [...prev, updated]
@@ -334,14 +339,16 @@ export const CMSProvider = ({ children }) => {
   };
 
   const deleteProgram = async (programId) => {
-    await deleteCMSProgram(programId, currentUser);
+    const cms = await loadCmsService();
+    await cms.deleteCMSProgram(programId, getStoredUser() || currentUser);
     setPrograms(prev => prev.filter(p => p.programId !== programId && p.id !== programId));
     return true;
   };
 
   // 4. Courses
   const saveCourse = async (courseData) => {
-    const updated = await saveCMSCourse(courseData, currentUser);
+    const cms = await loadCmsService();
+    const updated = await cms.saveCMSCourse(courseData, getStoredUser() || currentUser);
     setCourses(prev => prev.some(c => c.courseId === updated.courseId)
       ? prev.map(c => c.courseId === updated.courseId ? updated : c)
       : [...prev, updated]
@@ -350,14 +357,16 @@ export const CMSProvider = ({ children }) => {
   };
 
   const deleteCourse = async (courseId) => {
-    await deleteCMSCourse(courseId, currentUser);
+    const cms = await loadCmsService();
+    await cms.deleteCMSCourse(courseId, getStoredUser() || currentUser);
     setCourses(prev => prev.filter(c => c.courseId !== courseId));
     return true;
   };
 
   // 5. Gallery
   const saveGalleryItem = async (itemData) => {
-    const updated = await saveCMSGalleryItem(itemData, currentUser);
+    const cms = await loadCmsService();
+    const updated = await cms.saveCMSGalleryItem(itemData, getStoredUser() || currentUser);
     setGallery(prev => prev.some(g => g.imageId === updated.imageId)
       ? prev.map(g => g.imageId === updated.imageId ? updated : g)
       : [updated, ...prev]
@@ -366,14 +375,16 @@ export const CMSProvider = ({ children }) => {
   };
 
   const deleteGalleryItem = async (imageId) => {
-    await deleteCMSGalleryItem(imageId, currentUser);
+    const cms = await loadCmsService();
+    await cms.deleteCMSGalleryItem(imageId, getStoredUser() || currentUser);
     setGallery(prev => prev.filter(g => g.imageId !== imageId));
     return true;
   };
 
   // 6. Videos
   const saveVideo = async (videoData) => {
-    const updated = await saveCMSVideo(videoData, currentUser);
+    const cms = await loadCmsService();
+    const updated = await cms.saveCMSVideo(videoData, getStoredUser() || currentUser);
     setVideos(prev => prev.some(v => v.videoId === updated.videoId)
       ? prev.map(v => v.videoId === updated.videoId ? updated : v)
       : [updated, ...prev]
@@ -382,14 +393,16 @@ export const CMSProvider = ({ children }) => {
   };
 
   const deleteVideo = async (videoId) => {
-    await deleteCMSVideo(videoId, currentUser);
+    const cms = await loadCmsService();
+    await cms.deleteCMSVideo(videoId, getStoredUser() || currentUser);
     setVideos(prev => prev.filter(v => v.videoId !== videoId));
     return true;
   };
 
   // 7. Notices
   const saveNotice = async (noticeData) => {
-    const updated = await saveCMSNotice(noticeData, currentUser);
+    const cms = await loadCmsService();
+    const updated = await cms.saveCMSNotice(noticeData, getStoredUser() || currentUser);
     setNotices(prev => prev.some(n => n.noticeId === updated.noticeId)
       ? prev.map(n => n.noticeId === updated.noticeId ? updated : n)
       : [updated, ...prev]
@@ -398,14 +411,16 @@ export const CMSProvider = ({ children }) => {
   };
 
   const deleteNotice = async (noticeId) => {
-    await deleteCMSNotice(noticeId, currentUser);
+    const cms = await loadCmsService();
+    await cms.deleteCMSNotice(noticeId, getStoredUser() || currentUser);
     setNotices(prev => prev.filter(n => n.noticeId !== noticeId && n.id !== noticeId));
     return true;
   };
 
   // 8. Facilities
   const saveFacility = async (facilityData) => {
-    const updated = await saveCMSFacility(facilityData, currentUser);
+    const cms = await loadCmsService();
+    const updated = await cms.saveCMSFacility(facilityData, getStoredUser() || currentUser);
     setFacilities(prev => prev.some(f => f.facilityId === updated.facilityId)
       ? prev.map(f => f.facilityId === updated.facilityId ? updated : f)
       : [...prev, updated]
@@ -414,14 +429,16 @@ export const CMSProvider = ({ children }) => {
   };
 
   const deleteFacility = async (facilityId) => {
-    await deleteCMSFacility(facilityId, currentUser);
+    const cms = await loadCmsService();
+    await cms.deleteCMSFacility(facilityId, getStoredUser() || currentUser);
     setFacilities(prev => prev.filter(f => f.facilityId !== facilityId));
     return true;
   };
 
   // 9. Contact & Institution Details
   const updateInstitution = async (updates) => {
-    const updated = await updateCMSContact(updates, currentUser);
+    const cms = await loadCmsService();
+    const updated = await cms.updateCMSContact(updates, getStoredUser() || currentUser);
     setContactInfo(updated);
     setInstitution(prev => ({ ...prev, ...updated }));
     return updated;
@@ -429,21 +446,24 @@ export const CMSProvider = ({ children }) => {
 
   // 10. Website Settings
   const updateSettings = async (updates) => {
-    const updated = await updateCMSWebsiteSettings(updates, currentUser);
+    const cms = await loadCmsService();
+    const updated = await cms.updateCMSWebsiteSettings(updates, getStoredUser() || currentUser);
     setWebsiteSettings(updated);
     return updated;
   };
 
   // 11. SEO Settings
   const updateSEO = async (updates) => {
-    const updated = await updateCMSSEOSettings(updates, currentUser);
+    const cms = await loadCmsService();
+    const updated = await cms.updateCMSSEOSettings(updates, getStoredUser() || currentUser);
     setSeoSettings(updated);
     return updated;
   };
 
   // Refresh Activity Logs
   const refreshLogs = async () => {
-    const logs = await getCMSActivityLogs(50);
+    const cms = await loadCmsService();
+    const logs = await cms.getCMSActivityLogs(50);
     setActivityLogs(logs);
     return logs;
   };
@@ -469,7 +489,7 @@ export const CMSProvider = ({ children }) => {
   const value = {
     institution: institution || initialInfo,
     homepageData,
-    pages: Array.isArray(pages) ? pages : initialPagesList,
+    pages: Array.isArray(pages) ? pages : [],
     aboutData,
     programs: Array.isArray(programs) ? programs : [],
     courses: Array.isArray(courses) ? courses : [],
@@ -504,7 +524,8 @@ export const CMSProvider = ({ children }) => {
     refreshLogs,
     resetToDefaults,
     pushToFirestore: async () => {
-      const res = await pushInitialDataToFirestore(currentUser);
+      const cms = await loadCmsService();
+      const res = await cms.pushInitialDataToFirestore(getStoredUser() || currentUser);
       await loadAllCMSData();
       return res;
     },

@@ -17,10 +17,21 @@ import {
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useCMS } from '../../../contexts/CMSContext';
+import { useLanguage } from '../../../contexts/LanguageContext';
 import { uploadMediaFile, validateUploadFile } from '../../../services/storage/mediaUploadService';
+
+const COURSE_CATEGORIES = [
+  { value: 'शाळा (School)', mr: 'शाळा (School)', mrShort: 'शाळा', en: 'School' },
+  { value: 'ज्युनिअर कॉलेज (Junior College)', mr: 'ज्युनिअर कॉलेज (Junior College)', mrShort: 'ज्युनिअर कॉलेज', en: 'Junior College' },
+  { value: 'स्पर्धा परीक्षा अकॅडमी (Competitive)', mr: 'स्पर्धा परीक्षा अकॅडमी (Competitive)', mrShort: 'स्पर्धा परीक्षा अकॅडमी', en: 'Competitive Exams Academy' },
+  { value: 'सायन्स अकॅडमी (Science)', mr: 'सायन्स अकॅडमी (Science)', mrShort: 'सायन्स अकॅडमी', en: 'Science Academy' },
+  { value: 'स्पोर्ट्स व डिफेन्स (Sports & Defence)', mr: 'स्पोर्ट्स व डिफेन्स (Sports & Defence)', mrShort: 'स्पोर्ट्स व डिफेन्स', en: 'Sports & Defence' },
+  { value: 'कम्प्युटर इन्स्टिट्यूट (Computer)', mr: 'कम्प्युटर इन्स्टिट्यूट (Computer)', mrShort: 'कम्प्युटर इन्स्टिट्यूट', en: 'Computer Institute' }
+];
 
 export const CMSCoursesPage = () => {
   const { courses, saveCourse, deleteCourse, loading } = useCMS();
+  const { isMarathi } = useLanguage();
   const safeCourses = Array.isArray(courses) ? courses : [];
 
   const [isEditing, setIsEditing] = useState(false);
@@ -29,6 +40,12 @@ export const CMSCoursesPage = () => {
   const [saving, setSaving] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
   const [message, setMessage] = useState(null);
+
+  const getCategoryLabel = (val) => {
+    const match = COURSE_CATEGORIES.find(c => c.value === val);
+    if (match) return isMarathi ? match.mr : match.en;
+    return val || '';
+  };
 
   const defaultCourse = {
     courseId: '',
@@ -55,6 +72,10 @@ export const CMSCoursesPage = () => {
     const newCourse = {
       ...defaultCourse,
       courseId: `course_${Date.now()}`,
+      duration: isMarathi ? '१ वर्ष' : '1 Year',
+      features: isMarathi
+        ? ['सैनिक पॅटर्न निवासी दिनचर्या', 'तज्ज्ञ शिक्षकांचे मार्गदर्शन', 'नियमित सराव व परीक्षा']
+        : ['Sainik Pattern Residential Routine', 'Expert Faculty Guidance', 'Regular Practice & Assessments'],
       displayOrder: safeCourses.length + 1
     };
     setFormData(newCourse);
@@ -73,15 +94,27 @@ export const CMSCoursesPage = () => {
   };
 
   const handleDelete = async (courseId, title) => {
-    if (!window.confirm(`तुम्हाला खात्री आहे की "${title}" हा अभ्यासक्रम हटवायचा आहे?`)) {
+    if (!window.confirm(
+      isMarathi
+        ? `तुम्हाला खात्री आहे की "${title}" हा अभ्यासक्रम हटवायचा आहे?`
+        : `Are you sure you want to delete the course "${title}"?`
+    )) {
       return;
     }
 
     try {
       await deleteCourse(courseId);
-      setMessage({ type: 'success', text: `अभ्यासक्रम "${title}" यशस्वीरीत्या काढून टाकला.` });
+      setMessage({
+        type: 'success',
+        text: isMarathi
+          ? `अभ्यासक्रम "${title}" यशस्वीरीत्या काढून टाकला.`
+          : `Course "${title}" deleted successfully.`
+      });
     } catch (err) {
-      setMessage({ type: 'error', text: err.message || 'हटवताना त्रुटी आली.' });
+      setMessage({
+        type: 'error',
+        text: err.message || (isMarathi ? 'हटवताना त्रुटी आली.' : 'Error deleting course.')
+      });
     }
   };
 
@@ -94,10 +127,15 @@ export const CMSCoursesPage = () => {
       });
       setMessage({ 
         type: 'success', 
-        text: `अभ्यासक्रम "${course.title}" स्थिती ${newStatus === 'published' ? 'प्रकाशित' : 'मसुदा'} म्हणून बदलली.` 
+        text: isMarathi
+          ? `अभ्यासक्रम "${course.title}" स्थिती ${newStatus === 'published' ? 'प्रकाशित' : 'मसुदा'} म्हणून बदलली.`
+          : `Course "${course.title}" status changed to ${newStatus === 'published' ? 'Published' : 'Draft'}.`
       });
     } catch (err) {
-      setMessage({ type: 'error', text: 'स्थिती बदलताना त्रुटी आली.' });
+      setMessage({
+        type: 'error',
+        text: isMarathi ? 'स्थिती बदलताना त्रुटी आली.' : 'Failed to update course status.'
+      });
     }
   };
 
@@ -135,9 +173,15 @@ export const CMSCoursesPage = () => {
         imageUrl: downloadURL,
         storagePath: res.storagePath || ''
       }));
-      setMessage({ type: 'success', text: 'अभ्यासक्रम इमेज यशस्वीरीत्या अपलोड झाली.' });
+      setMessage({
+        type: 'success',
+        text: isMarathi ? 'अभ्यासक्रम इमेज यशस्वीरीत्या अपलोड झाली.' : 'Course image uploaded successfully.'
+      });
     } catch (err) {
-      setMessage({ type: 'error', text: err.message || 'इमेज अपलोड करताना त्रुटी आली.' });
+      setMessage({
+        type: 'error',
+        text: err.message || (isMarathi ? 'इमेज अपलोड करताना त्रुटी आली.' : 'Failed to upload image.')
+      });
     } finally {
       setUploadingImage(false);
     }
@@ -146,7 +190,7 @@ export const CMSCoursesPage = () => {
   const addFeature = () => {
     setFormData(prev => ({
       ...prev,
-      features: [...(prev.features || []), 'नवीन वैशिष्ट्य']
+      features: [...(prev.features || []), isMarathi ? 'नवीन वैशिष्ट्य' : 'New Feature']
     }));
   };
 
@@ -168,7 +212,10 @@ export const CMSCoursesPage = () => {
   const handleSave = async (e) => {
     e.preventDefault();
     if (!formData.title.trim()) {
-      setMessage({ type: 'error', text: 'कृपया अभ्यासक्रमाचे नाव प्रविष्ट करा.' });
+      setMessage({
+        type: 'error',
+        text: isMarathi ? 'कृपया अभ्यासक्रमाचे नाव प्रविष्ट करा.' : 'Please enter the course title.'
+      });
       return;
     }
 
@@ -181,10 +228,18 @@ export const CMSCoursesPage = () => {
         imageUrl: formData.imageUrl || formData.image || '',
         displayOrder: parseInt(formData.displayOrder) || 1
       });
-      setMessage({ type: 'success', text: `अभ्यासक्रम "${formData.title}" यशस्वीरीत्या सेव्ह झाला!` });
+      setMessage({
+        type: 'success',
+        text: isMarathi
+          ? `अभ्यासक्रम "${formData.title}" यशस्वीरीत्या सेव्ह झाला!`
+          : `Course "${formData.title}" saved successfully!`
+      });
       setIsEditing(false);
     } catch (err) {
-      setMessage({ type: 'error', text: err.message || 'जतन करताना त्रुटी आली.' });
+      setMessage({
+        type: 'error',
+        text: err.message || (isMarathi ? 'जतन करताना त्रुटी आली.' : 'Error saving course.')
+      });
     } finally {
       setSaving(false);
     }
@@ -208,17 +263,19 @@ export const CMSCoursesPage = () => {
           <Link 
             to="/admin/cms" 
             className="p-2 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-lg transition-colors"
-            title="CMS डॅशबोर्डवर परत जा"
+            title={isMarathi ? 'CMS डॅशबोर्डवर परत जा' : 'Back to CMS Dashboard'}
           >
             <ArrowLeft className="w-5 h-5" />
           </Link>
           <div>
             <h1 className="text-2xl font-black text-gurukul-navy-900 flex items-center gap-2">
               <BookOpen className="w-7 h-7 text-gurukul-saffron-600" />
-              <span>अभ्यासक्रम व्यवस्थापन (Courses CMS)</span>
+              <span>{isMarathi ? 'अभ्यासक्रम व्यवस्थापन (Courses CMS)' : 'Courses Management (CMS)'}</span>
             </h1>
             <p className="text-sm text-slate-500">
-              वेबसाईटवरील अभ्यासक्रम तयार करा, संपादन करा, पात्रता, कालावधी व तपशील व्यवस्थापित करा.
+              {isMarathi
+                ? 'वेबसाईटवरील अभ्यासक्रम तयार करा, संपादन करा, पात्रता, कालावधी व तपशील व्यवस्थापित करा.'
+                : 'Create and manage website courses, eligibility, duration, and curriculum details.'}
             </p>
           </div>
         </div>
@@ -230,7 +287,7 @@ export const CMSCoursesPage = () => {
             className="inline-flex items-center gap-2 px-4 py-2.5 bg-gurukul-saffron-600 hover:bg-gurukul-saffron-700 text-white rounded-xl font-bold text-sm shadow hover:shadow-md transition-all"
           >
             <Plus className="w-4 h-4" />
-            <span>नवीन कोर्स जोडा (Add New Course)</span>
+            <span>{isMarathi ? 'नवीन कोर्स जोडा' : 'Add New Course'}</span>
           </button>
         )}
       </div>
@@ -251,10 +308,14 @@ export const CMSCoursesPage = () => {
           <div className="flex items-center justify-between pb-4 border-b border-slate-100">
             <div>
               <h2 className="text-lg font-bold text-gurukul-navy-900">
-                {formData.courseId ? 'अभ्यासक्रम संपादन (Edit Course)' : 'नवीन अभ्यासक्रम तयार करा (New Course)'}
+                {formData.courseId
+                  ? (isMarathi ? 'अभ्यासक्रम संपादन (Edit Course)' : 'Edit Course')
+                  : (isMarathi ? 'नवीन अभ्यासक्रम तयार करा (New Course)' : 'Create New Course')}
               </h2>
               <p className="text-xs text-slate-500">
-                सार्वजनिक वेबसाईटवर दिसणारा सर्व अभ्यासक्रम मजकूर येथे अद्यतनित करा
+                {isMarathi
+                  ? 'सार्वजनिक वेबसाईटवर दिसणारा सर्व अभ्यासक्रम मजकूर येथे अद्यतनित करा'
+                  : 'Update all course content displayed on the public website'}
               </p>
             </div>
             <div className="flex items-center gap-2">
@@ -263,7 +324,7 @@ export const CMSCoursesPage = () => {
                 onClick={() => setIsEditing(false)}
                 className="px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-100 rounded-xl"
               >
-                रद्द करा (Cancel)
+                {isMarathi ? 'रद्द करा' : 'Cancel'}
               </button>
               <button
                 type="submit"
@@ -271,7 +332,7 @@ export const CMSCoursesPage = () => {
                 className="inline-flex items-center gap-2 px-5 py-2.5 bg-gurukul-saffron-600 hover:bg-gurukul-saffron-700 disabled:opacity-50 text-white rounded-xl font-bold text-sm shadow"
               >
                 <Save className="w-4 h-4" />
-                <span>{saving ? 'जतन करत आहे...' : 'कोर्स सेव्ह करा (Save Course)'}</span>
+                <span>{saving ? (isMarathi ? 'जतन करत आहे...' : 'Saving...') : (isMarathi ? 'कोर्स सेव्ह करा' : 'Save Course')}</span>
               </button>
             </div>
           </div>
@@ -279,21 +340,21 @@ export const CMSCoursesPage = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                अभ्यासक्रमाचे नाव (Course Title) *
+                {isMarathi ? 'अभ्यासक्रमाचे नाव (Course Title) *' : 'Course Title *'}
               </label>
               <input
                 type="text"
                 required
                 value={formData.title}
                 onChange={(e) => handleTitleChange(e.target.value)}
-                placeholder="उदा. ५ वी ते १० वी सैनिक पॅटर्न निवासी शाळा"
+                placeholder={isMarathi ? 'उदा. ५ वी ते १० वी सैनिक पॅटर्न निवासी शाळा' : 'e.g. 5th to 10th Std. Sainik Pattern Residential School'}
                 className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:bg-white outline-none"
               />
             </div>
 
             <div>
               <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                URL स्लग (Course Slug) *
+                {isMarathi ? 'URL स्लग (Course Slug) *' : 'Course Slug *'}
               </label>
               <div className="flex items-center">
                 <span className="px-3 py-2.5 bg-slate-100 border border-r-0 border-slate-200 rounded-l-xl text-xs text-slate-500 font-mono">
@@ -312,44 +373,43 @@ export const CMSCoursesPage = () => {
 
             <div>
               <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                वर्गवारी (Category)
+                {isMarathi ? 'वर्गवारी (Category)' : 'Category'}
               </label>
               <select
                 value={formData.category}
                 onChange={(e) => setFormData(prev => ({ ...prev, category: e.target.value }))}
                 className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:bg-white outline-none"
               >
-                <option value="शाळा (School)">शाळा (School)</option>
-                <option value="ज्युनिअर कॉलेज (Junior College)">ज्युनिअर कॉलेज (Junior College)</option>
-                <option value="स्पर्धा परीक्षा अकॅडमी (Competitive)">स्पर्धा परीक्षा अकॅडमी (Competitive)</option>
-                <option value="सायन्स अकॅडमी (Science)">सायन्स अकॅडमी (Science)</option>
-                <option value="स्पोर्ट्स व डिफेन्स (Sports & Defence)">स्पोर्ट्स व डिफेन्स (Sports & Defence)</option>
-                <option value="कम्प्युटर इन्स्टिट्यूट (Computer)">कम्प्युटर इन्स्टिट्यूट (Computer)</option>
+                {COURSE_CATEGORIES.map(cat => (
+                  <option key={cat.value} value={cat.value}>
+                    {isMarathi ? cat.mr : cat.en}
+                  </option>
+                ))}
               </select>
             </div>
 
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                  पात्रता (Eligibility)
+                  {isMarathi ? 'पात्रता (Eligibility)' : 'Eligibility'}
                 </label>
                 <input
                   type="text"
                   value={formData.eligibility || ''}
                   onChange={(e) => setFormData(prev => ({ ...prev, eligibility: e.target.value }))}
-                  placeholder="उदा. ४ थी उत्तीर्ण विद्यार्थी"
+                  placeholder={isMarathi ? 'उदा. ४ थी उत्तीर्ण विद्यार्थी' : 'e.g. 4th Std. Passed'}
                   className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:bg-white outline-none"
                 />
               </div>
               <div>
                 <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                  कालावधी (Duration)
+                  {isMarathi ? 'कालावधी (Duration)' : 'Duration'}
                 </label>
                 <input
                   type="text"
                   value={formData.duration || ''}
                   onChange={(e) => setFormData(prev => ({ ...prev, duration: e.target.value }))}
-                  placeholder="उदा. १ वर्ष / निवासी"
+                  placeholder={isMarathi ? 'उदा. १ वर्ष / निवासी' : 'e.g. 1 Year / Residential'}
                   className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:bg-white outline-none"
                 />
               </div>
@@ -357,46 +417,46 @@ export const CMSCoursesPage = () => {
 
             <div className="md:col-span-2">
               <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                थोडक्यात माहिती (Short Summary) *
+                {isMarathi ? 'थोडक्यात माहिती (Short Summary) *' : 'Short Summary *'}
               </label>
               <textarea
                 rows={2}
                 required
                 value={formData.shortDescription || ''}
                 onChange={(e) => setFormData(prev => ({ ...prev, shortDescription: e.target.value }))}
-                placeholder="कोर्स कार्डवर दिसणारा २-३ ओळींचा संक्षिप्त परिचय..."
+                placeholder={isMarathi ? 'कोर्स कार्डवर दिसणारा २-३ ओळींचा संक्षिप्त परिचय...' : '2-3 line summary shown on course cards...'}
                 className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:bg-white outline-none"
               />
             </div>
 
             <div className="md:col-span-2">
               <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                सविस्तर माहिती (Full Description)
+                {isMarathi ? 'सविस्तर माहिती (Full Description)' : 'Full Description'}
               </label>
               <textarea
                 rows={4}
                 value={formData.fullDescription || ''}
                 onChange={(e) => setFormData(prev => ({ ...prev, fullDescription: e.target.value }))}
-                placeholder="अभ्यासक्रमाची उद्दिष्टे, अभ्यासपद्धती आणि निकालांची सविस्तर माहिती..."
+                placeholder={isMarathi ? 'अभ्यासक्रमाची उद्दिष्टे, अभ्यासपद्धती आणि निकालांची सविस्तर माहिती...' : 'Detailed information about course objectives, teaching methodology, and outcomes...'}
                 className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm leading-relaxed focus:bg-white outline-none"
               />
             </div>
 
             <div>
               <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                इमेज (Course Image URL किंवा Upload)
+                {isMarathi ? 'इमेज (Course Image URL किंवा Upload)' : 'Course Image (URL or Upload)'}
               </label>
               <div className="flex items-center gap-2">
                 <input
                   type="text"
                   value={formData.imageUrl || formData.image || ''}
                   onChange={(e) => setFormData(prev => ({ ...prev, image: e.target.value, imageUrl: e.target.value }))}
-                  placeholder="इमेज URL किंवा अपलोड करा"
+                  placeholder={isMarathi ? 'इमेज URL किंवा अपलोड करा' : 'Image URL or upload'}
                   className="flex-1 px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:bg-white outline-none"
                 />
                 <label className="cursor-pointer px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold flex items-center gap-1 shrink-0">
                   <Upload className="w-3.5 h-3.5 text-gurukul-saffron-600" />
-                  <span>{uploadingImage ? '...' : 'अपलोड'}</span>
+                  <span>{uploadingImage ? '...' : (isMarathi ? 'अपलोड' : 'Upload')}</span>
                   <input type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
                 </label>
               </div>
@@ -410,7 +470,7 @@ export const CMSCoursesPage = () => {
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                  प्रदर्शन क्रम (Display Order)
+                  {isMarathi ? 'प्रदर्शन क्रम (Display Order)' : 'Display Order'}
                 </label>
                 <input
                   type="number"
@@ -423,15 +483,15 @@ export const CMSCoursesPage = () => {
 
               <div>
                 <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                  प्रकाशन स्थिती (Status)
+                  {isMarathi ? 'प्रकाशन स्थिती (Status)' : 'Publish Status'}
                 </label>
                 <select
                   value={formData.status || 'published'}
                   onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value }))}
                   className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold focus:bg-white outline-none"
                 >
-                  <option value="published">🟢 प्रकाशित (Published)</option>
-                  <option value="draft">🟡 मसुदा (Draft)</option>
+                  <option value="published">{isMarathi ? '🟢 प्रकाशित (Published)' : '🟢 Published'}</option>
+                  <option value="draft">{isMarathi ? '🟡 मसुदा (Draft)' : '🟡 Draft'}</option>
                 </select>
               </div>
             </div>
@@ -440,7 +500,7 @@ export const CMSCoursesPage = () => {
             <div className="md:col-span-2 pt-4 border-t border-slate-100 space-y-3">
               <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
                 <Globe className="w-3.5 h-3.5 text-gurukul-saffron-600" />
-                <span>SEO माहिती (SEO Metadata for Course Page)</span>
+                <span>{isMarathi ? 'SEO माहिती (SEO Metadata for Course Page)' : 'SEO Metadata for Course Page'}</span>
               </label>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -450,7 +510,7 @@ export const CMSCoursesPage = () => {
                     type="text"
                     value={formData.seoTitle || ''}
                     onChange={(e) => setFormData(prev => ({ ...prev, seoTitle: e.target.value }))}
-                    placeholder="उदा. ५ वी ते १० वी सैनिक पॅटर्न निवासी शाळा | गुरुकुल भोसे"
+                    placeholder={isMarathi ? 'उदा. ५ वी ते १० वी सैनिक पॅटर्न निवासी शाळा | गुरुकुल भोसे' : 'e.g. 5th to 10th Sainik Pattern School | Gurukul Bhose'}
                     className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:bg-white outline-none"
                   />
                 </div>
@@ -460,7 +520,7 @@ export const CMSCoursesPage = () => {
                     type="text"
                     value={formData.seoDescription || ''}
                     onChange={(e) => setFormData(prev => ({ ...prev, seoDescription: e.target.value }))}
-                    placeholder="सर्च इंजिनसाठी १६० अक्षरांचे संक्षिप्त वर्णन..."
+                    placeholder={isMarathi ? 'सर्च इंजिनसाठी १६० अक्षरांचे संक्षिप्त वर्णन...' : 'Brief description up to 160 characters for search engines...'}
                     className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:bg-white outline-none"
                   />
                 </div>
@@ -472,14 +532,14 @@ export const CMSCoursesPage = () => {
           <div className="pt-4 border-t border-slate-100 space-y-3">
             <div className="flex items-center justify-between">
               <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
-                अभ्यासक्रमाची वैशिष्ट्ये (Course Highlights)
+                {isMarathi ? 'अभ्यासक्रमाची वैशिष्ट्ये (Course Highlights)' : 'Course Highlights'}
               </label>
               <button
                 type="button"
                 onClick={addFeature}
                 className="text-xs font-bold text-gurukul-saffron-600 hover:text-gurukul-saffron-700"
               >
-                + वैशिष्ट्य जोडा
+                {isMarathi ? '+ वैशिष्ट्य जोडा' : '+ Add Highlight'}
               </button>
             </div>
 
@@ -515,7 +575,7 @@ export const CMSCoursesPage = () => {
                 type="text"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="अभ्यासक्रम शोधा (Search courses)..."
+                placeholder={isMarathi ? 'अभ्यासक्रम शोधा...' : 'Search courses...'}
                 className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:bg-white outline-none"
               />
             </div>
@@ -527,13 +587,12 @@ export const CMSCoursesPage = () => {
                 onChange={(e) => setCategoryFilter(e.target.value)}
                 className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:bg-white outline-none"
               >
-                <option value="all">सर्व वर्गवारी (All Categories)</option>
-                <option value="शाळा (School)">शाळा</option>
-                <option value="ज्युनिअर कॉलेज (Junior College)">ज्युनिअर कॉलेज</option>
-                <option value="स्पर्धा परीक्षा अकॅडमी (Competitive)">स्पर्धा परीक्षा अकॅडमी</option>
-                <option value="सायन्स अकॅडमी (Science)">सायन्स अकॅडमी</option>
-                <option value="स्पोर्ट्स व डिफेन्स (Sports & Defence)">स्पोर्ट्स व डिफेन्स</option>
-                <option value="कम्प्युटर इन्स्टिट्यूट (Computer)">कम्प्युटर इन्स्टिट्यूट</option>
+                <option value="all">{isMarathi ? 'सर्व वर्गवारी (All Categories)' : 'All Categories'}</option>
+                {COURSE_CATEGORIES.map(cat => (
+                  <option key={cat.value} value={cat.value}>
+                    {isMarathi ? cat.mrShort : cat.en}
+                  </option>
+                ))}
               </select>
             </div>
           </div>
@@ -543,7 +602,7 @@ export const CMSCoursesPage = () => {
             <div className="divide-y divide-slate-100">
               {filteredCourses.length === 0 ? (
                 <div className="p-8 text-center text-slate-400 text-sm">
-                  कोणतेही अभ्यासक्रम सापडले नाहीत.
+                  {isMarathi ? 'कोणतेही अभ्यासक्रम सापडले नाहीत.' : 'No courses found.'}
                 </div>
               ) : (
                 filteredCourses.map((c) => (
@@ -574,15 +633,17 @@ export const CMSCoursesPage = () => {
                                 ? 'bg-emerald-100 text-emerald-800 hover:bg-emerald-200' 
                                 : 'bg-amber-100 text-amber-800 hover:bg-amber-200'
                             }`}
-                            title="स्थिती बदलण्यासाठी क्लिक करा"
+                            title={isMarathi ? 'स्थिती बदलण्यासाठी क्लिक करा' : 'Click to toggle status'}
                           >
-                            {c.status === 'published' ? '🟢 प्रकाशित' : '🟡 मसुदा'}
+                            {c.status === 'published'
+                              ? (isMarathi ? '🟢 प्रकाशित' : '🟢 Published')
+                              : (isMarathi ? '🟡 मसुदा' : '🟡 Draft')}
                           </button>
                         </div>
                         <p className="text-xs text-slate-500 mt-0.5">
-                          वर्गवारी: <span className="font-semibold text-slate-700">{c.category}</span> • 
-                          कालावधी: <span className="font-semibold text-slate-700">{c.duration}</span> • 
-                          स्लग: <span className="font-mono text-gurukul-saffron-600">/courses/{c.slug}</span>
+                          {isMarathi ? 'वर्गवारी:' : 'Category:'} <span className="font-semibold text-slate-700">{getCategoryLabel(c.category)}</span> •{' '}
+                          {isMarathi ? 'कालावधी:' : 'Duration:'} <span className="font-semibold text-slate-700">{c.duration}</span> •{' '}
+                          {isMarathi ? 'स्लग:' : 'Slug:'} <span className="font-mono text-gurukul-saffron-600">/courses/{c.slug}</span>
                         </p>
                         <p className="text-xs text-slate-400 mt-1 line-clamp-1">{c.shortDescription}</p>
                       </div>
@@ -593,7 +654,7 @@ export const CMSCoursesPage = () => {
                         to={`/courses/${c.slug}`}
                         target="_blank"
                         className="p-2 text-slate-500 hover:text-gurukul-saffron-600 hover:bg-white rounded-lg border border-slate-200 transition-colors"
-                        title="वेबसाईटवर पहा (View Live)"
+                        title={isMarathi ? 'वेबसाईटवर पहा (View Live)' : 'View Live'}
                       >
                         <Eye className="w-4 h-4" />
                       </Link>
@@ -603,13 +664,13 @@ export const CMSCoursesPage = () => {
                         className="inline-flex items-center gap-1 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-lg transition-colors"
                       >
                         <Edit2 className="w-3.5 h-3.5" />
-                        <span>संपादित करा</span>
+                        <span>{isMarathi ? 'संपादित करा' : 'Edit'}</span>
                       </button>
                       <button
                         type="button"
                         onClick={() => handleDelete(c.courseId, c.title)}
                         className="p-1.5 text-slate-400 hover:text-red-600 rounded-lg transition-colors"
-                        title="हटवा (Delete)"
+                        title={isMarathi ? 'हटवा (Delete)' : 'Delete'}
                       >
                         <Trash2 className="w-4 h-4 text-red-500" />
                       </button>

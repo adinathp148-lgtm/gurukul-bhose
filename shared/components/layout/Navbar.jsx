@@ -18,14 +18,12 @@ import {
   LogIn
 } from 'lucide-react';
 import { useCMS } from '../../contexts/CMSContext';
-import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { LanguageSwitcher } from '../common/LanguageSwitcher';
 import { getAdminPanelUrl, getTelecallerPanelUrl } from '../../services/navigation/navigationUrls';
 
 export const Navbar = ({ showAdminLink = true }) => {
   const { institution, websiteSettings } = useCMS();
-  const { currentUser, role } = useAuth();
   const { language, isMarathi } = useLanguage();
   const location = useLocation();
 
@@ -99,6 +97,9 @@ export const Navbar = ({ showAdminLink = true }) => {
             <img 
               src={websiteSettings?.logoUrl && websiteSettings.logoUrl !== '/favicon.svg' ? websiteSettings.logoUrl : '/gurukul-logo.png'} 
               alt="गुरुकुल भोसे Logo" 
+              width="40"
+              height="40"
+              decoding="async"
               className="w-9 h-9 sm:w-10 sm:h-10 lg:w-10.5 lg:h-10.5 2xl:w-11 2xl:h-11 object-contain group-hover:scale-105 transition-transform shrink-0 drop-shadow-xs" 
             />
             <div className="shrink-0 flex flex-col justify-center text-left">

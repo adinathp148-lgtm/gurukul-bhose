@@ -44,7 +44,6 @@ export const VidyamandirPage = () => {
         title={isMarathi ? "गुरुकुल विद्यामंदिर, भोसे" : "Gurukul Vidyamandir, Bhose"}
         subtitle={isMarathi ? "सैनिक पॅटर्न निवासी मराठी व सेमी माध्यम स्कूल • विद्यार्थ्यांच्या शिक्षणाचा व जीवनाचा भक्कम पाया" : "Military Pattern Residential Marathi & Semi-English Medium School • Strong Foundation for Education & Life"}
         breadcrumbs={[
-          { label: isMarathi ? 'मुख्यपृष्ठ' : 'Home', link: '/' },
           { label: isMarathi ? 'गुरुकुल विद्यामंदिर' : 'Gurukul Vidyamandir' }
         ]}
       />

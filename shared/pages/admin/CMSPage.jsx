@@ -61,7 +61,9 @@ export const CMSPage = () => {
       setPushResult(res);
     } catch (err) {
       console.error('Push to Firestore failed:', err);
-      setPushError(err.message || 'फायरस्टोअरमध्ये डेटा सेव्ह करताना त्रुटी आली. कृपया .env मधील क्रेडेन्शियल्स तपासा.');
+      setPushError(err.message || (isMarathi
+        ? 'फायरस्टोअरमध्ये डेटा सेव्ह करताना त्रुटी आली. कृपया .env मधील क्रेडेन्शियल्स तपासा.'
+        : 'Error saving data to Firestore. Please check your .env credentials.'));
     } finally {
       setIsPushingFirestore(false);
     }

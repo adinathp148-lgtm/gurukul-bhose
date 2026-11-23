@@ -48,7 +48,6 @@ export const AboutPage = () => {
           ? '१५ वर्षांची गौरवशाली शैक्षणिक व क्रीडा परंपरा • सैनिक पॅटर्न निवासी शिक्षण • सर्वांगीण व्यक्तिमत्त्व विकास' 
           : '15 Years of Academic & Sports Excellence • Sainik Pattern Residential School • Holistic Development'}
         breadcrumbs={[
-          { label: isMarathi ? 'मुख्यपृष्ठ (Home)' : 'Home', link: '/' },
           { label: isMarathi ? 'आमच्याबद्दल (About Us)' : 'About Us' }
         ]}
       />

@@ -14,7 +14,11 @@ import {
   Video, 
   Bell, 
   RotateCcw,
-  Sparkles 
+  Sparkles,
+  CloudUpload,
+  Database,
+  AlertCircle,
+  Loader2 
 } from 'lucide-react';
 import { Button } from '../../components/common/Button';
 import { Modal } from '../../components/common/Modal';
@@ -33,11 +37,37 @@ export const CMSPage = () => {
     videos, 
     addVideo, 
     deleteVideo,
-    resetToDefaults 
+    resetToDefaults,
+    pushToFirestore
   } = useCMS();
 
   const [activeTab, setActiveTab] = useState('contact');
   const [saveSuccess, setSaveSuccess] = useState(false);
+  const [isPushingFirestore, setIsPushingFirestore] = useState(false);
+  const [pushResult, setPushResult] = useState(null);
+  const [pushError, setPushError] = useState(null);
+
+  const handlePushAllToFirestore = async () => {
+    if (!window.confirm(isMarathi 
+      ? 'तुम्हाला खात्री आहे का? वेबसाईटमधील सर्व माहिती (कार्यक्रम, कोर्सेस, गॅलरी, सूचना, संपर्क) क्लाउड फायरस्टोअरमध्ये पुश केली जाईल.' 
+      : 'Are you sure you want to push all website data (Programs, Courses, Gallery, Notices, Contact) into Cloud Firestore?')) {
+      return;
+    }
+    setIsPushingFirestore(true);
+    setPushResult(null);
+    setPushError(null);
+    try {
+      const res = await pushToFirestore();
+      setPushResult(res);
+    } catch (err) {
+      console.error('Push to Firestore failed:', err);
+      setPushError(err.message || (isMarathi
+        ? 'फायरस्टोअरमध्ये डेटा सेव्ह करताना त्रुटी आली. कृपया .env मधील क्रेडेन्शियल्स तपासा.'
+        : 'Error saving data to Firestore. Please check your .env credentials.'));
+    } finally {
+      setIsPushingFirestore(false);
+    }
+  };
 
   // Institution contact form state
   const [instForm, setInstForm] = useState({
@@ -140,14 +170,66 @@ export const CMSPage = () => {
           </p>
         </div>
 
-        <button
-          onClick={resetToDefaults}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-300 text-xs font-semibold text-slate-600 hover:bg-slate-50"
-        >
-          <RotateCcw className="w-3.5 h-3.5" />
-          <span>{isMarathi ? 'मूळ माहितीवर रीसेट करा' : 'Reset to Defaults'}</span>
-        </button>
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            onClick={handlePushAllToFirestore}
+            disabled={isPushingFirestore}
+            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-sm transition-colors disabled:opacity-50"
+          >
+            {isPushingFirestore ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <CloudUpload className="w-4 h-4" />
+            )}
+            <span>
+              {isPushingFirestore
+                ? (isMarathi ? 'डेटा पुश होत आहे...' : 'Pushing Data...')
+                : (isMarathi ? 'फायरस्टोअरमध्ये डेटा पुश करा (Push to Firestore)' : 'Push All Data to Firestore')}
+            </span>
+          </button>
+
+          <button
+            onClick={resetToDefaults}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-300 text-xs font-semibold text-slate-600 hover:bg-slate-50"
+          >
+            <RotateCcw className="w-3.5 h-3.5" />
+            <span>{isMarathi ? 'मूळ माहितीवर रीसेट करा' : 'Reset to Defaults'}</span>
+          </button>
+        </div>
       </div>
+
+      {/* Push to Firestore Feedback Alerts */}
+      {pushResult && (
+        <div className="p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-900 text-xs space-y-1">
+          <div className="flex items-center gap-2 font-bold text-emerald-800 text-sm">
+            <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
+            <span>{isMarathi ? 'वेबसाईट डेटा क्लाउड फायरस्टोअरमध्ये यशस्वीपणे पुश झाला!' : 'Website data pushed to Cloud Firestore successfully!'}</span>
+          </div>
+          <p className="text-emerald-700 pl-7">
+            {isMarathi
+              ? `अपडेट झालेले संच: मुख्यपृष्ठ (${pushResult.homepage ? 'होय' : 'नाही'}), संस्था माहिती, ${pushResult.programs} कार्यक्रम (Programs), ${pushResult.courses} कोर्सेस, ${pushResult.facilities} सुविधा, ${pushResult.gallery} फोटो गॅलरी, ${pushResult.videos} व्हिडिओ, ${pushResult.notices} सूचना.`
+              : `Collections updated: Homepage, Contact info, ${pushResult.programs} Programs, ${pushResult.courses} Courses, ${pushResult.facilities} Facilities, ${pushResult.gallery} Gallery items, ${pushResult.videos} Videos, ${pushResult.notices} Notices.`}
+          </p>
+          <p className="text-emerald-600 text-[11px] pl-7">
+            {isMarathi ? 'आता तुमच्या फायरबेस कन्सोलमध्ये (Cloud Firestore) रिफ्रेश करून तपासा.' : 'You can now refresh Firebase Console to see all collections populated.'}
+          </p>
+        </div>
+      )}
+
+      {pushError && (
+        <div className="p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-900 text-xs flex items-start gap-2.5">
+          <AlertCircle className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
+          <div className="space-y-1">
+            <p className="font-bold">{isMarathi ? 'फायरस्टोअरमध्ये डेटा सेव्ह करताना त्रुटी आली:' : 'Failed to push to Cloud Firestore:'}</p>
+            <p className="text-rose-700 font-mono text-[11px]">{pushError}</p>
+            <p className="text-slate-600 text-[11px]">
+              {isMarathi
+                ? 'कृपया .env फाईलमध्ये फायरबेस वेब क्रेडेन्शियल्स (VITE_FIREBASE_API_KEY इ.) बरोबर आहेत का याची खात्री करा.'
+                : 'Please make sure valid Firebase web credentials (VITE_FIREBASE_API_KEY etc.) are set in .env file.'}
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Tabs */}
       <div className="flex flex-wrap gap-2 border-b border-slate-200 pb-2">

@@ -15,10 +15,12 @@ import {
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useCMS } from '../../../contexts/CMSContext';
+import { useLanguage } from '../../../contexts/LanguageContext';
 import { uploadMediaFile, validateUploadFile } from '../../../services/storage/mediaUploadService';
 
 export const CMSAboutPage = () => {
   const { aboutData, updateAbout } = useCMS();
+  const { isMarathi } = useLanguage();
 
   const [saving, setSaving] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
@@ -69,11 +71,17 @@ export const CMSAboutPage = () => {
       const res = await uploadMediaFile(file, 'about', `founder_${Date.now()}`);
       setFormData(prev => ({
         ...prev,
-        founder: { ...prev.founder, image: res.url }
+        founder: { ...prev.founder, image: res.downloadURL || res.url }
       }));
-      setMessage({ type: 'success', text: 'संस्थापक फोटो यशस्वीरीत्या अपलोड झाला.' });
+      setMessage({
+        type: 'success',
+        text: isMarathi ? 'संस्थापक फोटो यशस्वीरीत्या अपलोड झाला.' : 'Founder photo uploaded successfully.'
+      });
     } catch (err) {
-      setMessage({ type: 'error', text: err.message || 'फोटो अपलोड करताना त्रुटी आली.' });
+      setMessage({
+        type: 'error',
+        text: err.message || (isMarathi ? 'फोटो अपलोड करताना त्रुटी आली.' : 'Failed to upload photo.')
+      });
     } finally {
       setUploadingImage(false);
     }
@@ -111,9 +119,17 @@ export const CMSAboutPage = () => {
 
     try {
       await updateAbout(formData);
-      setMessage({ type: 'success', text: 'आमच्याबद्दल माहिती यशस्वीरीत्या अद्यतनित झाली (About us details saved successfully).' });
+      setMessage({
+        type: 'success',
+        text: isMarathi
+          ? 'आमच्याबद्दल माहिती यशस्वीरीत्या अद्यतनित झाली.'
+          : 'About Us details updated successfully.'
+      });
     } catch (err) {
-      setMessage({ type: 'error', text: err.message || 'माहिती जतन करताना त्रुटी आली.' });
+      setMessage({
+        type: 'error',
+        text: err.message || (isMarathi ? 'माहिती जतन करताना त्रुटी आली.' : 'Error saving About Us details.')
+      });
     } finally {
       setSaving(false);
     }
@@ -127,17 +143,19 @@ export const CMSAboutPage = () => {
           <Link 
             to="/admin/cms" 
             className="p-2 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-lg transition-colors"
-            title="CMS डॅशबोर्डवर परत जा"
+            title={isMarathi ? 'CMS डॅशबोर्डवर परत जा' : 'Back to CMS Dashboard'}
           >
             <ArrowLeft className="w-5 h-5" />
           </Link>
           <div>
             <h1 className="text-2xl font-black text-gurukul-navy-900 flex items-center gap-2">
               <Building2 className="w-7 h-7 text-gurukul-saffron-600" />
-              <span>आमच्याबद्दल व्यवस्थापन (About Us CMS)</span>
+              <span>{isMarathi ? 'आमच्याबद्दल व्यवस्थापन (About Us CMS)' : 'About Us Management (CMS)'}</span>
             </h1>
             <p className="text-sm text-slate-500">
-              संस्थेचे ध्येय (Vision), उद्दिष्टे (Mission), संस्थापकांचे मनोगत व गौरवशाली परंपरा व्यवस्थापित करा.
+              {isMarathi
+                ? 'संस्थेचे ध्येय (Vision), उद्दिष्टे (Mission), संस्थापकांचे मनोगत व गौरवशाली परंपरा व्यवस्थापित करा.'
+                : 'Manage institutional vision, mission, founder message, and key milestones.'}
             </p>
           </div>
         </div>
@@ -149,7 +167,7 @@ export const CMSAboutPage = () => {
           className="inline-flex items-center gap-2 px-5 py-2.5 bg-gurukul-saffron-600 hover:bg-gurukul-saffron-700 disabled:opacity-50 text-white rounded-xl font-bold text-sm shadow hover:shadow-md transition-all"
         >
           <Save className="w-4 h-4" />
-          <span>{saving ? 'जतन करत आहे...' : 'बदल सेव्ह करा (Save Changes)'}</span>
+          <span>{saving ? (isMarathi ? 'जतन करत आहे...' : 'Saving...') : (isMarathi ? 'बदल सेव्ह करा' : 'Save Changes')}</span>
         </button>
       </div>
 
@@ -168,13 +186,13 @@ export const CMSAboutPage = () => {
         <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
           <h2 className="text-base font-bold text-gurukul-navy-900 flex items-center gap-2 pb-3 border-b border-slate-100">
             <Compass className="w-5 h-5 text-gurukul-saffron-600" />
-            <span>संस्था ओळख व तत्त्वज्ञान (Overview & Philosophy)</span>
+            <span>{isMarathi ? 'संस्था ओळख व तत्त्वज्ञान (Overview & Philosophy)' : 'Institutional Overview & Philosophy'}</span>
           </h2>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                पृष्ठ मथळा (Section Title)
+                {isMarathi ? 'पृष्ठ मथळा (Section Title)' : 'Section Title'}
               </label>
               <input
                 type="text"
@@ -185,7 +203,7 @@ export const CMSAboutPage = () => {
             </div>
             <div>
               <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                टॅगलाईन (Tagline)
+                {isMarathi ? 'टॅगलाईन (Tagline)' : 'Tagline'}
               </label>
               <input
                 type="text"
@@ -198,13 +216,13 @@ export const CMSAboutPage = () => {
 
           <div>
             <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-              संस्थेचे तत्त्वज्ञान व पार्श्वभूमी (Institutional Philosophy & Background)
+              {isMarathi ? 'संस्थेचे तत्त्वज्ञान व पार्श्वभूमी (Institutional Philosophy & Background)' : 'Institutional Philosophy & Background'}
             </label>
             <textarea
               rows={4}
               value={formData.philosophy || ''}
               onChange={(e) => setFormData(prev => ({ ...prev, philosophy: e.target.value }))}
-              placeholder="गुरुकुल भोसे निवासी संकुलाचा इतिहास, शिक्षण पद्धती आणि संस्कार..."
+              placeholder={isMarathi ? 'गुरुकुल भोसे निवासी संकुलाचा इतिहास, शिक्षण पद्धती आणि संस्कार...' : 'History, educational methodology, and core values of Gurukul Bhose residential campus...'}
               className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm leading-relaxed focus:bg-white outline-none"
             />
           </div>
@@ -215,16 +233,20 @@ export const CMSAboutPage = () => {
           <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-3">
             <h2 className="text-base font-bold text-gurukul-navy-900 flex items-center gap-2 pb-2 border-b border-slate-100">
               <Target className="w-5 h-5 text-gurukul-saffron-600" />
-              <span>ध्येय (Vision)</span>
+              <span>{isMarathi ? 'ध्येय (Vision)' : 'Vision'}</span>
             </h2>
             <p className="text-xs text-slate-500">
-              संस्थेचे दीर्घकालीन ध्येय आणि भविष्यातील विद्यार्थ्यांचे आदर्श व्यक्तिमत्त्व.
+              {isMarathi
+                ? 'संस्थेचे दीर्घकालीन ध्येय आणि भविष्यातील विद्यार्थ्यांचे आदर्श व्यक्तिमत्त्व.'
+                : 'Long-term institutional vision and ideal character development for students.'}
             </p>
             <textarea
               rows={5}
               value={formData.vision || ''}
               onChange={(e) => setFormData(prev => ({ ...prev, vision: e.target.value }))}
-              placeholder="ग्रामीण भागातील विद्यार्थ्यांना सैनिकी शिस्त, अत्याधुनिक विज्ञान शिक्षण आणि उच्च संस्कार देऊन देशाचे सक्षम नागरिक घडवणे."
+              placeholder={isMarathi
+                ? 'ग्रामीण भागातील विद्यार्थ्यांना सैनिकी शिस्त, अत्याधुनिक विज्ञान शिक्षण आणि उच्च संस्कार देऊन देशाचे सक्षम नागरिक घडवणे.'
+                : 'Empowering students with military discipline, modern science education, and strong values to build capable citizens.'}
               className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm leading-relaxed focus:bg-white outline-none"
             />
           </div>
@@ -232,16 +254,20 @@ export const CMSAboutPage = () => {
           <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-3">
             <h2 className="text-base font-bold text-gurukul-navy-900 flex items-center gap-2 pb-2 border-b border-slate-100">
               <Compass className="w-5 h-5 text-gurukul-navy-900" />
-              <span>उद्दिष्टे (Mission)</span>
+              <span>{isMarathi ? 'उद्दिष्टे (Mission)' : 'Mission'}</span>
             </h2>
             <p className="text-xs text-slate-500">
-              दैनंदिन शैक्षणिक, क्रीडा व निवासी उपक्रमांमागील मुख्य उद्दिष्टे.
+              {isMarathi
+                ? 'दैनंदिन शैक्षणिक, क्रीडा व निवासी उपक्रमांमागील मुख्य उद्दिष्टे.'
+                : 'Core objectives guiding daily academic, sports, and residential programs.'}
             </p>
             <textarea
               rows={5}
               value={formData.mission || ''}
               onChange={(e) => setFormData(prev => ({ ...prev, mission: e.target.value }))}
-              placeholder="प्रत्येक विद्यार्थ्याला स्पर्धा परीक्षा, NDA, NEET, JEE साठी सज्ज करणे व परिपूर्ण शारीरिक व मानसिक विकास साधणे."
+              placeholder={isMarathi
+                ? 'प्रत्येक विद्यार्थ्याला स्पर्धा परीक्षा, NDA, NEET, JEE साठी सज्ज करणे व परिपूर्ण शारीरिक व मानसिक विकास साधणे.'
+                : 'Preparing every student for competitive exams (NDA, NEET, JEE) while nurturing complete physical and mental growth.'}
               className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm leading-relaxed focus:bg-white outline-none"
             />
           </div>
@@ -251,49 +277,49 @@ export const CMSAboutPage = () => {
         <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
           <h2 className="text-base font-bold text-gurukul-navy-900 flex items-center gap-2 pb-3 border-b border-slate-100">
             <UserCheck className="w-5 h-5 text-gurukul-saffron-600" />
-            <span>संस्थापक / नेतृत्व संदेश (Founder & Leadership Message)</span>
+            <span>{isMarathi ? 'संस्थापक / नेतृत्व संदेश (Founder & Leadership Message)' : 'Founder & Leadership Message'}</span>
           </h2>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                नाव (Leader Name)
+                {isMarathi ? 'नाव (Leader Name)' : 'Leader Name'}
               </label>
               <input
                 type="text"
                 value={formData.founder?.name || ''}
                 onChange={(e) => setFormData(prev => ({ ...prev, founder: { ...prev.founder, name: e.target.value } }))}
-                placeholder="उदा. श्री. अजित पवार"
+                placeholder={isMarathi ? 'उदा. श्री. अजित पवार' : 'e.g. Founder Name'}
                 className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:bg-white outline-none"
               />
             </div>
             <div>
               <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                पद / पदनाम (Designation)
+                {isMarathi ? 'पद / पदनाम (Designation)' : 'Designation'}
               </label>
               <input
                 type="text"
                 value={formData.founder?.title || ''}
                 onChange={(e) => setFormData(prev => ({ ...prev, founder: { ...prev.founder, title: e.target.value } }))}
-                placeholder="संस्थापक अध्यक्ष"
+                placeholder={isMarathi ? 'संस्थापक अध्यक्ष' : 'Founder & President'}
                 className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:bg-white outline-none"
               />
             </div>
             <div>
               <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                फोटो (Leader Photo)
+                {isMarathi ? 'फोटो (Leader Photo)' : 'Leader Photo'}
               </label>
               <div className="flex items-center gap-2">
                 <input
                   type="text"
                   value={formData.founder?.image || ''}
                   onChange={(e) => setFormData(prev => ({ ...prev, founder: { ...prev.founder, image: e.target.value } }))}
-                  placeholder="फोटो URL"
+                  placeholder={isMarathi ? 'फोटो URL' : 'Photo URL'}
                   className="flex-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:bg-white outline-none"
                 />
                 <label className="cursor-pointer px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold flex items-center gap-1">
                   <Upload className="w-3.5 h-3.5 text-gurukul-saffron-600" />
-                  <span>{uploadingImage ? '...' : 'अपलोड'}</span>
+                  <span>{uploadingImage ? '...' : (isMarathi ? 'अपलोड' : 'Upload')}</span>
                   <input type="file" accept="image/*" onChange={handleFounderPhotoUpload} className="hidden" />
                 </label>
               </div>
@@ -302,13 +328,13 @@ export const CMSAboutPage = () => {
 
           <div>
             <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-              मार्गदर्शक संदेश (Founder Message)
+              {isMarathi ? 'मार्गदर्शक संदेश (Founder Message)' : 'Founder Message'}
             </label>
             <textarea
               rows={4}
               value={formData.founder?.message || ''}
               onChange={(e) => setFormData(prev => ({ ...prev, founder: { ...prev.founder, message: e.target.value } }))}
-              placeholder="पालक व विद्यार्थ्यांना उद्देशून संस्थेचे मार्गदर्शक विचार..."
+              placeholder={isMarathi ? 'पालक व विद्यार्थ्यांना उद्देशून संस्थेचे मार्गदर्शक विचार...' : 'Guiding message for parents and students...'}
               className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm leading-relaxed focus:bg-white outline-none"
             />
           </div>
@@ -319,7 +345,7 @@ export const CMSAboutPage = () => {
           <div className="flex items-center justify-between pb-3 border-b border-slate-100">
             <h2 className="text-base font-bold text-gurukul-navy-900 flex items-center gap-2">
               <Award className="w-5 h-5 text-gurukul-saffron-600" />
-              <span>महत्त्वाचे टप्पे व यश (Key Achievements & Milestones)</span>
+              <span>{isMarathi ? 'महत्त्वाचे टप्पे व यश (Key Achievements & Milestones)' : 'Key Achievements & Milestones'}</span>
             </h2>
             <button
               type="button"
@@ -327,7 +353,7 @@ export const CMSAboutPage = () => {
               className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-bold transition-colors"
             >
               <Plus className="w-3.5 h-3.5 text-gurukul-saffron-600" />
-              <span>टप्पा जोडा (Add Milestone)</span>
+              <span>{isMarathi ? 'टप्पा जोडा (Add Milestone)' : 'Add Milestone'}</span>
             </button>
           </div>
 
@@ -338,28 +364,28 @@ export const CMSAboutPage = () => {
                   type="text"
                   value={ach.year || ''}
                   onChange={(e) => updateAchievement(index, 'year', e.target.value)}
-                  placeholder="वर्ष (उदा. 2024)"
+                  placeholder={isMarathi ? 'वर्ष (उदा. 2024)' : 'Year (e.g. 2024)'}
                   className="w-28 px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs font-bold text-gurukul-saffron-600 outline-none"
                 />
                 <input
                   type="text"
                   value={ach.title || ''}
                   onChange={(e) => updateAchievement(index, 'title', e.target.value)}
-                  placeholder="यशाचे शीर्षक (उदा. १००% निकाल / सैनिक स्कूल निवड)"
+                  placeholder={isMarathi ? 'यशाचे शीर्षक (उदा. १००% निकाल / सैनिक स्कूल निवड)' : 'Achievement title (e.g. 100% Result / Sainik School Selection)'}
                   className="flex-1 px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs font-semibold text-slate-800 outline-none"
                 />
                 <input
                   type="text"
                   value={ach.description || ''}
                   onChange={(e) => updateAchievement(index, 'description', e.target.value)}
-                  placeholder="थोडक्यात माहिती"
+                  placeholder={isMarathi ? 'थोडक्यात माहिती' : 'Short description'}
                   className="flex-1 px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs text-slate-600 outline-none"
                 />
                 <button
                   type="button"
                   onClick={() => removeAchievement(index)}
                   className="p-2 text-slate-400 hover:text-red-600 transition-colors"
-                  title="काढून टाका"
+                  title={isMarathi ? 'काढून टाका' : 'Remove'}
                 >
                   <Trash2 className="w-4 h-4 text-red-500" />
                 </button>

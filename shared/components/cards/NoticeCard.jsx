@@ -17,7 +17,7 @@ export const NoticeCard = ({ notice, onOpenModal }) => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 mb-3">
         <div className="flex items-center gap-2">
           {notice.isImportant && (
-            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase bg-red-600 text-white tracking-wider animate-pulse">
+            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase bg-red-700 text-white tracking-wider">
               <AlertCircle className="w-3 h-3" /> {isMarathi ? 'महत्त्वाचे (Important)' : 'Important'}
             </span>
           )}

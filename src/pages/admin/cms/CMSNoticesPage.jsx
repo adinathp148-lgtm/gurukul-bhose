@@ -23,11 +23,21 @@ import {
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useCMS } from '../../../contexts/CMSContext';
+import { useLanguage } from '../../../contexts/LanguageContext';
 import { uploadMediaFile, validateUploadFile } from '../../../services/storage/mediaUploadService';
 import { getPublicWebsiteUrl } from '../../../services/navigation/navigationUrls';
 
+const NOTICE_CATEGORIES = [
+  { value: 'प्रवेश (Admission)', mr: 'प्रवेश (Admission)', mrShort: 'प्रवेश', en: 'Admission' },
+  { value: 'परीक्षा (Examination)', mr: 'परीक्षा (Examination)', mrShort: 'परीक्षा', en: 'Examination' },
+  { value: 'सुट्टी (Holidays)', mr: 'सुट्टी (Holidays)', mrShort: 'सुट्टी', en: 'Holidays' },
+  { value: 'सांस्कृतिक (Events)', mr: 'सांस्कृतिक (Events)', mrShort: 'सांस्कृतिक', en: 'Events' },
+  { value: 'सर्वसाधारण (General)', mr: 'सर्वसाधारण (General)', mrShort: 'सर्वसाधारण', en: 'General' }
+];
+
 export const CMSNoticesPage = () => {
   const { notices, saveNotice, deleteNotice, loading } = useCMS();
+  const { isMarathi } = useLanguage();
 
   const [showModal, setShowModal] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -36,6 +46,12 @@ export const CMSNoticesPage = () => {
   const [message, setMessage] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
+
+  const getNoticeCategoryLabel = (val) => {
+    const match = NOTICE_CATEGORIES.find(c => c.value === val);
+    if (match) return isMarathi ? match.mr : match.en;
+    return val || (isMarathi ? 'सर्वसाधारण' : 'General');
+  };
 
   const defaultNotice = {
     noticeId: '',
@@ -105,9 +121,15 @@ export const CMSNoticesPage = () => {
         fileName: file.name,
         attachmentStoragePath: res.storagePath || ''
       }));
-      setMessage({ type: 'success', text: 'PDF परिपत्रक यशस्वीरीत्या अपलोड झाले.' });
+      setMessage({
+        type: 'success',
+        text: isMarathi ? 'PDF परिपत्रक यशस्वीरीत्या अपलोड झाले.' : 'PDF circular uploaded successfully.'
+      });
     } catch (err) {
-      setMessage({ type: 'error', text: err.message || 'दस्तऐवज अपलोड करताना त्रुटी आली.' });
+      setMessage({
+        type: 'error',
+        text: err.message || (isMarathi ? 'दस्तऐवज अपलोड करताना त्रुटी आली.' : 'Error uploading document.')
+      });
     } finally {
       setUploadingPdf(false);
     }
@@ -116,7 +138,10 @@ export const CMSNoticesPage = () => {
   const handleSave = async (e) => {
     e.preventDefault();
     if (!formData.title.trim()) {
-      setMessage({ type: 'error', text: 'कृपया सूचनेचे शीर्षक भरा.' });
+      setMessage({
+        type: 'error',
+        text: isMarathi ? 'कृपया सूचनेचे शीर्षक भरा.' : 'Please enter a notice title.'
+      });
       return;
     }
 
@@ -137,10 +162,18 @@ export const CMSNoticesPage = () => {
         publishedAt: formData.publishedAt || now,
         updatedAt: now
       });
-      setMessage({ type: 'success', text: isEditing ? 'सूचना यशस्वीरीत्या अद्यतनित केली!' : `सूचना "${formData.title}" यशस्वीरीत्या प्रकाशित झाली!` });
+      setMessage({
+        type: 'success',
+        text: isEditing
+          ? (isMarathi ? 'सूचना यशस्वीरीत्या अद्यतनित केली!' : 'Notice updated successfully!')
+          : (isMarathi ? `सूचना "${formData.title}" यशस्वीरीत्या प्रकाशित झाली!` : `Notice "${formData.title}" published successfully!`)
+      });
       setShowModal(false);
     } catch (err) {
-      setMessage({ type: 'error', text: err.message || 'जतन करताना त्रुटी आली.' });
+      setMessage({
+        type: 'error',
+        text: err.message || (isMarathi ? 'जतन करताना त्रुटी आली.' : 'Error saving notice.')
+      });
     } finally {
       setSaving(false);
     }
@@ -155,23 +188,38 @@ export const CMSNoticesPage = () => {
       });
       setMessage({ 
         type: 'success', 
-        text: `सूचना स्थिती ${newStatus === 'published' ? 'प्रकाशित' : 'मसुदा'} म्हणून बदलली.` 
+        text: isMarathi
+          ? `सूचना स्थिती ${newStatus === 'published' ? 'प्रकाशित' : 'मसुदा'} म्हणून बदलली.`
+          : `Notice status changed to ${newStatus === 'published' ? 'Published' : 'Draft'}.`
       });
     } catch (err) {
-      setMessage({ type: 'error', text: 'स्थिती बदलताना त्रुटी आली.' });
+      setMessage({
+        type: 'error',
+        text: isMarathi ? 'स्थिती बदलताना त्रुटी आली.' : 'Failed to update status.'
+      });
     }
   };
 
   const handleDelete = async (noticeId, title) => {
-    if (!window.confirm(`तुम्हाला खात्री आहे की "${title}" ही सूचना हटवायची आहे?`)) {
+    if (!window.confirm(
+      isMarathi
+        ? `तुम्हाला खात्री आहे की "${title}" ही सूचना हटवायची आहे?`
+        : `Are you sure you want to delete the notice "${title}"?`
+    )) {
       return;
     }
 
     try {
       await deleteNotice(noticeId);
-      setMessage({ type: 'success', text: 'सूचना यशस्वीरीत्या काढून टाकली.' });
+      setMessage({
+        type: 'success',
+        text: isMarathi ? 'सूचना यशस्वीरीत्या काढून टाकली.' : 'Notice deleted successfully.'
+      });
     } catch (err) {
-      setMessage({ type: 'error', text: err.message || 'हटवताना त्रुटी आली.' });
+      setMessage({
+        type: 'error',
+        text: err.message || (isMarathi ? 'हटवताना त्रुटी आली.' : 'Error deleting notice.')
+      });
     }
   };
 
@@ -191,17 +239,19 @@ export const CMSNoticesPage = () => {
           <Link 
             to="/admin/cms" 
             className="p-2 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-lg transition-colors"
-            title="CMS डॅशबोर्डवर परत जा"
+            title={isMarathi ? 'CMS डॅशबोर्डवर परत जा' : 'Back to CMS Dashboard'}
           >
             <ArrowLeft className="w-5 h-5" />
           </Link>
           <div>
             <h1 className="text-2xl font-black text-gurukul-navy-900 flex items-center gap-2">
               <Bell className="w-7 h-7 text-gurukul-saffron-600" />
-              <span>सूचना व परिपत्रक व्यवस्थापन (Notices CMS)</span>
+              <span>{isMarathi ? 'सूचना व परिपत्रक व्यवस्थापन (Notices CMS)' : 'Notices & Circulars Management (CMS)'}</span>
             </h1>
             <p className="text-sm text-slate-500">
-              प्रवेश सूचना, वेळापत्रक, शेड्युलिंग, परिपत्रके व PDF दस्तऐवज अपलोड करा व व्यवस्थापित करा.
+              {isMarathi
+                ? 'प्रवेश सूचना, वेळापत्रक, शेड्युलिंग, परिपत्रके व PDF दस्तऐवज अपलोड करा व व्यवस्थापित करा.'
+                : 'Publish and manage admission notices, schedules, circulars, and PDF attachments.'}
             </p>
           </div>
         </div>
@@ -212,10 +262,10 @@ export const CMSNoticesPage = () => {
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-1.5 px-3.5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold text-xs border border-slate-300 transition-all"
-            title="लाईव्ह वेबसाईटवर सूचना पहा"
+            title={isMarathi ? 'लाईव्ह वेबसाईटवर सूचना पहा' : 'View Notices on Live Website'}
           >
             <Eye className="w-4 h-4 text-gurukul-saffron-600" />
-            <span className="hidden sm:inline">लाईव्ह सूचना पत्रक पहा</span>
+            <span className="hidden sm:inline">{isMarathi ? 'लाईव्ह सूचना पत्रक पहा' : 'View Live Notices'}</span>
           </a>
           <button
             type="button"
@@ -223,7 +273,7 @@ export const CMSNoticesPage = () => {
             className="inline-flex items-center gap-2 px-4 py-2.5 bg-gurukul-saffron-600 hover:bg-gurukul-saffron-700 text-white rounded-xl font-bold text-sm shadow hover:shadow-md transition-all"
           >
             <Plus className="w-4 h-4" />
-            <span>नवीन सूचना जोडा (Add Notice)</span>
+            <span>{isMarathi ? 'नवीन सूचना जोडा' : 'Add New Notice'}</span>
           </button>
         </div>
       </div>
@@ -246,7 +296,7 @@ export const CMSNoticesPage = () => {
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="सूचना शोधा..."
+            placeholder={isMarathi ? 'सूचना शोधा...' : 'Search notices...'}
             className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:bg-white outline-none"
           />
         </div>
@@ -258,12 +308,12 @@ export const CMSNoticesPage = () => {
             onChange={(e) => setCategoryFilter(e.target.value)}
             className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:bg-white outline-none"
           >
-            <option value="all">सर्व वर्गवारी (All)</option>
-            <option value="प्रवेश (Admission)">प्रवेश</option>
-            <option value="परीक्षा (Examination)">परीक्षा</option>
-            <option value="सुट्टी (Holidays)">सुट्टी</option>
-            <option value="सांस्कृतिक (Events)">सांस्कृतिक</option>
-            <option value="सर्वसाधारण (General)">सर्वसाधारण</option>
+            <option value="all">{isMarathi ? 'सर्व वर्गवारी (All)' : 'All Categories'}</option>
+            {NOTICE_CATEGORIES.map(cat => (
+              <option key={cat.value} value={cat.value}>
+                {isMarathi ? cat.mrShort : cat.en}
+              </option>
+            ))}
           </select>
         </div>
       </div>
@@ -274,7 +324,9 @@ export const CMSNoticesPage = () => {
           <form onSubmit={handleSave} className="bg-white rounded-2xl max-w-lg w-full p-6 space-y-4 shadow-2xl animate-in zoom-in-95 my-8">
             <div className="flex items-center justify-between pb-3 border-b border-slate-100">
               <h2 className="text-base font-bold text-gurukul-navy-900">
-                {isEditing ? 'सूचना संपादन (Edit Notice)' : 'नवीन सूचना तयार करा (Create Notice)'}
+                {isEditing
+                  ? (isMarathi ? 'सूचना संपादन (Edit Notice)' : 'Edit Notice')
+                  : (isMarathi ? 'नवीन सूचना तयार करा (Create Notice)' : 'Create New Notice')}
               </h2>
               <button
                 type="button"
@@ -287,27 +339,27 @@ export const CMSNoticesPage = () => {
 
             <div>
               <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                सूचनेचे शीर्षक (Notice Title) *
+                {isMarathi ? 'सूचनेचे शीर्षक (Notice Title) *' : 'Notice Title *'}
               </label>
               <input
                 type="text"
                 required
                 value={formData.title}
                 onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-                placeholder="उदा. चालू शैक्षणिक वर्षातील इयत्ता ५ वी सैनिक स्कूल प्रवेश परीक्षा"
+                placeholder={isMarathi ? 'उदा. चालू शैक्षणिक वर्षातील इयत्ता ५ वी सैनिक स्कूल प्रवेश परीक्षा' : 'e.g. Current Academic Year Std. 5th Sainik School Entrance Exam'}
                 className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:bg-white outline-none"
               />
             </div>
 
             <div>
               <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                तपशील (Details / Description)
+                {isMarathi ? 'तपशील (Details / Description)' : 'Details / Description'}
               </label>
               <textarea
                 rows={3}
                 value={formData.description || ''}
                 onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                placeholder="पालक व विद्यार्थ्यांसाठी सविस्तर सूचना किंवा मार्गदर्शक मुद्दे..."
+                placeholder={isMarathi ? 'पालक व विद्यार्थ्यांसाठी सविस्तर सूचना किंवा मार्गदर्शक मुद्दे...' : 'Detailed instructions or guidelines for parents and students...'}
                 className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:bg-white outline-none"
               />
             </div>
@@ -315,24 +367,24 @@ export const CMSNoticesPage = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                  वर्गवारी (Category)
+                  {isMarathi ? 'वर्गवारी (Category)' : 'Category'}
                 </label>
                 <select
                   value={formData.category}
                   onChange={(e) => setFormData(prev => ({ ...prev, category: e.target.value }))}
                   className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:bg-white outline-none"
                 >
-                  <option value="प्रवेश (Admission)">प्रवेश (Admission)</option>
-                  <option value="परीक्षा (Examination)">परीक्षा (Examination)</option>
-                  <option value="सुट्टी (Holidays)">सुट्टी (Holidays)</option>
-                  <option value="सांस्कृतिक (Events)">सांस्कृतिक (Events)</option>
-                  <option value="सर्वसाधारण (General)">सर्वसाधारण (General)</option>
+                  {NOTICE_CATEGORIES.map(cat => (
+                    <option key={cat.value} value={cat.value}>
+                      {isMarathi ? cat.mr : cat.en}
+                    </option>
+                  ))}
                 </select>
               </div>
 
               <div>
                 <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                  तारीख (Notice Date)
+                  {isMarathi ? 'तारीख (Notice Date)' : 'Notice Date'}
                 </label>
                 <input
                   type="date"
@@ -347,7 +399,7 @@ export const CMSNoticesPage = () => {
               <div>
                 <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1 flex items-center gap-1">
                   <Clock className="w-3.5 h-3.5 text-gurukul-saffron-600" />
-                  <span>प्रकाशन तारीख / वेळ (Publish Schedule)</span>
+                  <span>{isMarathi ? 'प्रकाशन तारीख / वेळ (Publish Schedule)' : 'Publish Schedule'}</span>
                 </label>
                 <input
                   type="datetime-local"
@@ -359,15 +411,15 @@ export const CMSNoticesPage = () => {
 
               <div>
                 <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                  स्थिती (Status)
+                  {isMarathi ? 'स्थिती (Status)' : 'Status'}
                 </label>
                 <select
                   value={formData.status}
                   onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value }))}
                   className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:bg-white outline-none"
                 >
-                  <option value="published">🟢 त्वरित प्रकाशित (Published)</option>
-                  <option value="draft">🟡 मसुदा (Draft)</option>
+                  <option value="published">{isMarathi ? '🟢 त्वरित प्रकाशित (Published)' : '🟢 Publish Immediately'}</option>
+                  <option value="draft">{isMarathi ? '🟡 मसुदा (Draft)' : '🟡 Draft'}</option>
                 </select>
               </div>
             </div>
@@ -375,7 +427,7 @@ export const CMSNoticesPage = () => {
             {/* PDF Attachment Upload */}
             <div className="pt-2 border-t border-slate-100">
               <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                परिपत्रक PDF फाईल (PDF Circular - Max 15MB)
+                {isMarathi ? 'परिपत्रक PDF फाईल (PDF Circular - Max 15MB)' : 'PDF Circular Attachment (Max 15MB)'}
               </label>
               <div className="flex items-center gap-2">
                 <input
@@ -387,18 +439,18 @@ export const CMSNoticesPage = () => {
                     fileUrl: e.target.value, 
                     downloadLink: e.target.value 
                   }))}
-                  placeholder="PDF URL किंवा थेट अपलोड करा"
+                  placeholder={isMarathi ? 'PDF URL किंवा थेट अपलोड करा' : 'PDF URL or upload directly'}
                   className="flex-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:bg-white outline-none"
                 />
                 <label className="cursor-pointer px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold flex items-center gap-1 shrink-0">
                   <Upload className="w-3.5 h-3.5 text-gurukul-saffron-600" />
-                  <span>{uploadingPdf ? '...' : 'PDF अपलोड'}</span>
+                  <span>{uploadingPdf ? '...' : (isMarathi ? 'PDF अपलोड' : 'Upload PDF')}</span>
                   <input type="file" accept="application/pdf" onChange={handlePdfUpload} className="hidden" />
                 </label>
               </div>
               {formData.fileName && (
                 <p className="text-[11px] text-emerald-600 font-medium mt-1">
-                  जोडलेली फाईल: {formData.fileName}
+                  {isMarathi ? 'जोडलेली फाईल:' : 'Attached file:'} {formData.fileName}
                 </p>
               )}
             </div>
@@ -417,7 +469,7 @@ export const CMSNoticesPage = () => {
                 className="w-4 h-4 rounded text-gurukul-saffron-600 focus:ring-gurukul-saffron-500"
               />
               <label htmlFor="isImportantNotice" className="text-xs font-bold text-gurukul-navy-900 cursor-pointer">
-                महत्त्वाची / तातडीची सूचना (Important / Urgent Notice Highlight)
+                {isMarathi ? 'महत्त्वाची / तातडीची सूचना (Important / Urgent Notice Highlight)' : 'Highlight as Important / Urgent Notice'}
               </label>
             </div>
 
@@ -427,7 +479,7 @@ export const CMSNoticesPage = () => {
                 onClick={() => setShowModal(false)}
                 className="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl"
               >
-                रद्द करा
+                {isMarathi ? 'रद्द करा' : 'Cancel'}
               </button>
               <button
                 type="submit"
@@ -435,7 +487,7 @@ export const CMSNoticesPage = () => {
                 className="inline-flex items-center gap-1.5 px-5 py-2.5 bg-gurukul-saffron-600 hover:bg-gurukul-saffron-700 disabled:opacity-50 text-white rounded-xl font-bold text-xs shadow"
               >
                 <Save className="w-4 h-4" />
-                <span>{saving ? 'जतन करत आहे...' : 'सूचना सेव्ह करा'}</span>
+                <span>{saving ? (isMarathi ? 'जतन करत आहे...' : 'Saving...') : (isMarathi ? 'सूचना सेव्ह करा' : 'Save Notice')}</span>
               </button>
             </div>
           </form>
@@ -446,7 +498,7 @@ export const CMSNoticesPage = () => {
       <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
         <div className="p-4 border-b border-slate-100 flex items-center justify-between">
           <h2 className="text-sm font-bold text-gurukul-navy-900">
-            एकूण सूचना ({filteredNotices.length})
+            {isMarathi ? `एकूण सूचना (${filteredNotices.length})` : `Total Notices (${filteredNotices.length})`}
           </h2>
         </div>
 
@@ -454,11 +506,13 @@ export const CMSNoticesPage = () => {
           {loading && (!notices || notices.length === 0) ? (
             <div className="p-12 text-center text-slate-500 space-y-3">
               <div className="w-8 h-8 border-3 border-gurukul-saffron-500 border-t-transparent rounded-full animate-spin mx-auto" />
-              <p className="text-xs font-semibold text-slate-600">सूचना लोड होत आहेत (Loading notices)...</p>
+              <p className="text-xs font-semibold text-slate-600">
+                {isMarathi ? 'सूचना लोड होत आहेत...' : 'Loading notices...'}
+              </p>
             </div>
           ) : filteredNotices.length === 0 ? (
             <div className="p-8 text-center text-slate-400 text-sm">
-              कोणतीही सूचना आढळली नाही.
+              {isMarathi ? 'कोणतीही सूचना आढळली नाही.' : 'No notices found.'}
             </div>
           ) : (
             filteredNotices.map((n) => {
@@ -473,15 +527,15 @@ export const CMSNoticesPage = () => {
                       <Bell className="w-5 h-5" />
                     </div>
                     <div>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-wrap">
                         <h3 className="font-bold text-gurukul-navy-900 text-sm">{n.title}</h3>
                         {isImp && (
                           <span className="px-2 py-0.5 rounded-full bg-red-100 text-red-700 text-[10px] font-bold">
-                            महत्त्वाची
+                            {isMarathi ? 'महत्त्वाची' : 'Important'}
                           </span>
                         )}
                         <span className="px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 text-[10px] font-medium">
-                          {n.category}
+                          {getNoticeCategoryLabel(n.category)}
                         </span>
                         <button
                           type="button"
@@ -491,9 +545,11 @@ export const CMSNoticesPage = () => {
                               ? 'bg-emerald-100 text-emerald-800 hover:bg-emerald-200'
                               : 'bg-amber-100 text-amber-800 hover:bg-amber-200'
                           }`}
-                          title="स्थिती बदलण्यासाठी क्लिक करा"
+                          title={isMarathi ? 'स्थिती बदलण्यासाठी क्लिक करा' : 'Click to toggle status'}
                         >
-                          {n.status === 'published' ? 'प्रकाशित' : 'मसुदा'}
+                          {n.status === 'published'
+                            ? (isMarathi ? 'प्रकाशित' : 'Published')
+                            : (isMarathi ? 'मसुदा' : 'Draft')}
                         </button>
                       </div>
                       {n.description && (
@@ -504,7 +560,7 @@ export const CMSNoticesPage = () => {
                         <span>{n.date || n.publishedAt?.split('T')[0]}</span>
                         {fileLink && (
                           <span className="ml-2 text-gurukul-saffron-600 font-medium inline-flex items-center gap-1">
-                            <FileText className="w-3 h-3" /> PDF जोडलेले
+                            <FileText className="w-3 h-3" /> {isMarathi ? 'PDF जोडलेले' : 'PDF Attached'}
                           </span>
                         )}
                       </p>
@@ -518,7 +574,7 @@ export const CMSNoticesPage = () => {
                         target="_blank"
                         rel="noreferrer"
                         className="p-2 text-slate-500 hover:text-gurukul-saffron-600 rounded-lg hover:bg-slate-100 transition-colors"
-                        title="PDF पहा / डाउनलोड करा"
+                        title={isMarathi ? 'PDF पहा / डाउनलोड करा' : 'View / Download PDF'}
                       >
                         <Download className="w-4 h-4" />
                       </a>
@@ -527,7 +583,7 @@ export const CMSNoticesPage = () => {
                       type="button"
                       onClick={() => handleOpenEdit(n)}
                       className="p-2 text-slate-400 hover:text-gurukul-navy-900 rounded-lg hover:bg-slate-100 transition-colors"
-                      title="संपादन करा"
+                      title={isMarathi ? 'संपादन करा' : 'Edit'}
                     >
                       <Edit2 className="w-4 h-4" />
                     </button>
@@ -535,7 +591,7 @@ export const CMSNoticesPage = () => {
                       type="button"
                       onClick={() => handleDelete(n.noticeId || n.id, n.title)}
                       className="p-2 text-slate-400 hover:text-red-500 rounded-lg transition-colors"
-                      title="काढून टाका"
+                      title={isMarathi ? 'काढून टाका' : 'Delete'}
                     >
                       <Trash2 className="w-4 h-4 text-red-500" />
                     </button>

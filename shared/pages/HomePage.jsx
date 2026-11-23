@@ -20,7 +20,6 @@ import {
 } from 'lucide-react';
 
 import { useCMS } from '../contexts/CMSContext';
-import { useCRM } from '../contexts/CRMContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { SEO } from '../components/common/SEO';
 import { Button } from '../components/common/Button';
@@ -35,25 +34,24 @@ import { VideoCard } from '../components/cards/VideoCard';
 import { Modal } from '../components/common/Modal';
 
 import { 
-  getPrograms, 
-  getFacilities, 
-  getNotices, 
-  getGalleryImages, 
-  getVideos 
-} from '../services/firestore/contentService';
-import { featuresList } from '../data/initialData';
+  featuresList,
+  programsList,
+  facilitiesList,
+  noticesList,
+  galleryList,
+  videosList
+} from '../data/initialData';
 
 export const HomePage = () => {
-  const { institution, slides, gallery: cmsGallery, videos: cmsVideos, homepageData } = useCMS();
-  const { addLead } = useCRM();
+  const { institution, slides, gallery: cmsGallery, videos: cmsVideos, notices: cmsNotices, facilities: cmsFacilities, homepageData } = useCMS();
   const { isMarathi } = useLanguage();
 
-  // Dynamic content states loaded via Firestore service (with authentic fallback)
-  const [programs, setPrograms] = useState([]);
-  const [facilities, setFacilities] = useState([]);
-  const [notices, setNotices] = useState([]);
-  const [gallery, setGallery] = useState([]);
-  const [videos, setVideos] = useState([]);
+  // Initialize immediately with authentic local/CMS data to avoid empty-state layout shifts & double renders
+  const [programs, setPrograms] = useState(() => programsList || []);
+  const [facilities, setFacilities] = useState(() => (cmsFacilities?.length ? cmsFacilities : facilitiesList) || []);
+  const [notices, setNotices] = useState(() => ((cmsNotices?.length ? cmsNotices : noticesList) || []).slice(0, 3));
+  const [gallery, setGallery] = useState(() => ((cmsGallery?.length ? cmsGallery : galleryList) || []).slice(0, 6));
+  const [videos, setVideos] = useState(() => ((cmsVideos?.length ? cmsVideos : videosList) || []).slice(0, 3));
   const [selectedNotice, setSelectedNotice] = useState(null);
 
   // Quick admission form state
@@ -70,6 +68,14 @@ export const HomePage = () => {
     let isMounted = true;
     const fetchHomeData = async () => {
       try {
+        const {
+          getPrograms,
+          getFacilities,
+          getNotices,
+          getGalleryImages,
+          getVideos
+        } = await import('../services/firestore/contentService');
+
         const [progRes, facRes, notRes, galRes, vidRes] = await Promise.all([
           getPrograms(),
           getFacilities(),
@@ -112,32 +118,56 @@ export const HomePage = () => {
             filteredVids = [...matches, ...others];
           }
 
-          setPrograms(filteredProgs);
-          setFacilities(rawFacs);
-          setNotices(filteredNots.slice(0, 3));
-          setGallery(filteredGals.slice(0, 6));
-          setVideos(filteredVids.slice(0, 3));
+          if (filteredProgs.length) setPrograms(filteredProgs);
+          if (rawFacs.length) setFacilities(rawFacs);
+          if (filteredNots.length) setNotices(filteredNots.slice(0, 3));
+          if (filteredGals.length) setGallery(filteredGals.slice(0, 6));
+          if (filteredVids.length) setVideos(filteredVids.slice(0, 3));
         }
       } catch (err) {
         console.warn('Error fetching homepage dynamic content:', err);
       }
     };
-    fetchHomeData();
-    return () => { isMounted = false; };
+
+    // Defer live Firestore sync until after initial paint & interaction window
+    let synced = false;
+    const triggerSync = () => {
+      if (synced) return;
+      synced = true;
+      fetchHomeData();
+    };
+    const timerId = setTimeout(triggerSync, 4500);
+    window.addEventListener('pointerdown', triggerSync, { once: true, passive: true });
+    window.addEventListener('keydown', triggerSync, { once: true, passive: true });
+
+    return () => {
+      isMounted = false;
+      clearTimeout(timerId);
+      window.removeEventListener('pointerdown', triggerSync);
+      window.removeEventListener('keydown', triggerSync);
+    };
   }, [cmsGallery, cmsVideos, homepageData]);
 
   // Real-time listener for CMS updates on homepage
   useEffect(() => {
-    const handleUpdate = () => {
-      Promise.all([
-        getNotices(6),
-        getGalleryImages('all'),
-        getVideos()
-      ]).then(([notRes, galRes, vidRes]) => {
+    const handleUpdate = async () => {
+      try {
+        const {
+          getNotices,
+          getGalleryImages,
+          getVideos
+        } = await import('../services/firestore/contentService');
+        const [notRes, galRes, vidRes] = await Promise.all([
+          getNotices(6),
+          getGalleryImages('all'),
+          getVideos()
+        ]);
         if (notRes?.data) setNotices(notRes.data.slice(0, 3));
         if (galRes?.data) setGallery(galRes.data.slice(0, 6));
         if (vidRes?.data) setVideos(vidRes.data.slice(0, 3));
-      }).catch(console.warn);
+      } catch (err) {
+        console.warn(err);
+      }
     };
 
     window.addEventListener('gurukul_content_updated', handleUpdate);
@@ -152,25 +182,30 @@ export const HomePage = () => {
     e.preventDefault();
     setFormStatus({ loading: true, success: false, error: null });
 
-    const res = await addLead({
-      ...quickForm,
-      leadSource: 'Website (Home Page Quick Form)',
-      course: quickForm.admissionClass.includes('11') || quickForm.admissionClass.includes('12') 
-        ? 'गुरुकुल जुनियर कॉलेज' 
-        : 'गुरुकुल विद्यामंदिर'
-    });
-
-    if (res.success) {
-      setFormStatus({ loading: false, success: true, error: null });
-      setQuickForm({
-        studentName: '',
-        parentName: '',
-        mobileNumber: '',
-        admissionClass: 'इ. 5 वी',
-        message: ''
+    try {
+      const { submitPublicAdmissionEnquiry } = await import('../services/firestore/crmService');
+      const res = await submitPublicAdmissionEnquiry({
+        ...quickForm,
+        leadSource: 'Website (Home Page Quick Form)',
+        course: quickForm.admissionClass.includes('11') || quickForm.admissionClass.includes('12') 
+          ? 'गुरुकुल जुनियर कॉलेज' 
+          : 'गुरुकुल विद्यामंदिर'
       });
-    } else {
-      setFormStatus({ loading: false, success: false, error: res.message || 'त्रुटी आढळली.' });
+
+      if (res?.success) {
+        setFormStatus({ loading: false, success: true, error: null });
+        setQuickForm({
+          studentName: '',
+          parentName: '',
+          mobileNumber: '',
+          admissionClass: 'इ. 5 वी',
+          message: ''
+        });
+      } else {
+        setFormStatus({ loading: false, success: false, error: res?.message || 'त्रुटी आढळली.' });
+      }
+    } catch (err) {
+      setFormStatus({ loading: false, success: false, error: err?.message || 'त्रुटी आढळली.' });
     }
   };
 
@@ -240,8 +275,12 @@ export const HomePage = () => {
             <div className="lg:col-span-7 space-y-6">
               <div className="relative rounded-2xl overflow-hidden shadow-2xl">
                 <img
-                  src={homepageData?.aboutSection?.imageUrl || "https://images.unsplash.com/photo-1580582932707-520aed937b7b?auto=format&fit=crop&w=1000&q=80"}
+                  src={homepageData?.aboutSection?.imageUrl || "https://images.unsplash.com/photo-1580582932707-520aed937b7b?auto=format&fit=crop&w=800&q=75"}
                   alt={isMarathi ? "गुरुकुल भोसे कॅम्पस" : "Gurukul Bhose Campus"}
+                  loading="lazy"
+                  decoding="async"
+                  width="800"
+                  height="400"
                   className="w-full h-[360px] sm:h-[400px] object-cover"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-gurukul-navy-950/80 via-transparent to-transparent"></div>
@@ -378,10 +417,12 @@ export const HomePage = () => {
                       </div>
 
                       <div>
-                        <label className="block text-xs font-semibold text-slate-700 mb-1">
+                        <label htmlFor="quick-admission-class" className="block text-xs font-semibold text-slate-700 mb-1">
                           {isMarathi ? 'प्रवेश इयत्ता (Class) *' : 'Admission Class *'}
                         </label>
                         <select
+                          id="quick-admission-class"
+                          aria-label={isMarathi ? 'प्रवेश इयत्ता (Class)' : 'Admission Class'}
                           value={quickForm.admissionClass}
                           onChange={(e) => setQuickForm({ ...quickForm, admissionClass: e.target.value })}
                           className="w-full text-sm sm:text-xs px-3.5 py-3 sm:py-2.5 bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-gurukul-saffron-500 focus:outline-none"

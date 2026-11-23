@@ -97,10 +97,13 @@ export const Footer = ({ showStaffLink = true }) => {
               <img 
                 src="/gurukul-logo.png" 
                 alt="गुरुकुल भोसे Logo" 
+                width="48"
+                height="48"
+                loading="lazy"
                 className="w-12 h-12 object-contain bg-white/10 backdrop-blur-sm rounded-xl p-1 shadow-lg shrink-0" 
               />
               <div>
-                <h4 className="font-bold text-white text-base">{isMarathi ? 'गुरुकुल भोसे' : 'Gurukul Bhose'}</h4>
+                <h2 className="font-bold text-white text-base">{isMarathi ? 'गुरुकुल भोसे' : 'Gurukul Bhose'}</h2>
                 <p className="text-xs text-gurukul-saffron-400 font-medium">
                   {institution?.tagline || (isMarathi ? 'विद्यामंदिर व ज्युनिअर कॉलेज' : 'Vidyamandir & Junior College')}
                 </p>
@@ -123,9 +126,9 @@ export const Footer = ({ showStaffLink = true }) => {
 
           {/* Column 2: Quick Links */}
           <div>
-            <h4 className="font-bold text-white text-sm mb-4 border-l-2 border-gurukul-saffron-500 pl-2.5">
+            <h2 className="font-bold text-white text-sm mb-4 border-l-2 border-gurukul-saffron-500 pl-2.5">
               {isMarathi ? 'महत्त्वाचे दुवे (Quick Links)' : 'Quick Links'}
-            </h4>
+            </h2>
             <ul className="space-y-2 text-xs">
               <li>
                 <Link to="/" className="hover:text-gurukul-saffron-400 transition-colors flex items-center gap-1.5">
@@ -182,9 +185,9 @@ export const Footer = ({ showStaffLink = true }) => {
 
           {/* Column 3: Contact Details */}
           <div>
-            <h4 className="font-bold text-white text-sm mb-4 border-l-2 border-gurukul-saffron-500 pl-2.5">
+            <h2 className="font-bold text-white text-sm mb-4 border-l-2 border-gurukul-saffron-500 pl-2.5">
               {isMarathi ? 'कॅम्पस संपर्क (Contact)' : 'Campus Contact'}
-            </h4>
+            </h2>
             <ul className="space-y-3 text-xs">
               <li className="flex items-start gap-2.5">
                 <MapPin className="w-4 h-4 text-gurukul-saffron-400 shrink-0 mt-0.5" />
@@ -211,9 +214,9 @@ export const Footer = ({ showStaffLink = true }) => {
 
           {/* Column 4: Admissions & Downloads */}
           <div className="space-y-4">
-            <h4 className="font-bold text-white text-sm border-l-2 border-gurukul-saffron-500 pl-2.5">
+            <h2 className="font-bold text-white text-sm border-l-2 border-gurukul-saffron-500 pl-2.5">
               {isMarathi ? 'प्रवेश व माहिती पत्रक' : 'Admissions & Downloads'}
-            </h4>
+            </h2>
             <p className="text-xs text-slate-400">
               {isMarathi 
                 ? 'चालू शैक्षणिक वर्षामध्ये ५ वी ते १२ वी मराठी व इंग्रजी सेमी तसेच सायन्स व आर्टस् प्रवेश सुरू आहेत.'
@@ -232,7 +235,7 @@ export const Footer = ({ showStaffLink = true }) => {
 
             <Link 
               to="/admission-enquiry"
-              className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-gurukul-saffron-500 hover:bg-gurukul-saffron-600 text-white text-xs font-bold shadow-md transition-colors"
+              className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-gurukul-saffron-600 hover:bg-gurukul-saffron-700 text-white text-xs font-bold shadow-md transition-colors"
             >
               <span>{isMarathi ? 'ऑनलाईन प्रवेश अर्ज / Enquiry' : 'Online Admission Enquiry'}</span>
             </Link>
@@ -248,14 +251,14 @@ export const Footer = ({ showStaffLink = true }) => {
             {/* Backdrop overlay when Admin Menu is open to prevent background buttons/text bleed */}
             {crmMenuOpen && (
               <div 
-                className="fixed inset-0 bg-slate-950/70 backdrop-blur-[2px] z-40 transition-opacity animate-in fade-in duration-200"
+                className="fixed inset-0 bg-slate-950/70 backdrop-blur-[2px] z-[60] sm:z-40 transition-opacity animate-in fade-in duration-200"
                 onClick={() => setCrmMenuOpen(false)}
                 aria-hidden="true"
               />
             )}
 
             {/* Admin Profile & CRM Hub Popover Button */}
-            <div className={`relative ${crmMenuOpen ? 'z-50' : ''}`} ref={crmMenuRef}>
+            <div className={`relative ${crmMenuOpen ? 'z-[70] sm:z-50' : ''}`} ref={crmMenuRef}>
               <button
                 type="button"
                 onClick={() => setCrmMenuOpen(!crmMenuOpen)}
@@ -273,10 +276,10 @@ export const Footer = ({ showStaffLink = true }) => {
                 <ChevronUp className={`w-3.5 h-3.5 text-yellow-400/80 transition-transform duration-200 shrink-0 ${crmMenuOpen ? 'rotate-180' : ''}`} />
               </button>
 
-              {/* CRM & Admin Profile Popover Menu (opens upward with 100% solid background) */}
+              {/* CRM & Admin Profile Popover Menu (centered in viewport on mobile, opens upward on desktop) */}
               {crmMenuOpen && (
                 <div 
-                  className="absolute bottom-full mb-3 left-1/2 -translate-x-1/2 sm:left-auto sm:right-0 sm:translate-x-0 w-[calc(100vw-2rem)] max-w-sm sm:w-88 bg-slate-900 rounded-2xl shadow-2xl shadow-black/95 border border-slate-700/90 py-3 z-50 animate-in fade-in slide-in-from-bottom-2 text-left ring-1 ring-white/10 overflow-hidden"
+                  className="fixed inset-x-4 bottom-24 mx-auto max-w-sm z-[70] sm:absolute sm:inset-x-auto sm:bottom-full sm:right-0 sm:mb-3 sm:mx-0 sm:w-88 sm:z-50 bg-slate-900 rounded-2xl shadow-2xl shadow-black/95 border border-slate-700/90 py-3 animate-in fade-in slide-in-from-bottom-2 text-left ring-1 ring-white/10 overflow-hidden"
                   style={{ backgroundColor: '#0f172a' }}
                   role="menu"
                 >
@@ -307,7 +310,7 @@ export const Footer = ({ showStaffLink = true }) => {
                   <a
                     href={crmUrls.admin}
                     target="_blank"
-                    rel="noopener noreferrer"
+                    rel="noopener noreferrer nofollow"
                     onClick={() => setCrmMenuOpen(false)}
                     className="flex items-start gap-3 px-4 py-2.5 hover:bg-slate-800 transition-colors group bg-slate-900"
                     style={{ backgroundColor: '#0f172a' }}
@@ -332,7 +335,7 @@ export const Footer = ({ showStaffLink = true }) => {
                   <a
                     href={crmUrls.telecaller}
                     target="_blank"
-                    rel="noopener noreferrer"
+                    rel="noopener noreferrer nofollow"
                     onClick={() => setCrmMenuOpen(false)}
                     className="flex items-start gap-3 px-4 py-2.5 hover:bg-slate-800 border-t border-slate-800/80 transition-colors group bg-slate-900"
                     style={{ backgroundColor: '#0f172a' }}
@@ -361,7 +364,7 @@ export const Footer = ({ showStaffLink = true }) => {
                     <a
                       href={crmUrls.login}
                       target="_blank"
-                      rel="noopener noreferrer"
+                      rel="noopener noreferrer nofollow"
                       onClick={() => setCrmMenuOpen(false)}
                       className="font-bold text-slate-200 hover:text-yellow-400 flex items-center gap-1.5 transition-colors shrink-0"
                     >
@@ -372,7 +375,7 @@ export const Footer = ({ showStaffLink = true }) => {
                       <a
                         href={crmUrls.telecallerRegister}
                         target="_blank"
-                        rel="noopener noreferrer"
+                        rel="noopener noreferrer nofollow"
                         onClick={() => setCrmMenuOpen(false)}
                         className="font-bold text-emerald-400 hover:text-emerald-300 text-[11px] transition-colors"
                         title={isMarathi ? 'समुपदेशक नोंदणी' : 'Telecaller Register'}
@@ -383,7 +386,7 @@ export const Footer = ({ showStaffLink = true }) => {
                       <a
                         href={crmUrls.adminRegister}
                         target="_blank"
-                        rel="noopener noreferrer"
+                        rel="noopener noreferrer nofollow"
                         onClick={() => setCrmMenuOpen(false)}
                         className="font-bold text-blue-400 hover:text-blue-300 text-[11px] transition-colors"
                         title={isMarathi ? 'अ‍ॅडमिन नोंदणी' : 'Admin Register'}
@@ -400,7 +403,7 @@ export const Footer = ({ showStaffLink = true }) => {
             <a 
               href={`${adminBaseUrl}/login`} 
               target="_blank" 
-              rel="noopener noreferrer" 
+              rel="noopener noreferrer nofollow" 
               className="hover:text-gurukul-saffron-400 transition-colors text-slate-400 hover:text-white"
             >
               {isMarathi ? 'स्टाफ लॉगिन (Staff Login)' : 'Staff Login'}

@@ -13,15 +13,22 @@
     
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website" />
-    <meta property="og:url" content="https://www.gurukulbhose.com/" />
     <meta property="og:title" content="गुरुकुल भोसे - विद्यामंदिर व ज्युनिअर कॉलेज" />
     <meta property="og:description" content="इ. ५ वी ते १२ वी सैनिक पॅटर्न निवासी स्कूल व कॉलेज, भोसे (ता. मिरज, जि. सांगली)." />
-    <meta property="og:image" content="/images/og-image.jpg" />
+    <meta property="og:image" content="/gurukul-logo.png" />
 
-    <!-- Google Fonts -->
+    <!-- Preconnect & Preload Critical LCP Hero Image -->
+    <link rel="preconnect" href="https://images.unsplash.com" crossorigin>
+    <link rel="preload" as="image" href="https://images.unsplash.com/photo-1580582932707-520aed937b7b?auto=format&fit=crop&w=960&q=75" imagesrcset="https://images.unsplash.com/photo-1580582932707-520aed937b7b?auto=format&fit=crop&w=640&q=70 640w, https://images.unsplash.com/photo-1580582932707-520aed937b7b?auto=format&fit=crop&w=960&q=75 960w, https://images.unsplash.com/photo-1580582932707-520aed937b7b?auto=format&fit=crop&w=1400&q=80 1400w" imagesizes="100vw" fetchpriority="high">
+
+    <!-- Google Fonts (non-render-blocking async load) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Mukta:wght@300;400;500;600;700;800&family=Noto+Sans+Devanagari:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Mukta:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
+    <link href="https://fonts.googleapis.com/css2?family=Mukta:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+    <noscript>
+      <link href="https://fonts.googleapis.com/css2?family=Mukta:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    </noscript>
   </head>
   <body class="bg-slate-50 text-slate-900 font-sans antialiased selection:bg-gurukul-saffron-500 selection:text-white">
     <div id="root"></div>

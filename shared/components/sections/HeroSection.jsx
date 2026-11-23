@@ -83,12 +83,24 @@ export const HeroSection = ({ slides = [], institution = {} }) => {
 
   return (
     <section className="relative bg-gradient-to-br from-gurukul-navy-950 via-slate-900 to-gurukul-navy-900 text-white min-h-[440px] sm:min-h-[480px] lg:min-h-[460px] xl:min-h-[520px] 2xl:min-h-[600px] flex flex-col justify-center overflow-hidden">
-      {/* Background slide image with overlay */}
+      {/* Background slide image with overlay (uses <img> with fetchPriority="high" for fast LCP) */}
       {(slide.imageUrl || slide.image) && (
-        <div 
-          className="absolute inset-0 bg-cover bg-center transition-all duration-1000 transform scale-105"
-          style={{ backgroundImage: `url(${slide.imageUrl || slide.image})` }}
-        >
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <img
+            src={slide.imageUrl || slide.image}
+            srcSet={
+              (slide.imageUrl || slide.image || '').includes('images.unsplash.com')
+                ? `${(slide.imageUrl || slide.image).replace(/w=\d+/, 'w=640').replace(/q=\d+/, 'q=70')} 640w, ${(slide.imageUrl || slide.image).replace(/w=\d+/, 'w=960').replace(/q=\d+/, 'q=75')} 960w, ${(slide.imageUrl || slide.image).replace(/w=\d+/, 'w=1400').replace(/q=\d+/, 'q=80')} 1400w`
+                : undefined
+            }
+            sizes="100vw"
+            alt=""
+            aria-hidden="true"
+            fetchPriority="high"
+            loading="eager"
+            decoding="async"
+            className="w-full h-full object-cover object-center transition-all duration-1000 transform scale-105"
+          />
           <div className="absolute inset-0 bg-gradient-to-r from-gurukul-navy-950/95 via-gurukul-navy-950/85 to-gurukul-navy-900/75"></div>
         </div>
       )}
@@ -159,19 +171,24 @@ export const HeroSection = ({ slides = [], institution = {} }) => {
         </div>
       </div>
 
-      {/* Mobile Slide Dots */}
+      {/* Mobile Slide Dots (24x24px accessible touch targets) */}
       {effectiveSlides.length > 1 && (
-        <div className="sm:hidden flex items-center justify-center gap-2 pb-4 relative z-20">
+        <div className="sm:hidden flex items-center justify-center gap-1 pb-3 relative z-20">
           {effectiveSlides.map((_, idx) => (
             <button
               key={idx}
+              type="button"
               onClick={() => setCurrentSlideIndex(idx)}
-              className={`h-2 rounded-full transition-all ${
-                idx === currentSlideIndex ? 'w-6 bg-gurukul-saffron-500' : 'w-2 bg-white/40'
-              }`}
+              className="min-w-[24px] min-h-[24px] p-1 flex items-center justify-center rounded-full"
               title={`Slide ${idx + 1}`}
               aria-label={`Slide ${idx + 1}`}
-            />
+            >
+              <span
+                className={`block h-2 rounded-full transition-all ${
+                  idx === currentSlideIndex ? 'w-6 bg-gurukul-saffron-500' : 'w-2 bg-white/50'
+                }`}
+              />
+            </button>
           ))}
         </div>
       )}
@@ -180,28 +197,38 @@ export const HeroSection = ({ slides = [], institution = {} }) => {
       {effectiveSlides.length > 1 && (
         <div className="absolute bottom-4 sm:bottom-5 left-4 sm:left-6 lg:left-8 z-20 hidden sm:flex items-center gap-2">
           <button
+            type="button"
             onClick={() => setCurrentSlideIndex((prev) => (prev - 1 + effectiveSlides.length) % effectiveSlides.length)}
             className="p-1.5 sm:p-2 rounded-full bg-white/10 hover:bg-white/25 text-white backdrop-blur-sm transition-colors"
             title="Previous slide"
+            aria-label="Previous slide"
           >
             <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5" />
           </button>
-          <div className="flex items-center gap-1.5 px-1 sm:px-2">
+          <div className="flex items-center gap-0.5 px-1 sm:px-2">
             {effectiveSlides.map((_, idx) => (
               <button
                 key={idx}
+                type="button"
                 onClick={() => setCurrentSlideIndex(idx)}
-                className={`h-1.5 sm:h-2 rounded-full transition-all ${
-                  idx === currentSlideIndex ? 'w-5 sm:w-6 bg-gurukul-saffron-500' : 'w-1.5 sm:w-2 bg-white/40'
-                }`}
+                className="min-w-[24px] min-h-[24px] p-1 flex items-center justify-center rounded-full"
                 title={`Slide ${idx + 1}`}
-              />
+                aria-label={`Slide ${idx + 1}`}
+              >
+                <span
+                  className={`block h-1.5 sm:h-2 rounded-full transition-all ${
+                    idx === currentSlideIndex ? 'w-5 sm:w-6 bg-gurukul-saffron-500' : 'w-1.5 sm:w-2 bg-white/50'
+                  }`}
+                />
+              </button>
             ))}
           </div>
           <button
+            type="button"
             onClick={() => setCurrentSlideIndex((prev) => (prev + 1) % effectiveSlides.length)}
             className="p-1.5 sm:p-2 rounded-full bg-white/10 hover:bg-white/25 text-white backdrop-blur-sm transition-colors"
             title="Next slide"
+            aria-label="Next slide"
           >
             <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
           </button>

@@ -6,14 +6,19 @@ import { Phone, Home, Building2, FileText, Compass } from 'lucide-react';
 import { WhatsAppIcon } from '../components/common/WhatsAppIcon';
 import { useCMS } from '../contexts/CMSContext';
 import { useLanguage } from '../contexts/LanguageContext';
-import { useAuth } from '../contexts/AuthContext';
 
 export const PublicLayout = () => {
   const { institution, websiteSettings } = useCMS();
   const { isMarathi } = useLanguage();
   const location = useLocation();
-  const auth = useAuth?.() || {};
-  const isPrivileged = auth.isSuperAdmin || auth.isAdmin;
+  const isPrivileged = React.useMemo(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem('gurukul_active_user') || 'null');
+      return saved?.role === 'super_admin' || saved?.role === 'admin';
+    } catch {
+      return false;
+    }
+  }, []);
   const isMaintenance = websiteSettings?.maintenanceMode === true || websiteSettings?.maintenanceMode?.enabled === true;
 
   const primaryPhone = institution.phones?.[0] || '9850449800';

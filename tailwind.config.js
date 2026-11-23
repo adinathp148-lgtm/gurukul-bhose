@@ -16,11 +16,11 @@ export default {
             200: '#fed7aa',
             300: '#fdba74',
             400: '#fb923c',
-            500: '#f97316', // Primary Kesari / Saffron
-            600: '#ea580c',
-            700: '#c2410c',
-            800: '#9a3412',
-            900: '#7c2d12',
+            500: '#f97316', // Primary Kesari / Saffron (accents/borders)
+            600: '#c2410c', // WCAG AA accessible Saffron (5.18:1 on white, 4.94:1 on slate-50)
+            700: '#9a3412',
+            800: '#7c2d12',
+            900: '#63220d',
           },
           navy: {
             50: '#f0f4f8',

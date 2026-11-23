@@ -1,6 +1,9 @@
 import { initializeApp, getApps, getApp } from 'firebase/app';
 import { 
-  getAuth, 
+  getAuth,
+  initializeAuth,
+  indexedDBLocalPersistence,
+  browserLocalPersistence,
   signInWithEmailAndPassword, 
   signOut, 
   onAuthStateChanged,
@@ -65,7 +68,21 @@ export const isConfigured = Boolean(
 
 // Initialize Firebase
 const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
-export const auth = getAuth(app);
+// Use initializeAuth without popupRedirectResolver in browsers to avoid loading
+// the unused 93 KiB __/auth/iframe.js script (this app uses email/password auth only).
+let authInstance;
+if (typeof window !== 'undefined') {
+  try {
+    authInstance = initializeAuth(app, {
+      persistence: [indexedDBLocalPersistence, browserLocalPersistence]
+    });
+  } catch {
+    authInstance = getAuth(app);
+  }
+} else {
+  authInstance = getAuth(app);
+}
+export const auth = authInstance;
 export const db = getFirestore(app);
 export const storage = getStorage(app);
 export const functions = getFunctions(app);

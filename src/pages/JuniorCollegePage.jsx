@@ -44,7 +44,6 @@ export const JuniorCollegePage = () => {
         title={isMarathi ? "गुरुकुल जुनियर कॉलेज, भोसे" : "Gurukul Junior College, Bhose"}
         subtitle={isMarathi ? "सैनिक पॅटर्न निवासी आर्टस् व सायन्स • बारावी पास नंतर हमखास सरकारी नोकरी व उच्च करिअर" : "Military Pattern Residential Arts & Science • Assured Government Jobs & Higher Career After 12th"}
         breadcrumbs={[
-          { label: isMarathi ? 'मुख्यपृष्ठ' : 'Home', link: '/' },
           { label: isMarathi ? 'गुरुकुल जुनियर कॉलेज' : 'Gurukul Junior College' }
         ]}
       />

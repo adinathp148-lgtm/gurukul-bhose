@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useCMS } from '../../../contexts/CMSContext';
+import { useLanguage } from '../../../contexts/LanguageContext';
 import { 
   Home, 
   Plus, 
@@ -51,6 +52,7 @@ export const CMSHomepagePage = () => {
     videos = [],
     loading = false
   } = useCMS();
+  const { isMarathi } = useLanguage();
 
   const [saving, setSaving] = useState(false);
   const [successMsg, setSuccessMsg] = useState('');
@@ -157,22 +159,28 @@ export const CMSHomepagePage = () => {
     const nextOrder = slides.length + 1;
     const newSlide = {
       id: newId,
-      title: 'नवीन बॅनर शीर्षक (New Banner Title)',
-      subtitle: 'सैनिक पॅटर्न निवासी शिक्षण (Sainik Pattern)',
-      description: 'इयत्ता ५ वी ते १२ वी मराठी व सेमी इंग्रजी माध्यम निवासी प्रवेश सुरू.',
+      title: isMarathi ? 'नवीन बॅनर शीर्षक' : 'New Banner Title',
+      subtitle: isMarathi ? 'सैनिक पॅटर्न निवासी शिक्षण' : 'Sainik Pattern Residential Education',
+      description: isMarathi
+        ? 'इयत्ता ५ वी ते १२ वी मराठी व सेमी इंग्रजी माध्यम निवासी प्रवेश सुरू.'
+        : 'Admissions open for Std. 5th to 12th Marathi & Semi-English residential classes.',
       imageUrl: 'https://images.unsplash.com/photo-1541829070764-84a7d30dd3f3?auto=format&fit=crop&w=1200&q=80',
       image: 'https://images.unsplash.com/photo-1541829070764-84a7d30dd3f3?auto=format&fit=crop&w=1200&q=80',
-      ctaText: 'प्रवेश चौकशी करा',
+      ctaText: isMarathi ? 'प्रवेश चौकशी करा' : 'Admission Enquiry',
       ctaLink: '/admission-enquiry',
       ctaPrimary: {
-        text: 'प्रवेश चौकशी करा',
+        text: isMarathi ? 'प्रवेश चौकशी करा' : 'Admission Enquiry',
         link: '/admission-enquiry'
       },
       active: true,
       displayOrder: nextOrder
     };
     setSlides(prev => [...prev, newSlide]);
-    setSuccessMsg(`नवीन बॅनर #${nextOrder} जोडला गेला आहे! खाली स्क्रोल करून संपादन करा व "बदल प्रकाशित करा" बटणावर क्लिक करा.`);
+    setSuccessMsg(
+      isMarathi
+        ? `नवीन बॅनर #${nextOrder} जोडला गेला आहे! खाली स्क्रोल करून संपादन करा व "बदल प्रकाशित करा" बटणावर क्लिक करा.`
+        : `New banner #${nextOrder} added! Scroll down to edit and click "Publish Changes" to save.`
+    );
     
     // Smooth scroll to the newly added slide card
     setTimeout(() => {
@@ -203,15 +211,19 @@ export const CMSHomepagePage = () => {
 
   const handleDeleteSlide = (index) => {
     if (slides.length <= 1) {
-      alert('किमान १ बॅनर आवश्यक आहे (At least 1 banner slide is required).');
+      alert(isMarathi ? 'किमान १ बॅनर आवश्यक आहे.' : 'At least 1 banner slide is required.');
       return;
     }
-    if (window.confirm(`बॅनर #${index + 1} नक्की हटवायचा आहे का?`)) {
+    if (window.confirm(isMarathi ? `बॅनर #${index + 1} नक्की हटवायचा आहे का?` : `Are you sure you want to delete Banner #${index + 1}?`)) {
       setSlides(prev => {
         const filtered = prev.filter((_, i) => i !== index);
         return filtered.map((s, idx) => ({ ...s, displayOrder: idx + 1 }));
       });
-      setSuccessMsg('बॅनर हटवला गेला. बदल सेव्ह करण्यासाठी "बदल प्रकाशित करा" वर क्लिक करा.');
+      setSuccessMsg(
+        isMarathi
+          ? 'बॅनर हटवला गेला. बदल सेव्ह करण्यासाठी "बदल प्रकाशित करा" वर क्लिक करा.'
+          : 'Banner removed. Click "Publish Changes" to save your updates.'
+      );
     }
   };
 
@@ -235,7 +247,7 @@ export const CMSHomepagePage = () => {
       const res = await uploadMediaFile(file, 'banners');
       handleUpdateSlide(index, 'imageUrl', res.downloadURL);
     } catch (err) {
-      setErrorMsg(err.message || 'इमेज अपलोड अयशस्वी झाली.');
+      setErrorMsg(err.message || (isMarathi ? 'इमेज अपलोड अयशस्वी झाली.' : 'Image upload failed.'));
     } finally {
       setUploadingSlideIdx(null);
     }
@@ -249,7 +261,7 @@ export const CMSHomepagePage = () => {
       const res = await uploadMediaFile(file, 'pages');
       setWelcome(prev => ({ ...prev, imageUrl: res.downloadURL }));
     } catch (err) {
-      setErrorMsg(err.message || 'स्वागत इमेज अपलोड अयशस्वी झाली.');
+      setErrorMsg(err.message || (isMarathi ? 'स्वागत इमेज अपलोड अयशस्वी झाली.' : 'Welcome image upload failed.'));
     } finally {
       setUploadingWelcomeImg(false);
     }
@@ -263,7 +275,7 @@ export const CMSHomepagePage = () => {
       const res = await uploadMediaFile(file, 'pages');
       setAbout(prev => ({ ...prev, imageUrl: res.downloadURL }));
     } catch (err) {
-      setErrorMsg(err.message || 'About इमेज अपलोड अयशस्वी झाली.');
+      setErrorMsg(err.message || (isMarathi ? 'About इमेज अपलोड अयशस्वी झाली.' : 'About image upload failed.'));
     } finally {
       setUploadingAboutImg(false);
     }
@@ -332,10 +344,18 @@ export const CMSHomepagePage = () => {
         enabledSections,
         admissionCTA: cta
       });
-      setSuccessMsg('मुख्यपृष्ठ माहिती यशस्वीरीत्या प्रकाशित झाली! (Homepage published successfully)');
+      setSuccessMsg(
+        isMarathi
+          ? 'मुख्यपृष्ठ माहिती यशस्वीरीत्या प्रकाशित झाली!'
+          : 'Homepage content published successfully!'
+      );
       setTimeout(() => setSuccessMsg(''), 4000);
     } catch (err) {
-      setErrorMsg('बदल सेव्ह करताना त्रुटी आली. कृपया पुन्हा प्रयत्न करा.');
+      setErrorMsg(
+        isMarathi
+          ? 'बदल सेव्ह करताना त्रुटी आली. कृपया पुन्हा प्रयत्न करा.'
+          : 'Error saving changes. Please try again.'
+      );
     } finally {
       setSaving(false);
     }
@@ -345,7 +365,9 @@ export const CMSHomepagePage = () => {
     return (
       <div className="flex flex-col items-center justify-center min-h-[360px] space-y-3 bg-white rounded-2xl border border-slate-200 p-8 shadow-xs">
         <div className="w-9 h-9 border-4 border-gurukul-saffron-500 border-t-transparent rounded-full animate-spin"></div>
-        <p className="text-xs font-bold text-slate-600">मुख्यपृष्ठ माहिती लोड होत आहे... कृपया प्रतीक्षा करा.</p>
+        <p className="text-xs font-bold text-slate-600">
+          {isMarathi ? 'मुख्यपृष्ठ माहिती लोड होत आहे... कृपया प्रतीक्षा करा.' : 'Loading homepage content... Please wait.'}
+        </p>
       </div>
     );
   }
@@ -357,10 +379,12 @@ export const CMSHomepagePage = () => {
         <div>
           <h1 className="text-xl sm:text-2xl font-black text-gurukul-navy-900 flex items-center gap-2">
             <Home className="w-6 h-6 text-gurukul-saffron-500" />
-            <span>मुख्यपृष्ठ व्यवस्थापक (Homepage Management)</span>
+            <span>{isMarathi ? 'मुख्यपृष्ठ व्यवस्थापक (Homepage Management)' : 'Homepage Management'}</span>
           </h1>
           <p className="text-xs text-slate-500 mt-1">
-            हिरो बॅनर्स, स्वागत संदेश, वैशिष्ट्ये, सूचना, गॅलरी व प्रवेश कॉल-टू-ॲक्शन संपादन
+            {isMarathi
+              ? 'हिरो बॅनर्स, स्वागत संदेश, वैशिष्ट्ये, सूचना, गॅलरी व प्रवेश कॉल-टू-ॲक्शन संपादन'
+              : 'Edit hero banners, welcome section, featured programs, notices, gallery, and admission CTA'}
           </p>
         </div>
 
@@ -373,7 +397,7 @@ export const CMSHomepagePage = () => {
             className="text-xs font-bold"
           >
             <Save className="w-4 h-4 mr-1.5" />
-            <span>बदल प्रकाशित करा (Publish Changes)</span>
+            <span>{isMarathi ? 'बदल प्रकाशित करा' : 'Publish Changes'}</span>
           </Button>
         </div>
       </div>
@@ -396,8 +420,14 @@ export const CMSHomepagePage = () => {
       <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-6">
         <div className="flex items-center justify-between border-b border-slate-100 pb-3">
           <div>
-            <h2 className="text-base font-bold text-slate-800">१. हिरो बॅनर्स (Hero Carousel Banners)</h2>
-            <p className="text-xs text-slate-400">मुख्यपृष्ठावर फिरणारे मोठे इमेज बॅनर्स, क्रम व ॲक्टिव्ह स्थिती</p>
+            <h2 className="text-base font-bold text-slate-800">
+              {isMarathi ? '१. हिरो बॅनर्स (Hero Carousel Banners)' : '1. Hero Carousel Banners'}
+            </h2>
+            <p className="text-xs text-slate-400">
+              {isMarathi
+                ? 'मुख्यपृष्ठावर फिरणारे मोठे इमेज बॅनर्स, क्रम व ॲक्टिव्ह स्थिती'
+                : 'Manage large hero slider banners, display order, and active visibility'}
+            </p>
           </div>
           <Button
             type="button"
@@ -406,7 +436,7 @@ export const CMSHomepagePage = () => {
             className="text-xs font-bold"
           >
             <Plus className="w-4 h-4 mr-1" />
-            <span>नवीन बॅनर जोडा</span>
+            <span>{isMarathi ? 'नवीन बॅनर जोडा' : 'Add New Banner'}</span>
           </Button>
         </div>
 
@@ -420,7 +450,7 @@ export const CMSHomepagePage = () => {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <span className="text-xs font-bold text-gurukul-navy-900 bg-white px-2.5 py-1 rounded-md border border-slate-200">
-                    बॅनर #{idx + 1}
+                    {isMarathi ? `बॅनर #${idx + 1}` : `Banner #${idx + 1}`}
                   </span>
                   <label className="flex items-center gap-1.5 cursor-pointer text-xs font-semibold text-slate-700">
                     <input
@@ -429,13 +459,17 @@ export const CMSHomepagePage = () => {
                       onChange={(e) => handleUpdateSlide(idx, 'active', e.target.checked)}
                       className="rounded text-gurukul-saffron-500 focus:ring-gurukul-saffron-400"
                     />
-                    <span>{slide.active !== false ? 'सक्रिय (Active)' : 'निष्क्रिय (Inactive)'}</span>
+                    <span>
+                      {slide.active !== false
+                        ? (isMarathi ? 'सक्रिय (Active)' : 'Active')
+                        : (isMarathi ? 'निष्क्रिय (Inactive)' : 'Inactive')}
+                    </span>
                   </label>
                 </div>
 
                 <div className="flex items-center gap-2">
                   <div className="flex items-center gap-1 text-xs text-slate-500">
-                    <span>क्रम:</span>
+                    <span>{isMarathi ? 'क्रम:' : 'Order:'}</span>
                     <input
                       type="number"
                       min="1"
@@ -449,7 +483,7 @@ export const CMSHomepagePage = () => {
                     onClick={() => handleMoveSlide(idx, 'up')}
                     disabled={idx === 0}
                     className="p-1 rounded text-slate-500 hover:bg-slate-200 disabled:opacity-30"
-                    title="वर हलवा"
+                    title={isMarathi ? 'वर हलवा' : 'Move Up'}
                   >
                     <ArrowUp className="w-4 h-4" />
                   </button>
@@ -458,7 +492,7 @@ export const CMSHomepagePage = () => {
                     onClick={() => handleMoveSlide(idx, 'down')}
                     disabled={idx === slides.length - 1}
                     className="p-1 rounded text-slate-500 hover:bg-slate-200 disabled:opacity-30"
-                    title="खाली हलवा"
+                    title={isMarathi ? 'खाली हलवा' : 'Move Down'}
                   >
                     <ArrowDown className="w-4 h-4" />
                   </button>
@@ -466,7 +500,7 @@ export const CMSHomepagePage = () => {
                     type="button"
                     onClick={() => handleDeleteSlide(idx)}
                     className="p-1 rounded text-red-600 hover:bg-red-50 ml-2"
-                    title="बॅनर हटवा"
+                    title={isMarathi ? 'बॅनर हटवा' : 'Delete Banner'}
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
@@ -475,51 +509,61 @@ export const CMSHomepagePage = () => {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">मुख्य मथळा (Heading) *</label>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                    {isMarathi ? 'मुख्य मथळा (Heading) *' : 'Main Heading *'}
+                  </label>
                   <input
                     type="text"
                     value={slide.title || ''}
                     onChange={(e) => handleUpdateSlide(idx, 'title', e.target.value)}
                     className="w-full text-xs p-2.5 rounded-lg border border-slate-300 focus:ring-1 focus:ring-gurukul-saffron-500"
-                    placeholder="उदा. गुरुकुल भोसे सैनिक पॅटर्न निवासी संकुल"
+                    placeholder={isMarathi ? 'उदा. गुरुकुल भोसे सैनिक पॅटर्न निवासी संकुल' : 'e.g. Gurukul Bhose Sainik Pattern Residential Campus'}
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">उप-मथळा (Subtitle)</label>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                    {isMarathi ? 'उप-मथळा (Subtitle)' : 'Subtitle'}
+                  </label>
                   <input
                     type="text"
                     value={slide.subtitle || ''}
                     onChange={(e) => handleUpdateSlide(idx, 'subtitle', e.target.value)}
                     className="w-full text-xs p-2.5 rounded-lg border border-slate-300 focus:ring-1 focus:ring-gurukul-saffron-500"
-                    placeholder="उदा. इ. ५ वी ते १२ वी सैनिक पॅटर्न निवासी प्रवेश सुरू"
+                    placeholder={isMarathi ? 'उदा. इ. ५ वी ते १२ वी सैनिक पॅटर्न निवासी प्रवेश सुरू' : 'e.g. Admissions Open for Std. 5th to 12th'}
                   />
                 </div>
 
                 <div className="md:col-span-2">
-                  <label className="block text-xs font-bold text-slate-700 mb-1">तपशील (Description)</label>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                    {isMarathi ? 'तपशील (Description)' : 'Description'}
+                  </label>
                   <textarea
                     rows={2}
                     value={slide.description || ''}
                     onChange={(e) => handleUpdateSlide(idx, 'description', e.target.value)}
                     className="w-full text-xs p-2.5 rounded-lg border border-slate-300 focus:ring-1 focus:ring-gurukul-saffron-500"
-                    placeholder="बॅनरवरील संक्षिप्त माहिती..."
+                    placeholder={isMarathi ? 'बॅनरवरील संक्षिप्त माहिती...' : 'Brief description shown on the banner...'}
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">CTA बटण मजकूर (Button Text)</label>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                    {isMarathi ? 'CTA बटण मजकूर (Button Text)' : 'CTA Button Text'}
+                  </label>
                   <input
                     type="text"
                     value={slide.ctaText || ''}
                     onChange={(e) => handleUpdateSlide(idx, 'ctaText', e.target.value)}
                     className="w-full text-xs p-2.5 rounded-lg border border-slate-300"
-                    placeholder="उदा. प्रवेश चौकशी करा"
+                    placeholder={isMarathi ? 'उदा. प्रवेश चौकशी करा' : 'e.g. Apply for Admission'}
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">CTA बटण लिंक (Button URL)</label>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                    {isMarathi ? 'CTA बटण लिंक (Button URL)' : 'CTA Button URL'}
+                  </label>
                   <input
                     type="text"
                     value={slide.ctaLink || ''}
@@ -530,18 +574,24 @@ export const CMSHomepagePage = () => {
                 </div>
 
                 <div className="md:col-span-2">
-                  <label className="block text-xs font-bold text-slate-700 mb-1">बॅनर प्रतिमा (Image URL किंवा Upload) *</label>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                    {isMarathi ? 'बॅनर प्रतिमा (Image URL किंवा Upload) *' : 'Banner Image (URL or Upload) *'}
+                  </label>
                   <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
                     <input
                       type="text"
                       value={slide.imageUrl || ''}
                       onChange={(e) => handleUpdateSlide(idx, 'imageUrl', e.target.value)}
                       className="flex-1 text-xs p-2.5 rounded-lg border border-slate-300"
-                      placeholder="https://... किंवा उजवीकडून फाईल निवडा"
+                      placeholder={isMarathi ? 'https://... किंवा उजवीकडून फाईल निवडा' : 'https://... or upload file on the right'}
                     />
                     <label className="cursor-pointer inline-flex items-center gap-1.5 px-3 py-2 text-xs font-bold bg-gurukul-navy-900 text-white rounded-lg hover:bg-gurukul-navy-950 transition-colors shrink-0">
                       <Upload className="w-3.5 h-3.5" />
-                      <span>{uploadingSlideIdx === idx ? 'अपलोड होत आहे...' : 'इमेज अपलोड'}</span>
+                      <span>
+                        {uploadingSlideIdx === idx
+                          ? (isMarathi ? 'अपलोड होत आहे...' : 'Uploading...')
+                          : (isMarathi ? 'इमेज अपलोड' : 'Upload Image')}
+                      </span>
                       <input
                         type="file"
                         accept="image/png,image/jpeg,image/webp"
@@ -570,7 +620,7 @@ export const CMSHomepagePage = () => {
             className="text-xs font-bold border-dashed border-2 py-2.5 px-6 hover:bg-orange-50 text-gurukul-saffron-600 border-gurukul-saffron-300 transition-colors w-full sm:w-auto"
           >
             <Plus className="w-4 h-4 mr-1.5" />
-            <span>+ आणखी एक नवीन बॅनर जोडा (Add Another Banner)</span>
+            <span>{isMarathi ? '+ आणखी एक नवीन बॅनर जोडा' : '+ Add Another Banner'}</span>
           </Button>
         </div>
       </div>
@@ -579,7 +629,7 @@ export const CMSHomepagePage = () => {
       <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-4">
         <div className="flex items-center justify-between border-b border-slate-100 pb-2">
           <h2 className="text-base font-bold text-slate-800">
-            २. स्वागत विभाग (Welcome Section)
+            {isMarathi ? '२. स्वागत विभाग (Welcome Section)' : '2. Welcome Section'}
           </h2>
           <label className="flex items-center gap-1.5 cursor-pointer text-xs font-semibold text-slate-700">
             <input
@@ -588,13 +638,15 @@ export const CMSHomepagePage = () => {
               onChange={() => toggleSection('welcome')}
               className="rounded text-gurukul-saffron-500"
             />
-            <span>विभाग दाखवा (Enable)</span>
+            <span>{isMarathi ? 'विभाग दाखवा (Enable)' : 'Enable Section'}</span>
           </label>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="md:col-span-2">
-            <label className="block text-xs font-bold text-slate-700 mb-1">स्वागत मथळा (Heading)</label>
+            <label className="block text-xs font-bold text-slate-700 mb-1">
+              {isMarathi ? 'स्वागत मथळा (Heading)' : 'Welcome Heading'}
+            </label>
             <input
               type="text"
               value={welcome.heading || ''}
@@ -603,7 +655,9 @@ export const CMSHomepagePage = () => {
             />
           </div>
           <div className="md:col-span-2">
-            <label className="block text-xs font-bold text-slate-700 mb-1">प्रस्तावना मजकूर (Intro Text)</label>
+            <label className="block text-xs font-bold text-slate-700 mb-1">
+              {isMarathi ? 'प्रस्तावना मजकूर (Intro Text)' : 'Intro Text'}
+            </label>
             <textarea
               rows={3}
               value={welcome.introText || ''}
@@ -613,7 +667,9 @@ export const CMSHomepagePage = () => {
           </div>
 
           <div className="md:col-span-2">
-            <label className="block text-xs font-bold text-slate-700 mb-1">स्वागत इमेज (Image URL किंवा Upload)</label>
+            <label className="block text-xs font-bold text-slate-700 mb-1">
+              {isMarathi ? 'स्वागत इमेज (Image URL किंवा Upload)' : 'Welcome Image (URL or Upload)'}
+            </label>
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
               <input
                 type="text"
@@ -624,7 +680,11 @@ export const CMSHomepagePage = () => {
               />
               <label className="cursor-pointer inline-flex items-center gap-1.5 px-3 py-2 text-xs font-bold bg-gurukul-navy-900 text-white rounded-lg hover:bg-gurukul-navy-950 transition-colors shrink-0">
                 <Upload className="w-3.5 h-3.5" />
-                <span>{uploadingWelcomeImg ? 'अपलोड होत आहे...' : 'इमेज अपलोड'}</span>
+                <span>
+                  {uploadingWelcomeImg
+                    ? (isMarathi ? 'अपलोड होत आहे...' : 'Uploading...')
+                    : (isMarathi ? 'इमेज अपलोड' : 'Upload Image')}
+                </span>
                 <input
                   type="file"
                   accept="image/png,image/jpeg,image/webp"
@@ -641,7 +701,9 @@ export const CMSHomepagePage = () => {
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1">बटण मजकूर (Read More Button)</label>
+            <label className="block text-xs font-bold text-slate-700 mb-1">
+              {isMarathi ? 'बटण मजकूर (Read More Button)' : 'Read More Button Text'}
+            </label>
             <input
               type="text"
               value={welcome.ctaText || ''}
@@ -650,7 +712,9 @@ export const CMSHomepagePage = () => {
             />
           </div>
           <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1">बटण लिंक</label>
+            <label className="block text-xs font-bold text-slate-700 mb-1">
+              {isMarathi ? 'बटण लिंक' : 'Button Link'}
+            </label>
             <input
               type="text"
               value={welcome.ctaLink || ''}
@@ -665,7 +729,7 @@ export const CMSHomepagePage = () => {
       <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-4">
         <div className="flex items-center justify-between border-b border-slate-100 pb-2">
           <h2 className="text-base font-bold text-slate-800">
-            ३. संस्थेबद्दल विभाग (About Section on Homepage)
+            {isMarathi ? '३. संस्थेबद्दल विभाग (About Section on Homepage)' : '3. About Section on Homepage'}
           </h2>
           <label className="flex items-center gap-1.5 cursor-pointer text-xs font-semibold text-slate-700">
             <input
@@ -674,13 +738,15 @@ export const CMSHomepagePage = () => {
               onChange={() => toggleSection('about')}
               className="rounded text-gurukul-saffron-500"
             />
-            <span>विभाग दाखवा (Enable)</span>
+            <span>{isMarathi ? 'विभाग दाखवा (Enable)' : 'Enable Section'}</span>
           </label>
         </div>
 
         <div className="space-y-4">
           <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1">शीर्षक (Title)</label>
+            <label className="block text-xs font-bold text-slate-700 mb-1">
+              {isMarathi ? 'शीर्षक (Title)' : 'Title'}
+            </label>
             <input
               type="text"
               value={about.title || ''}
@@ -689,7 +755,9 @@ export const CMSHomepagePage = () => {
             />
           </div>
           <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1">संक्षिप्त माहिती (Description)</label>
+            <label className="block text-xs font-bold text-slate-700 mb-1">
+              {isMarathi ? 'संक्षिप्त माहिती (Description)' : 'Description'}
+            </label>
             <textarea
               rows={3}
               value={about.description || ''}
@@ -699,7 +767,9 @@ export const CMSHomepagePage = () => {
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1">कॅम्पस इमेज (Image URL किंवा Upload)</label>
+            <label className="block text-xs font-bold text-slate-700 mb-1">
+              {isMarathi ? 'कॅम्पस इमेज (Image URL किंवा Upload)' : 'Campus Image (URL or Upload)'}
+            </label>
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
               <input
                 type="text"
@@ -710,7 +780,11 @@ export const CMSHomepagePage = () => {
               />
               <label className="cursor-pointer inline-flex items-center gap-1.5 px-3 py-2 text-xs font-bold bg-gurukul-navy-900 text-white rounded-lg hover:bg-gurukul-navy-950 transition-colors shrink-0">
                 <Upload className="w-3.5 h-3.5" />
-                <span>{uploadingAboutImg ? 'अपलोड होत आहे...' : 'इमेज अपलोड'}</span>
+                <span>
+                  {uploadingAboutImg
+                    ? (isMarathi ? 'अपलोड होत आहे...' : 'Uploading...')
+                    : (isMarathi ? 'इमेज अपलोड' : 'Upload Image')}
+                </span>
                 <input
                   type="file"
                   accept="image/png,image/jpeg,image/webp"
@@ -728,7 +802,9 @@ export const CMSHomepagePage = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">दृष्टिकोन (Vision)</label>
+              <label className="block text-xs font-bold text-slate-700 mb-1">
+                {isMarathi ? 'दृष्टिकोन (Vision)' : 'Vision'}
+              </label>
               <textarea
                 rows={2}
                 value={about.vision || ''}
@@ -737,7 +813,9 @@ export const CMSHomepagePage = () => {
               />
             </div>
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">ध्येय (Mission)</label>
+              <label className="block text-xs font-bold text-slate-700 mb-1">
+                {isMarathi ? 'ध्येय (Mission)' : 'Mission'}
+              </label>
               <textarea
                 rows={2}
                 value={about.mission || ''}
@@ -755,9 +833,11 @@ export const CMSHomepagePage = () => {
           <div>
             <h2 className="text-base font-bold text-slate-800 flex items-center gap-2">
               <BookOpen className="w-4 h-4 text-gurukul-saffron-500" />
-              <span>४. मुख्यपृष्ठावरील वैशिष्ट्यपूर्ण शाखा (Featured Programs)</span>
+              <span>{isMarathi ? '४. मुख्यपृष्ठावरील वैशिष्ट्यपूर्ण शाखा (Featured Programs)' : '4. Featured Programs on Homepage'}</span>
             </h2>
-            <p className="text-xs text-slate-400">मुख्यपृष्ठावर दर्शवायचे शैक्षणिक विभाग निवडा</p>
+            <p className="text-xs text-slate-400">
+              {isMarathi ? 'मुख्यपृष्ठावर दर्शवायचे शैक्षणिक विभाग निवडा' : 'Select the academic programs to highlight on the homepage'}
+            </p>
           </div>
           <label className="flex items-center gap-1.5 cursor-pointer text-xs font-semibold text-slate-700">
             <input
@@ -766,7 +846,7 @@ export const CMSHomepagePage = () => {
               onChange={() => toggleSection('featuredPrograms')}
               className="rounded text-gurukul-saffron-500"
             />
-            <span>विभाग दाखवा (Enable)</span>
+            <span>{isMarathi ? 'विभाग दाखवा (Enable)' : 'Enable Section'}</span>
           </label>
         </div>
 
@@ -804,9 +884,13 @@ export const CMSHomepagePage = () => {
           <div>
             <h2 className="text-base font-bold text-slate-800 flex items-center gap-2">
               <Bell className="w-4 h-4 text-gurukul-saffron-500" />
-              <span>५. मुख्यपृष्ठावरील सूचना (Homepage Notices)</span>
+              <span>{isMarathi ? '५. मुख्यपृष्ठावरील सूचना (Homepage Notices)' : '5. Homepage Notices'}</span>
             </h2>
-            <p className="text-xs text-slate-400">विशिष्ट सूचना निवडा किंवा रिक्त ठेवल्यास आपोआप ताज्या ३ सूचना दिसतील</p>
+            <p className="text-xs text-slate-400">
+              {isMarathi
+                ? 'विशिष्ट सूचना निवडा किंवा रिक्त ठेवल्यास आपोआप ताज्या ३ सूचना दिसतील'
+                : 'Select specific notices, or leave empty to automatically display the latest 3 notices'}
+            </p>
           </div>
           <label className="flex items-center gap-1.5 cursor-pointer text-xs font-semibold text-slate-700">
             <input
@@ -815,7 +899,7 @@ export const CMSHomepagePage = () => {
               onChange={() => toggleSection('notices')}
               className="rounded text-gurukul-saffron-500"
             />
-            <span>विभाग दाखवा (Enable)</span>
+            <span>{isMarathi ? 'विभाग दाखवा (Enable)' : 'Enable Section'}</span>
           </label>
         </div>
 
@@ -834,12 +918,12 @@ export const CMSHomepagePage = () => {
               >
                 <div className="truncate mr-3">
                   <span className="text-[10px] font-bold text-gurukul-saffron-600 mr-2 uppercase">
-                    [{n.category || 'सामान्य'}]
+                    [{n.category || (isMarathi ? 'सामान्य' : 'General')}]
                   </span>
                   <span className="text-xs">{n.title}</span>
                   {n.isImportant && (
                     <span className="ml-2 text-[10px] bg-red-100 text-red-700 px-1.5 py-0.5 rounded font-bold">
-                      महत्त्वाची
+                      {isMarathi ? 'महत्त्वाची' : 'Important'}
                     </span>
                   )}
                 </div>
@@ -860,9 +944,13 @@ export const CMSHomepagePage = () => {
           <div>
             <h2 className="text-base font-bold text-slate-800 flex items-center gap-2">
               <Grid className="w-4 h-4 text-gurukul-saffron-500" />
-              <span>६. फोटो गॅलरी प्रिव्ह्यू (Gallery Preview on Homepage)</span>
+              <span>{isMarathi ? '६. फोटो गॅलरी प्रिव्ह्यू (Gallery Preview on Homepage)' : '6. Gallery Preview on Homepage'}</span>
             </h2>
-            <p className="text-xs text-slate-400">मुख्यपृष्ठावर दर्शवायचे फोटो निवडा (रिक्त ठेवल्यास ६ नवीन फोटो आपोआप दिसतील)</p>
+            <p className="text-xs text-slate-400">
+              {isMarathi
+                ? 'मुख्यपृष्ठावर दर्शवायचे फोटो निवडा (रिक्त ठेवल्यास ६ नवीन फोटो आपोआप दिसतील)'
+                : 'Select photos to show on the homepage (leave empty to automatically show the 6 latest photos)'}
+            </p>
           </div>
           <label className="flex items-center gap-1.5 cursor-pointer text-xs font-semibold text-slate-700">
             <input
@@ -871,7 +959,7 @@ export const CMSHomepagePage = () => {
               onChange={() => toggleSection('gallery')}
               className="rounded text-gurukul-saffron-500"
             />
-            <span>विभाग दाखवा (Enable)</span>
+            <span>{isMarathi ? 'विभाग दाखवा (Enable)' : 'Enable Section'}</span>
           </label>
         </div>
 
@@ -904,9 +992,13 @@ export const CMSHomepagePage = () => {
           <div>
             <h2 className="text-base font-bold text-slate-800 flex items-center gap-2">
               <Video className="w-4 h-4 text-gurukul-saffron-500" />
-              <span>७. व्हिडिओ प्रिव्ह्यू (Video Preview on Homepage)</span>
+              <span>{isMarathi ? '७. व्हिडिओ प्रिव्ह्यू (Video Preview on Homepage)' : '7. Video Preview on Homepage'}</span>
             </h2>
-            <p className="text-xs text-slate-400">मुख्यपृष्ठावर दर्शवायचे व्हिडिओ निवडा (रिक्त ठेवल्यास ३ नवीन व्हिडिओ आपोआप दिसतील)</p>
+            <p className="text-xs text-slate-400">
+              {isMarathi
+                ? 'मुख्यपृष्ठावर दर्शवायचे व्हिडिओ निवडा (रिक्त ठेवल्यास ३ नवीन व्हिडिओ आपोआप दिसतील)'
+                : 'Select videos to show on the homepage (leave empty to automatically show the 3 latest videos)'}
+            </p>
           </div>
           <label className="flex items-center gap-1.5 cursor-pointer text-xs font-semibold text-slate-700">
             <input
@@ -915,7 +1007,7 @@ export const CMSHomepagePage = () => {
               onChange={() => toggleSection('videos')}
               className="rounded text-gurukul-saffron-500"
             />
-            <span>विभाग दाखवा (Enable)</span>
+            <span>{isMarathi ? 'विभाग दाखवा (Enable)' : 'Enable Section'}</span>
           </label>
         </div>
 
@@ -933,7 +1025,7 @@ export const CMSHomepagePage = () => {
                 }`}
               >
                 <p className="text-xs truncate">{v.title}</p>
-                <p className="text-[10px] text-slate-400 mt-0.5">{v.category || 'कॅम्पस उपक्रम'}</p>
+                <p className="text-[10px] text-slate-400 mt-0.5">{v.category || (isMarathi ? 'कॅम्पस उपक्रम' : 'Campus Activities')}</p>
               </div>
             );
           })}
@@ -944,7 +1036,7 @@ export const CMSHomepagePage = () => {
       <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-4">
         <div className="flex items-center justify-between border-b border-slate-100 pb-2">
           <h2 className="text-base font-bold text-slate-800">
-            ८. प्रवेश नोंदणी बॅनर (Admission CTA Section)
+            {isMarathi ? '८. प्रवेश नोंदणी बॅनर (Admission CTA Section)' : '8. Admission CTA Section'}
           </h2>
           <label className="flex items-center gap-1.5 cursor-pointer text-xs font-semibold text-slate-700">
             <input
@@ -953,13 +1045,15 @@ export const CMSHomepagePage = () => {
               onChange={() => toggleSection('cta')}
               className="rounded text-gurukul-saffron-500"
             />
-            <span>विभाग दाखवा (Enable)</span>
+            <span>{isMarathi ? 'विभाग दाखवा (Enable)' : 'Enable Section'}</span>
           </label>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="md:col-span-2">
-            <label className="block text-xs font-bold text-slate-700 mb-1">CTA मथळा (Heading)</label>
+            <label className="block text-xs font-bold text-slate-700 mb-1">
+              {isMarathi ? 'CTA मथळा (Heading)' : 'CTA Heading'}
+            </label>
             <input
               type="text"
               value={cta.heading || ''}
@@ -968,7 +1062,9 @@ export const CMSHomepagePage = () => {
             />
           </div>
           <div className="md:col-span-2">
-            <label className="block text-xs font-bold text-slate-700 mb-1">CTA वर्णन (Description)</label>
+            <label className="block text-xs font-bold text-slate-700 mb-1">
+              {isMarathi ? 'CTA वर्णन (Description)' : 'CTA Description'}
+            </label>
             <textarea
               rows={2}
               value={cta.description || ''}
@@ -977,7 +1073,9 @@ export const CMSHomepagePage = () => {
             />
           </div>
           <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1">बटण मजकूर (Button Text)</label>
+            <label className="block text-xs font-bold text-slate-700 mb-1">
+              {isMarathi ? 'बटण मजकूर (Button Text)' : 'Button Text'}
+            </label>
             <input
               type="text"
               value={cta.buttonText || ''}
@@ -986,7 +1084,9 @@ export const CMSHomepagePage = () => {
             />
           </div>
           <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1">बटण लिंक (Admission URL)</label>
+            <label className="block text-xs font-bold text-slate-700 mb-1">
+              {isMarathi ? 'बटण लिंक (Admission URL)' : 'Button Link (Admission URL)'}
+            </label>
             <input
               type="text"
               value={cta.buttonLink || ''}
@@ -1007,7 +1107,7 @@ export const CMSHomepagePage = () => {
           className="text-xs font-bold px-6 py-3"
         >
           <Save className="w-4 h-4 mr-2" />
-          <span>मुख्यपृष्ठ बदल प्रकाशित करा (Save & Publish)</span>
+          <span>{isMarathi ? 'मुख्यपृष्ठ बदल प्रकाशित करा' : 'Save & Publish Homepage'}</span>
         </Button>
       </div>
     </div>

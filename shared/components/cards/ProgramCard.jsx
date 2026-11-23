@@ -56,7 +56,7 @@ export const ProgramCard = ({ program }) => {
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent"></div>
         {displayCategory && (
-          <span className="absolute bottom-3 left-4 text-[11px] font-bold bg-gurukul-saffron-500 text-white px-2.5 py-1 rounded shadow-sm">
+          <span className="absolute bottom-3 left-4 text-[11px] font-bold bg-gurukul-saffron-600 text-white px-2.5 py-1 rounded shadow-sm">
             {displayCategory}
           </span>
         )}

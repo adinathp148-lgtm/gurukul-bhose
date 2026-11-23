@@ -304,7 +304,14 @@ export const StaffPage = () => {
             ? 'गुरुकुल भोसे निवासी स्कूल व जुनियर कॉलेजचे अनुभवी शिक्षक, माजी लष्करी सुभेदार, राष्ट्रीय क्रीडा प्रशिक्षक आणि समर्पित कर्मचारी वर्ग. वर्गात फक्त ३० विद्यार्थी व वैयक्तिक मार्गदर्शन.'
             : 'Meet the experienced faculty, retired Army drill instructors, national sports coaches, and dedicated residential staff of Gurukul Bhose.'}
         />
-        <link rel="canonical" href="https://gurukulbhose.com/staff" />
+        <link
+          rel="canonical"
+          href={
+            typeof window !== 'undefined' && window.location?.origin
+              ? `${window.location.origin}/staff`
+              : 'https://gurukulbhose.com/staff'
+          }
+        />
       </Helmet>
 
       {/* 2. Top Header & Breadcrumb Hero */}

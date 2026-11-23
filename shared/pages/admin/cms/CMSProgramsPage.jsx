@@ -21,11 +21,13 @@ import {
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useCMS } from '../../../contexts/CMSContext';
+import { useLanguage } from '../../../contexts/LanguageContext';
 import { uploadMediaFile, validateUploadFile } from '../../../services/storage/mediaUploadService';
 import { Button } from '../../../components/common/Button';
 
 export const CMSProgramsPage = () => {
   const { programs, saveProgram, loading } = useCMS();
+  const { isMarathi } = useLanguage();
 
   const [editingProgram, setEditingProgram] = useState(null);
   const [saving, setSaving] = useState(false);
@@ -51,9 +53,15 @@ export const CMSProgramsPage = () => {
       setUploadingImage(true);
       const res = await uploadMediaFile(file, 'programs', `program_${editingProgram.id || Date.now()}`);
       setEditingProgram(prev => ({ ...prev, imageUrl: res.url || res.downloadURL, image: res.url || res.downloadURL }));
-      setMessage({ type: 'success', text: 'विभाग छायाचित्र यशस्वीरीत्या अपलोड झाले.' });
+      setMessage({
+        type: 'success',
+        text: isMarathi ? 'विभाग छायाचित्र यशस्वीरीत्या अपलोड झाले.' : 'Program image uploaded successfully.'
+      });
     } catch (err) {
-      setMessage({ type: 'error', text: err.message || 'इमेज अपलोड करताना त्रुटी आली.' });
+      setMessage({
+        type: 'error',
+        text: err.message || (isMarathi ? 'इमेज अपलोड करताना त्रुटी आली.' : 'Failed to upload image.')
+      });
     } finally {
       setUploadingImage(false);
     }
@@ -63,7 +71,7 @@ export const CMSProgramsPage = () => {
     if (!editingProgram) return;
     setEditingProgram(prev => ({
       ...prev,
-      features: [...(prev.features || prev.highlights || []), 'नवीन वैशिष्ट्य']
+      features: [...(prev.features || prev.highlights || []), isMarathi ? 'नवीन वैशिष्ट्य' : 'New Feature']
     }));
   };
 
@@ -85,7 +93,10 @@ export const CMSProgramsPage = () => {
   const handleSaveProgram = async (e) => {
     e.preventDefault();
     if (!editingProgram.title?.trim()) {
-      setMessage({ type: 'error', text: 'कृपया शैक्षणिक विभागाचे नाव भरा.' });
+      setMessage({
+        type: 'error',
+        text: isMarathi ? 'कृपया शैक्षणिक विभागाचे नाव भरा.' : 'Please enter the program title.'
+      });
       return;
     }
 
@@ -99,10 +110,18 @@ export const CMSProgramsPage = () => {
         highlights: editingProgram.features || editingProgram.highlights
       };
       await saveProgram(payload);
-      setMessage({ type: 'success', text: `"${editingProgram.title}" यशस्वीरीत्या अद्यतनित केले (Program saved successfully).` });
+      setMessage({
+        type: 'success',
+        text: isMarathi
+          ? `"${editingProgram.title}" यशस्वीरीत्या अद्यतनित केले.`
+          : `"${editingProgram.title}" updated successfully.`
+      });
       setEditingProgram(null);
     } catch (err) {
-      setMessage({ type: 'error', text: err.message || 'माहिती जतन करताना त्रुटी आली.' });
+      setMessage({
+        type: 'error',
+        text: err.message || (isMarathi ? 'माहिती जतन करताना त्रुटी आली.' : 'Error saving program details.')
+      });
     } finally {
       setSaving(false);
     }
@@ -116,17 +135,19 @@ export const CMSProgramsPage = () => {
           <Link 
             to="/admin/cms" 
             className="p-2 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-lg transition-colors"
-            title="CMS डॅशबोर्डवर परत जा"
+            title={isMarathi ? 'CMS डॅशबोर्डवर परत जा' : 'Back to CMS Dashboard'}
           >
             <ArrowLeft className="w-5 h-5" />
           </Link>
           <div>
             <h1 className="text-2xl font-black text-gurukul-navy-900 flex items-center gap-2">
               <GraduationCap className="w-7 h-7 text-gurukul-saffron-600" />
-              <span>शैक्षणिक विभाग व्यवस्थापन (Programs CMS)</span>
+              <span>{isMarathi ? 'शैक्षणिक विभाग व्यवस्थापन (Programs CMS)' : 'Academic Programs Management (CMS)'}</span>
             </h1>
             <p className="text-sm text-slate-500">
-              विद्यामंदिर, ज्युनिअर कॉलेज, टॅलेंट सर्च, सायन्स, कॉम्प्युटर व स्पोर्ट्स अकॅडमी व्यवस्थापित करा.
+              {isMarathi
+                ? 'विद्यामंदिर, ज्युनिअर कॉलेज, टॅलेंट सर्च, सायन्स, कॉम्प्युटर व स्पोर्ट्स अकॅडमी व्यवस्थापित करा.'
+                : 'Manage Vidyamandir, Junior College, Talent Search, Science, Computer, and Sports Academy.'}
             </p>
           </div>
         </div>
@@ -147,7 +168,7 @@ export const CMSProgramsPage = () => {
         <form onSubmit={handleSaveProgram} className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-5 animate-in fade-in">
           <div className="flex items-center justify-between pb-3 border-b border-slate-100">
             <h2 className="text-base font-bold text-gurukul-navy-900">
-              शैक्षणिक विभाग संपादन: {editingProgram.title}
+              {isMarathi ? 'शैक्षणिक विभाग संपादन:' : 'Edit Program:'} {editingProgram.title}
             </h2>
             <div className="flex items-center gap-2">
               <button
@@ -155,14 +176,14 @@ export const CMSProgramsPage = () => {
                 onClick={() => setEditingProgram(null)}
                 className="px-3.5 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-lg"
               >
-                रद्द करा (Cancel)
+                {isMarathi ? 'रद्द करा' : 'Cancel'}
               </button>
               <button
                 type="submit"
                 disabled={saving}
                 className="px-4 py-1.5 bg-gurukul-saffron-600 hover:bg-gurukul-saffron-700 disabled:opacity-50 text-white text-xs font-bold rounded-lg shadow"
               >
-                {saving ? 'जतन करत आहे...' : 'सेव्ह करा (Save)'}
+                {saving ? (isMarathi ? 'जतन करत आहे...' : 'Saving...') : (isMarathi ? 'सेव्ह करा' : 'Save')}
               </button>
             </div>
           </div>
@@ -170,7 +191,7 @@ export const CMSProgramsPage = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                विभागाचे नाव (Program Title) *
+                {isMarathi ? 'विभागाचे नाव (Program Title) *' : 'Program Title *'}
               </label>
               <input
                 type="text"
@@ -182,7 +203,7 @@ export const CMSProgramsPage = () => {
             </div>
             <div>
               <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                उपशीर्षक / वर्ग (Subtitle / Classes)
+                {isMarathi ? 'उपशीर्षक / वर्ग (Subtitle / Classes)' : 'Subtitle / Classes'}
               </label>
               <input
                 type="text"
@@ -196,7 +217,7 @@ export const CMSProgramsPage = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                वर्गवारी (Category)
+                {isMarathi ? 'वर्गवारी (Category)' : 'Category'}
               </label>
               <input
                 type="text"
@@ -207,22 +228,22 @@ export const CMSProgramsPage = () => {
             </div>
             <div>
               <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                प्रकाशन स्थिती (Status)
+                {isMarathi ? 'प्रकाशन स्थिती (Status)' : 'Publish Status'}
               </label>
               <select
                 value={editingProgram.status || 'published'}
                 onChange={(e) => setEditingProgram(prev => ({ ...prev, status: e.target.value }))}
                 className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold focus:bg-white outline-none"
               >
-                <option value="published">🟢 प्रकाशित (Published)</option>
-                <option value="draft">🟡 मसुदा (Draft)</option>
+                <option value="published">{isMarathi ? '🟢 प्रकाशित (Published)' : '🟢 Published'}</option>
+                <option value="draft">{isMarathi ? '🟡 मसुदा (Draft)' : '🟡 Draft'}</option>
               </select>
             </div>
           </div>
 
           <div>
             <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-              वर्णन (Full Description)
+              {isMarathi ? 'वर्णन (Full Description)' : 'Full Description'}
             </label>
             <textarea
               rows={3}
@@ -235,19 +256,19 @@ export const CMSProgramsPage = () => {
           {/* Image Upload */}
           <div>
             <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-              विभागाचे छायाचित्र (Program Image)
+              {isMarathi ? 'विभागाचे छायाचित्र (Program Image)' : 'Program Image'}
             </label>
             <div className="flex items-center gap-3">
               <input
                 type="text"
                 value={editingProgram.imageUrl || editingProgram.image || ''}
                 onChange={(e) => setEditingProgram(prev => ({ ...prev, imageUrl: e.target.value, image: e.target.value }))}
-                placeholder="इमेज URL किंवा उजवीकडे फाईल निवडून अपलोड करा"
+                placeholder={isMarathi ? 'इमेज URL किंवा उजवीकडे फाईल निवडून अपलोड करा' : 'Image URL or upload file on the right'}
                 className="flex-1 px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:bg-white outline-none"
               />
               <label className="cursor-pointer px-4 py-2.5 bg-gurukul-navy-900 hover:bg-gurukul-navy-950 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors shrink-0">
                 <Upload className="w-4 h-4 text-gurukul-saffron-400" />
-                <span>{uploadingImage ? 'अपलोड होत आहे...' : 'इमेज अपलोड'}</span>
+                <span>{uploadingImage ? (isMarathi ? 'अपलोड होत आहे...' : 'Uploading...') : (isMarathi ? 'इमेज अपलोड' : 'Upload Image')}</span>
                 <input type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
               </label>
             </div>
@@ -266,14 +287,14 @@ export const CMSProgramsPage = () => {
           <div>
             <div className="flex items-center justify-between mb-2">
               <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
-                महत्त्वाची वैशिष्ट्ये (Key Features & Highlights)
+                {isMarathi ? 'महत्त्वाची वैशिष्ट्ये (Key Features & Highlights)' : 'Key Features & Highlights'}
               </label>
               <button
                 type="button"
                 onClick={handleAddFeature}
                 className="text-xs font-bold text-gurukul-saffron-600 hover:text-gurukul-saffron-700"
               >
-                + वैशिष्ट्य जोडा
+                {isMarathi ? '+ वैशिष्ट्य जोडा' : '+ Add Feature'}
               </button>
             </div>
             <div className="space-y-2">
@@ -317,12 +338,14 @@ export const CMSProgramsPage = () => {
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <span className="px-2.5 py-1 bg-orange-100 text-gurukul-saffron-700 text-[11px] font-bold rounded-lg uppercase tracking-wider">
-                    {prog.category || 'शैक्षणिक विभाग'}
+                    {prog.category || (isMarathi ? 'शैक्षणिक विभाग' : 'Academic Program')}
                   </span>
                   <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
                     prog.status === 'draft' ? 'bg-amber-100 text-amber-800' : 'bg-emerald-100 text-emerald-800'
                   }`}>
-                    {prog.status === 'draft' ? '🟡 मसुदा (Draft)' : '🟢 प्रकाशित (Active)'}
+                    {prog.status === 'draft'
+                      ? (isMarathi ? '🟡 मसुदा (Draft)' : '🟡 Draft')
+                      : (isMarathi ? '🟢 प्रकाशित (Active)' : '🟢 Published')}
                   </span>
                 </div>
 
@@ -333,7 +356,9 @@ export const CMSProgramsPage = () => {
                 </div>
 
                 <div className="pt-2 border-t border-slate-100 space-y-1.5">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">ठळक बाबी:</span>
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                    {isMarathi ? 'ठळक बाबी:' : 'Highlights:'}
+                  </span>
                   {(prog.features || prog.highlights || []).slice(0, 3).map((f, i) => (
                     <div key={i} className="text-xs text-slate-600 flex items-center gap-1.5">
                       <span className="w-1.5 h-1.5 rounded-full bg-gurukul-saffron-500 shrink-0" />
@@ -348,7 +373,7 @@ export const CMSProgramsPage = () => {
                   to={prog.slug || prog.link || '#'}
                   className="text-xs font-bold text-gurukul-navy-900 hover:text-gurukul-saffron-600 transition-colors flex items-center gap-1"
                 >
-                  <span>वेबसाईटवर पहा</span>
+                  <span>{isMarathi ? 'वेबसाईटवर पहा' : 'View on Website'}</span>
                   <ExternalLink className="w-3.5 h-3.5" />
                 </Link>
                 <button
@@ -357,7 +382,7 @@ export const CMSProgramsPage = () => {
                   className="inline-flex items-center gap-1 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-lg text-xs font-bold transition-colors"
                 >
                   <Edit2 className="w-3.5 h-3.5" />
-                  <span>संपादित करा</span>
+                  <span>{isMarathi ? 'संपादित करा' : 'Edit'}</span>
                 </button>
               </div>
             </div>

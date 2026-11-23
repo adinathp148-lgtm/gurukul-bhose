@@ -23,11 +23,13 @@ import {
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useCMS } from '../../../contexts/CMSContext';
+import { useLanguage } from '../../../contexts/LanguageContext';
 import { uploadMediaFile, validateUploadFile } from '../../../services/storage/mediaUploadService';
 import { Button } from '../../../components/common/Button';
 
 export const CMSPagesPage = () => {
   const { pages, savePage, loading } = useCMS();
+  const { isMarathi } = useLanguage();
 
   const [selectedPage, setSelectedPage] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
@@ -82,10 +84,15 @@ export const CMSPagesPage = () => {
       await savePage({ ...page, status: newStatus });
       setMessage({ 
         type: 'success', 
-        text: `पृष्ठ "${page.title}" आता ${newStatus === 'published' ? 'प्रकाशित (Published)' : 'मसुदा (Draft)'} स्थितीत आहे.` 
+        text: isMarathi
+          ? `पृष्ठ "${page.title}" आता ${newStatus === 'published' ? 'प्रकाशित (Published)' : 'मसुदा (Draft)'} स्थितीत आहे.`
+          : `Page "${page.title}" is now set to ${newStatus === 'published' ? 'Published' : 'Draft'}.`
       });
     } catch (err) {
-      setMessage({ type: 'error', text: 'स्थिती बदलताना त्रुटी आली.' });
+      setMessage({
+        type: 'error',
+        text: isMarathi ? 'स्थिती बदलताना त्रुटी आली.' : 'Failed to update page status.'
+      });
     }
   };
 
@@ -103,9 +110,15 @@ export const CMSPagesPage = () => {
       setUploadingImage(true);
       const res = await uploadMediaFile(file, 'pages', `banner_${formData.slug || 'page'}_${Date.now()}`);
       setFormData(prev => ({ ...prev, bannerImage: res.url || res.downloadURL }));
-      setMessage({ type: 'success', text: 'बॅनर इमेज अपलोड झाली (Banner uploaded).' });
+      setMessage({
+        type: 'success',
+        text: isMarathi ? 'बॅनर इमेज अपलोड झाली.' : 'Banner image uploaded successfully.'
+      });
     } catch (err) {
-      setMessage({ type: 'error', text: err.message || 'इमेज अपलोड करताना त्रुटी आली.' });
+      setMessage({
+        type: 'error',
+        text: err.message || (isMarathi ? 'इमेज अपलोड करताना त्रुटी आली.' : 'Failed to upload image.')
+      });
     } finally {
       setUploadingImage(false);
     }
@@ -119,7 +132,7 @@ export const CMSPagesPage = () => {
     };
 
     if (type === 'heading') {
-      newBlock.content = 'नवीन मथळा';
+      newBlock.content = isMarathi ? 'नवीन मथळा' : 'New Heading';
       newBlock.level = 'h2';
     } else if (type === 'paragraph') {
       newBlock.content = '';
@@ -132,11 +145,13 @@ export const CMSPagesPage = () => {
       newBlock.content = '';
       newBlock.imagePosition = 'left';
     } else if (type === 'features') {
-      newBlock.items = ['वैशिष्ट्य १', 'वैशिष्ट्य २', 'वैशिष्ट्य ३'];
+      newBlock.items = isMarathi
+        ? ['वैशिष्ट्य १', 'वैशिष्ट्य २', 'वैशिष्ट्य ३']
+        : ['Feature 1', 'Feature 2', 'Feature 3'];
     } else if (type === 'cta') {
-      newBlock.heading = 'प्रवेश नोंदणी करा';
-      newBlock.description = 'मर्यादित जागांवर प्रवेश सुरू आहेत.';
-      newBlock.buttonText = 'प्रवेश अर्ज करा';
+      newBlock.heading = isMarathi ? 'प्रवेश नोंदणी करा' : 'Apply for Admission';
+      newBlock.description = isMarathi ? 'मर्यादित जागांवर प्रवेश सुरू आहेत.' : 'Admissions are open for limited seats.';
+      newBlock.buttonText = isMarathi ? 'प्रवेश अर्ज करा' : 'Apply Now';
       newBlock.buttonUrl = '/admission-enquiry';
     } else if (type === 'video') {
       newBlock.youtubeUrl = '';
@@ -187,15 +202,24 @@ export const CMSPagesPage = () => {
     try {
       const res = await uploadMediaFile(file, 'pages', `block_img_${Date.now()}`);
       updateBlock(index, { url: res.url || res.downloadURL });
-      setMessage({ type: 'success', text: 'इमेज अपलोड झाली.' });
+      setMessage({
+        type: 'success',
+        text: isMarathi ? 'इमेज अपलोड झाली.' : 'Image uploaded successfully.'
+      });
     } catch (err) {
-      setMessage({ type: 'error', text: err.message || 'अपलोड अयशस्वी.' });
+      setMessage({
+        type: 'error',
+        text: err.message || (isMarathi ? 'अपलोड अयशस्वी.' : 'Upload failed.')
+      });
     }
   };
 
   const handleSave = async (statusOverride = null) => {
     if (!formData.title?.trim()) {
-      setMessage({ type: 'error', text: 'कृपया पृष्ठाचे शीर्षक (Page Title) भरा.' });
+      setMessage({
+        type: 'error',
+        text: isMarathi ? 'कृपया पृष्ठाचे शीर्षक (Page Title) भरा.' : 'Please enter a page title.'
+      });
       return;
     }
 
@@ -207,11 +231,19 @@ export const CMSPagesPage = () => {
         status: statusOverride || formData.status || 'published'
       };
       await savePage(pageToSave);
-      setMessage({ type: 'success', text: `पृष्ठ "${pageToSave.title}" यशस्वीरीत्या सेव्ह झाले!` });
+      setMessage({
+        type: 'success',
+        text: isMarathi
+          ? `पृष्ठ "${pageToSave.title}" यशस्वीरीत्या सेव्ह झाले!`
+          : `Page "${pageToSave.title}" saved successfully!`
+      });
       setIsEditing(false);
       setShowPreview(false);
     } catch (err) {
-      setMessage({ type: 'error', text: err.message || 'पृष्ठ जतन करताना त्रुटी आली.' });
+      setMessage({
+        type: 'error',
+        text: err.message || (isMarathi ? 'पृष्ठ जतन करताना त्रुटी आली.' : 'Error saving page.')
+      });
     } finally {
       setSaving(false);
     }
@@ -225,17 +257,19 @@ export const CMSPagesPage = () => {
           <Link 
             to="/admin/cms" 
             className="p-2 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-lg transition-colors"
-            title="CMS डॅशबोर्डवर परत जा"
+            title={isMarathi ? 'CMS डॅशबोर्डवर परत जा' : 'Back to CMS Dashboard'}
           >
             <ArrowLeft className="w-5 h-5" />
           </Link>
           <div>
             <h1 className="text-2xl font-black text-gurukul-navy-900 flex items-center gap-2">
               <FileText className="w-7 h-7 text-gurukul-saffron-600" />
-              <span>वेबसाईट पेजेस व्यवस्थापन (Page Management)</span>
+              <span>{isMarathi ? 'वेबसाईट पेजेस व्यवस्थापन (Page Management)' : 'Website Pages Management'}</span>
             </h1>
             <p className="text-sm text-slate-500">
-              सर्व मुख्य पेजेसचे संरक्षित संरचित ब्लॉक्स, मथळे, प्रतिमा व CTA संपादन करा.
+              {isMarathi
+                ? 'सर्व मुख्य पेजेसचे संरक्षित संरचित ब्लॉक्स, मथळे, प्रतिमा व CTA संपादन करा.'
+                : 'Create and edit structured content blocks, headings, images, and CTAs for all website pages.'}
             </p>
           </div>
         </div>
@@ -247,7 +281,7 @@ export const CMSPagesPage = () => {
             className="inline-flex items-center gap-2 px-4 py-2.5 bg-gurukul-saffron-600 hover:bg-gurukul-saffron-700 text-white rounded-xl font-bold text-sm shadow hover:shadow-md transition-all"
           >
             <Plus className="w-4 h-4" />
-            <span>नवीन पृष्ठ जोडा (Add New Page)</span>
+            <span>{isMarathi ? 'नवीन पृष्ठ जोडा' : 'Add New Page'}</span>
           </button>
         )}
       </div>
@@ -269,10 +303,16 @@ export const CMSPagesPage = () => {
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
               <div>
                 <h2 className="text-lg font-bold text-gurukul-navy-900">
-                  {formData.pageId ? `पृष्ठ संपादन: ${formData.title || 'शीर्षक नसलेले पृष्ठ'}` : 'नवीन पृष्ठ तयार करा'}
+                  {formData.pageId
+                    ? (isMarathi
+                        ? `पृष्ठ संपादन: ${formData.title || 'शीर्षक नसलेले पृष्ठ'}`
+                        : `Edit Page: ${formData.title || 'Untitled Page'}`)
+                    : (isMarathi ? 'नवीन पृष्ठ तयार करा' : 'Create New Page')}
                 </h2>
                 <p className="text-xs text-slate-500">
-                  संरचित ब्लॉक्स जोडून सुरक्षित पद्धतीने पृष्ठ तयार करा (सुरक्षित व XSS-मुक्त).
+                  {isMarathi
+                    ? 'संरचित ब्लॉक्स जोडून सुरक्षित पद्धतीने पृष्ठ तयार करा (सुरक्षित व XSS-मुक्त).'
+                    : 'Build pages safely using structured content blocks (secure and XSS-free).'}
                 </p>
               </div>
 
@@ -283,7 +323,11 @@ export const CMSPagesPage = () => {
                   className="px-3.5 py-2 text-xs font-bold text-gurukul-navy-900 bg-slate-100 hover:bg-slate-200 rounded-xl inline-flex items-center gap-1.5 transition-colors"
                 >
                   <Eye className="w-4 h-4 text-gurukul-saffron-600" />
-                  <span>{showPreview ? 'संपादकाकडे परत जा' : 'प्रिव्ह्यू पहा (Live Preview)'}</span>
+                  <span>
+                    {showPreview
+                      ? (isMarathi ? 'संपादकाकडे परत जा' : 'Back to Editor')
+                      : (isMarathi ? 'प्रिव्ह्यू पहा' : 'Live Preview')}
+                  </span>
                 </button>
                 <button
                   type="button"
@@ -291,7 +335,7 @@ export const CMSPagesPage = () => {
                   disabled={saving}
                   className="px-3.5 py-2 text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-xl transition-colors"
                 >
-                  मसुदा ठेवा (Save Draft)
+                  {isMarathi ? 'मसुदा ठेवा' : 'Save Draft'}
                 </button>
                 <button
                   type="button"
@@ -300,14 +344,14 @@ export const CMSPagesPage = () => {
                   className="inline-flex items-center gap-1.5 px-4 py-2 bg-gurukul-saffron-600 hover:bg-gurukul-saffron-700 disabled:opacity-50 text-white rounded-xl font-bold text-xs shadow transition-all"
                 >
                   <Save className="w-4 h-4" />
-                  <span>{saving ? 'जतन करत आहे...' : 'प्रकाशित करा (Publish)'}</span>
+                  <span>{saving ? (isMarathi ? 'जतन करत आहे...' : 'Saving...') : (isMarathi ? 'प्रकाशित करा' : 'Publish')}</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => { setIsEditing(false); setShowPreview(false); }}
                   className="px-3 py-2 text-xs text-slate-500 hover:text-slate-800"
                 >
-                  रद्द करा
+                  {isMarathi ? 'रद्द करा' : 'Cancel'}
                 </button>
               </div>
             </div>
@@ -318,7 +362,7 @@ export const CMSPagesPage = () => {
                 <div className="flex items-center justify-between pb-3 border-b border-slate-200">
                   <span className="text-xs font-bold uppercase tracking-wider text-gurukul-saffron-600 flex items-center gap-1.5">
                     <Eye className="w-4 h-4" />
-                    <span>लाईव्ह प्रिव्ह्यू मोड (Live Public Preview)</span>
+                    <span>{isMarathi ? 'लाईव्ह प्रिव्ह्यू मोड (Live Public Preview)' : 'Live Public Preview Mode'}</span>
                   </span>
                   <span className="text-xs text-slate-500">
                     URL: <strong>{(formData.slug || '').startsWith('/') ? formData.slug : `/${formData.slug || ''}`}</strong>
@@ -379,7 +423,9 @@ export const CMSPagesPage = () => {
                     if (block.type === 'features') {
                       return (
                         <div key={block.id || idx} className="p-5 bg-orange-50/60 rounded-2xl border border-orange-200/80 my-4 space-y-2">
-                          <h4 className="text-xs font-bold uppercase tracking-wider text-gurukul-saffron-700">वैशिष्ट्ये व ठळक बाबी:</h4>
+                          <h4 className="text-xs font-bold uppercase tracking-wider text-gurukul-saffron-700">
+                            {isMarathi ? 'वैशिष्ट्ये व ठळक बाबी:' : 'Key Features & Highlights:'}
+                          </h4>
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
                             {(block.items || []).map((item, fIdx) => (
                               <div key={fIdx} className="flex items-center gap-2 text-xs text-slate-800 font-semibold">
@@ -398,7 +444,7 @@ export const CMSPagesPage = () => {
                           <p className="text-xs text-slate-300 max-w-md mx-auto">{block.description}</p>
                           <div className="pt-2">
                             <span className="inline-block px-5 py-2.5 bg-gurukul-saffron-500 text-white text-xs font-bold rounded-xl shadow">
-                              {block.buttonText || 'प्रवेश अर्ज करा'}
+                              {block.buttonText || (isMarathi ? 'प्रवेश अर्ज करा' : 'Apply Now')}
                             </span>
                           </div>
                         </div>
@@ -427,21 +473,21 @@ export const CMSPagesPage = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                      पृष्ठाचे शीर्षक (Page Title) *
+                      {isMarathi ? 'पृष्ठाचे शीर्षक (Page Title) *' : 'Page Title *'}
                     </label>
                     <input
                       type="text"
                       required
                       value={formData.title}
                       onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-                      placeholder="उदा. गुरुकुल विद्यामंदिर"
+                      placeholder={isMarathi ? 'उदा. गुरुकुल विद्यामंदिर' : 'e.g. Gurukul Vidyamandir'}
                       className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:bg-white outline-none"
                     />
                   </div>
 
                   <div>
                     <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                      URL स्लग (Slug) *
+                      {isMarathi ? 'URL स्लग (Slug) *' : 'URL Slug *'}
                     </label>
                     <div className="flex items-center">
                       <span className="px-3 py-2.5 bg-slate-100 border border-r-0 border-slate-200 rounded-l-xl text-xs text-slate-500 font-mono">
@@ -460,46 +506,50 @@ export const CMSPagesPage = () => {
 
                   <div className="md:col-span-2">
                     <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                      उपशीर्षक / टॅगलाईन (Subtitle)
+                      {isMarathi ? 'उपशीर्षक / टॅगलाईन (Subtitle)' : 'Subtitle / Tagline'}
                     </label>
                     <input
                       type="text"
                       value={formData.subtitle || ''}
                       onChange={(e) => setFormData(prev => ({ ...prev, subtitle: e.target.value }))}
-                      placeholder="उदा. इ. ५ वी ते १० वी (मराठी व सेमी इंग्रजी माध्यम)"
+                      placeholder={isMarathi ? 'उदा. इ. ५ वी ते १० वी (मराठी व सेमी इंग्रजी माध्यम)' : 'e.g. Std. 5th to 10th (Marathi & Semi-English Medium)'}
                       className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:bg-white outline-none"
                     />
                   </div>
 
                   <div>
                     <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                      प्रकाशन स्थिती (Status)
+                      {isMarathi ? 'प्रकाशन स्थिती (Status)' : 'Publish Status'}
                     </label>
                     <select
                       value={formData.status || 'draft'}
                       onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value }))}
                       className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold focus:bg-white outline-none"
                     >
-                      <option value="published">🟢 प्रकाशित (Published - Publicly Visible)</option>
-                      <option value="draft">🟡 मसुदा (Draft - Hidden)</option>
+                      <option value="published">
+                        {isMarathi ? '🟢 प्रकाशित (Published - Publicly Visible)' : '🟢 Published (Publicly Visible)'}
+                      </option>
+                      <option value="draft">
+                        {isMarathi ? '🟡 मसुदा (Draft - Hidden)' : '🟡 Draft (Hidden)'}
+                      </option>
                     </select>
                   </div>
 
                   <div>
                     <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                      हेडर बॅनर इमेज (Header Banner Image)
+                      {isMarathi ? 'हेडर बॅनर इमेज (Header Banner Image)' : 'Header Banner Image'}
                     </label>
                     <div className="flex items-center gap-3">
                       <input
                         type="text"
                         value={formData.bannerImage || ''}
                         onChange={(e) => setFormData(prev => ({ ...prev, bannerImage: e.target.value }))}
-                        placeholder="इमेज URL किंवा अपलोड करा"
+                        placeholder={isMarathi ? 'इमेज URL किंवा अपलोड करा' : 'Image URL or upload'}
                         className="flex-1 px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:bg-white outline-none"
                       />
                       <label className="cursor-pointer px-4 py-2.5 bg-gurukul-navy-900 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors shrink-0">
                         <Upload className="w-4 h-4 text-gurukul-saffron-400" />
-                        <span>{uploadingImage ? '...' : 'अपलोड'}</span>
+                        <span>{uploadingImage ? '...' : (isMarathi ? 'अपलोड' : 'Upload')}</span>
                         <input type="file" accept="image/*" onChange={handleBannerUpload} className="hidden" />
                       </label>
                     </div>
@@ -512,10 +562,12 @@ export const CMSPagesPage = () => {
                     <div>
                       <h3 className="text-sm font-bold text-gurukul-navy-900 uppercase tracking-wider flex items-center gap-2">
                         <Layers className="w-4 h-4 text-gurukul-saffron-600" />
-                        <span>संरचित मजकूर ब्लॉक्स (Structured Content Blocks)</span>
+                        <span>{isMarathi ? 'संरचित मजकूर ब्लॉक्स (Structured Content Blocks)' : 'Structured Content Blocks'}</span>
                       </h3>
                       <p className="text-xs text-slate-500">
-                        मथळा, परिच्छेद, फोटो, फोटो+मजकूर, वैशिष्ट्ये, कॉल-टू-ॲक्शन व व्हिडिओ ब्लॉक्स
+                        {isMarathi
+                          ? 'मथळा, परिच्छेद, फोटो, फोटो+मजकूर, वैशिष्ट्ये, कॉल-टू-ॲक्शन व व्हिडिओ ब्लॉक्स'
+                          : 'Add heading, paragraph, image, image+text, features, call-to-action, and video blocks'}
                       </p>
                     </div>
 
@@ -525,14 +577,14 @@ export const CMSPagesPage = () => {
                         onClick={() => addBlock('heading')}
                         className="px-2.5 py-1.5 text-xs bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-lg font-semibold"
                       >
-                        + मथळा
+                        {isMarathi ? '+ मथळा' : '+ Heading'}
                       </button>
                       <button
                         type="button"
                         onClick={() => addBlock('paragraph')}
                         className="px-2.5 py-1.5 text-xs bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-lg font-semibold"
                       >
-                        + परिच्छेद
+                        {isMarathi ? '+ परिच्छेद' : '+ Paragraph'}
                       </button>
                       <button
                         type="button"
@@ -540,14 +592,14 @@ export const CMSPagesPage = () => {
                         className="px-2.5 py-1.5 text-xs bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-lg font-semibold inline-flex items-center gap-1"
                       >
                         <ImageIcon className="w-3.5 h-3.5 text-gurukul-saffron-600" />
-                        <span>+ फोटो</span>
+                        <span>{isMarathi ? '+ फोटो' : '+ Image'}</span>
                       </button>
                       <button
                         type="button"
                         onClick={() => addBlock('image_text')}
                         className="px-2.5 py-1.5 text-xs bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-lg font-semibold"
                       >
-                        + फोटो+मजकूर
+                        {isMarathi ? '+ फोटो+मजकूर' : '+ Image + Text'}
                       </button>
                       <button
                         type="button"
@@ -555,7 +607,7 @@ export const CMSPagesPage = () => {
                         className="px-2.5 py-1.5 text-xs bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-lg font-semibold inline-flex items-center gap-1"
                       >
                         <List className="w-3.5 h-3.5 text-gurukul-saffron-600" />
-                        <span>+ वैशिष्ट्ये</span>
+                        <span>{isMarathi ? '+ वैशिष्ट्ये' : '+ Features'}</span>
                       </button>
                       <button
                         type="button"
@@ -571,7 +623,7 @@ export const CMSPagesPage = () => {
                         className="px-2.5 py-1.5 text-xs bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-lg font-semibold inline-flex items-center gap-1"
                       >
                         <Video className="w-3.5 h-3.5 text-red-600" />
-                        <span>+ व्हिडिओ</span>
+                        <span>{isMarathi ? '+ व्हिडिओ' : '+ Video'}</span>
                       </button>
                     </div>
                   </div>
@@ -582,7 +634,7 @@ export const CMSPagesPage = () => {
                       <div key={block.id || index} className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-3">
                         <div className="flex items-center justify-between text-xs text-slate-500 font-medium">
                           <span className="font-bold text-gurukul-navy-900 uppercase">
-                            ब्लॉक #{index + 1}: {block.type}
+                            {isMarathi ? `ब्लॉक #${index + 1}` : `Block #${index + 1}`}: {block.type}
                           </span>
                           <div className="flex items-center gap-1">
                             <button
@@ -590,7 +642,7 @@ export const CMSPagesPage = () => {
                               onClick={() => moveBlock(index, -1)}
                               disabled={index === 0}
                               className="p-1 hover:text-slate-900 disabled:opacity-30"
-                              title="वर हलवा"
+                              title={isMarathi ? 'वर हलवा' : 'Move Up'}
                             >
                               <MoveUp className="w-3.5 h-3.5" />
                             </button>
@@ -599,7 +651,7 @@ export const CMSPagesPage = () => {
                               onClick={() => moveBlock(index, 1)}
                               disabled={index === formData.blocks.length - 1}
                               className="p-1 hover:text-slate-900 disabled:opacity-30"
-                              title="खाली हलवा"
+                              title={isMarathi ? 'खाली हलवा' : 'Move Down'}
                             >
                               <MoveDown className="w-3.5 h-3.5" />
                             </button>
@@ -607,7 +659,7 @@ export const CMSPagesPage = () => {
                               type="button"
                               onClick={() => removeBlock(index)}
                               className="p-1 hover:text-red-600 transition-colors"
-                              title="काढून टाका"
+                              title={isMarathi ? 'काढून टाका' : 'Remove Block'}
                             >
                               <Trash2 className="w-3.5 h-3.5 text-red-500" />
                             </button>
@@ -620,7 +672,7 @@ export const CMSPagesPage = () => {
                             type="text"
                             value={block.content || ''}
                             onChange={(e) => updateBlock(index, { content: e.target.value })}
-                            placeholder="मथळा प्रविष्ट करा..."
+                            placeholder={isMarathi ? 'मथळा प्रविष्ट करा...' : 'Enter heading...'}
                             className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-base font-bold text-gurukul-navy-900 outline-none"
                           />
                         )}
@@ -631,7 +683,7 @@ export const CMSPagesPage = () => {
                             rows={3}
                             value={block.content || ''}
                             onChange={(e) => updateBlock(index, { content: e.target.value })}
-                            placeholder="परिच्छेद मजकूर लिहा..."
+                            placeholder={isMarathi ? 'परिच्छेद मजकूर लिहा...' : 'Write paragraph text...'}
                             className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm text-slate-700 leading-relaxed outline-none"
                           />
                         )}
@@ -644,12 +696,12 @@ export const CMSPagesPage = () => {
                                 type="text"
                                 value={block.url || ''}
                                 onChange={(e) => updateBlock(index, { url: e.target.value })}
-                                placeholder="इमेज URL किंवा उजवीकडून फाईल निवडा"
+                                placeholder={isMarathi ? 'इमेज URL किंवा उजवीकडून फाईल निवडा' : 'Image URL or upload file on the right'}
                                 className="flex-1 px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs outline-none"
                               />
                               <label className="cursor-pointer px-3 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-lg text-xs font-bold flex items-center gap-1">
                                 <Upload className="w-3 h-3" />
-                                <span>अपलोड</span>
+                                <span>{isMarathi ? 'अपलोड' : 'Upload'}</span>
                                 <input type="file" accept="image/*" onChange={(e) => handleBlockImageUpload(index, e.target.files[0])} className="hidden" />
                               </label>
                             </div>
@@ -658,14 +710,14 @@ export const CMSPagesPage = () => {
                                 type="text"
                                 value={block.altText || ''}
                                 onChange={(e) => updateBlock(index, { altText: e.target.value })}
-                                placeholder="Alt मजकूर (Accessibility)"
+                                placeholder={isMarathi ? 'Alt मजकूर (Accessibility)' : 'Alt Text (Accessibility)'}
                                 className="px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs"
                               />
                               <input
                                 type="text"
                                 value={block.caption || ''}
                                 onChange={(e) => updateBlock(index, { caption: e.target.value })}
-                                placeholder="फोटो कॅप्शन (Caption)"
+                                placeholder={isMarathi ? 'फोटो कॅप्शन (Caption)' : 'Photo Caption'}
                                 className="px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs"
                               />
                             </div>
@@ -686,11 +738,11 @@ export const CMSPagesPage = () => {
                                   type="text"
                                   value={block.url || ''}
                                   onChange={(e) => updateBlock(index, { url: e.target.value })}
-                                  placeholder="इमेज URL"
+                                  placeholder={isMarathi ? 'इमेज URL' : 'Image URL'}
                                   className="flex-1 px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs outline-none"
                                 />
                                 <label className="cursor-pointer px-3 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-lg text-xs font-bold">
-                                  <span>अपलोड</span>
+                                  <span>{isMarathi ? 'अपलोड' : 'Upload'}</span>
                                   <input type="file" accept="image/*" onChange={(e) => handleBlockImageUpload(index, e.target.files[0])} className="hidden" />
                                 </label>
                               </div>
@@ -699,15 +751,15 @@ export const CMSPagesPage = () => {
                                 onChange={(e) => updateBlock(index, { imagePosition: e.target.value })}
                                 className="px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs font-semibold"
                               >
-                                <option value="left">इमेज डावीकडे (Image Left)</option>
-                                <option value="right">इमेज उजवीकडे (Image Right)</option>
+                                <option value="left">{isMarathi ? 'इमेज डावीकडे (Image Left)' : 'Image Left'}</option>
+                                <option value="right">{isMarathi ? 'इमेज उजवीकडे (Image Right)' : 'Image Right'}</option>
                               </select>
                             </div>
                             <textarea
                               rows={3}
                               value={block.content || ''}
                               onChange={(e) => updateBlock(index, { content: e.target.value })}
-                              placeholder="मजकूर लिहा..."
+                              placeholder={isMarathi ? 'मजकूर लिहा...' : 'Write content...'}
                               className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs leading-relaxed"
                             />
                           </div>
@@ -717,13 +769,15 @@ export const CMSPagesPage = () => {
                         {block.type === 'features' && (
                           <div className="space-y-2">
                             <div className="flex items-center justify-between">
-                              <span className="text-xs font-bold text-slate-600">वैशिष्ट्ये यादी:</span>
+                              <span className="text-xs font-bold text-slate-600">
+                                {isMarathi ? 'वैशिष्ट्ये यादी:' : 'Features List:'}
+                              </span>
                               <button
                                 type="button"
-                                onClick={() => updateBlock(index, { items: [...(block.items || []), 'नवीन मुद्दा'] })}
+                                onClick={() => updateBlock(index, { items: [...(block.items || []), isMarathi ? 'नवीन मुद्दा' : 'New Item'] })}
                                 className="text-xs font-bold text-gurukul-saffron-600"
                               >
-                                + मुद्दा जोडा
+                                {isMarathi ? '+ मुद्दा जोडा' : '+ Add Item'}
                               </button>
                             </div>
                             {(block.items || []).map((it, itemIdx) => (
@@ -760,28 +814,28 @@ export const CMSPagesPage = () => {
                               type="text"
                               value={block.heading || ''}
                               onChange={(e) => updateBlock(index, { heading: e.target.value })}
-                              placeholder="CTA मथळा"
+                              placeholder={isMarathi ? 'CTA मथळा' : 'CTA Heading'}
                               className="px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs font-bold"
                             />
                             <input
                               type="text"
                               value={block.buttonText || ''}
                               onChange={(e) => updateBlock(index, { buttonText: e.target.value })}
-                              placeholder="बटण मजकूर"
+                              placeholder={isMarathi ? 'बटण मजकूर' : 'Button Text'}
                               className="px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs"
                             />
                             <input
                               type="text"
                               value={block.description || ''}
                               onChange={(e) => updateBlock(index, { description: e.target.value })}
-                              placeholder="वर्णन"
+                              placeholder={isMarathi ? 'वर्णन' : 'Description'}
                               className="px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs"
                             />
                             <input
                               type="text"
                               value={block.buttonUrl || ''}
                               onChange={(e) => updateBlock(index, { buttonUrl: e.target.value })}
-                              placeholder="बटण URL"
+                              placeholder={isMarathi ? 'बटण URL' : 'Button URL'}
                               className="px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs"
                             />
                           </div>
@@ -800,12 +854,12 @@ export const CMSPagesPage = () => {
                                 else if (url.includes('youtu.be/')) vidId = url.split('youtu.be/')[1]?.split('?')[0];
                                 updateBlock(index, { youtubeUrl: url, embedId: vidId });
                               }}
-                              placeholder="YouTube व्हिडिओ लिंक (उदा. https://www.youtube.com/watch?v=...)"
+                              placeholder={isMarathi ? 'YouTube व्हिडिओ लिंक (उदा. https://www.youtube.com/watch?v=...)' : 'YouTube Video URL (e.g. https://www.youtube.com/watch?v=...)'}
                               className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs"
                             />
                             {block.embedId && (
                               <p className="text-[11px] text-emerald-600 font-semibold">
-                                ✓ YouTube व्हिडिओ आयडी सापडला: {block.embedId}
+                                {isMarathi ? `✓ YouTube व्हिडिओ आयडी सापडला: ${block.embedId}` : `✓ YouTube Video ID detected: ${block.embedId}`}
                               </p>
                             )}
                           </div>
@@ -824,7 +878,11 @@ export const CMSPagesPage = () => {
           <div className="p-5 border-b border-slate-100 flex items-center justify-between">
             <h2 className="text-base font-bold text-gurukul-navy-900 flex items-center gap-2">
               <Globe className="w-5 h-5 text-gurukul-saffron-600" />
-              <span>वेबसाईटवरील उपलब्ध पेजेसची यादी ({pages?.length || 0})</span>
+              <span>
+                {isMarathi
+                  ? `वेबसाईटवरील उपलब्ध पेजेसची यादी (${pages?.length || 0})`
+                  : `Website Pages Directory (${pages?.length || 0})`}
+              </span>
             </h2>
           </div>
 
@@ -832,11 +890,11 @@ export const CMSPagesPage = () => {
             <table className="w-full text-left text-sm text-slate-600">
               <thead className="bg-slate-50 text-[11px] font-bold uppercase tracking-wider text-slate-500 border-b border-slate-200">
                 <tr>
-                  <th className="px-5 py-3.5">पृष्ठाचे नाव (Title)</th>
-                  <th className="px-5 py-3.5">URL स्लग (Route)</th>
-                  <th className="px-5 py-3.5">ब्लॉक्स संख्या</th>
-                  <th className="px-5 py-3.5">स्थिती (Status)</th>
-                  <th className="px-5 py-3.5 text-right">कृती (Actions)</th>
+                  <th className="px-5 py-3.5">{isMarathi ? 'पृष्ठाचे नाव (Title)' : 'Page Title'}</th>
+                  <th className="px-5 py-3.5">{isMarathi ? 'URL स्लग (Route)' : 'URL Slug'}</th>
+                  <th className="px-5 py-3.5">{isMarathi ? 'ब्लॉक्स संख्या' : 'Blocks Count'}</th>
+                  <th className="px-5 py-3.5">{isMarathi ? 'स्थिती (Status)' : 'Status'}</th>
+                  <th className="px-5 py-3.5 text-right">{isMarathi ? 'कृती (Actions)' : 'Actions'}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 text-xs">
@@ -854,7 +912,7 @@ export const CMSPagesPage = () => {
                       {(page.slug || '').startsWith('/') ? page.slug : `/${page.slug || ''}`}
                     </td>
                     <td className="px-5 py-4 font-semibold text-slate-600">
-                      {page.blocks?.length || 0} ब्लॉक्स
+                      {page.blocks?.length || 0} {isMarathi ? 'ब्लॉक्स' : 'Blocks'}
                     </td>
                     <td className="px-5 py-4">
                       <button
@@ -867,7 +925,11 @@ export const CMSPagesPage = () => {
                         }`}
                       >
                         <span className={`w-1.5 h-1.5 rounded-full ${page.status === 'published' ? 'bg-emerald-500' : 'bg-amber-500'}`} />
-                        <span>{page.status === 'published' ? 'प्रकाशित (Live)' : 'मसुदा (Draft)'}</span>
+                        <span>
+                          {page.status === 'published'
+                            ? (isMarathi ? 'प्रकाशित (Live)' : 'Published (Live)')
+                            : (isMarathi ? 'मसुदा (Draft)' : 'Draft')}
+                        </span>
                       </button>
                     </td>
                     <td className="px-5 py-4 text-right">
@@ -876,7 +938,7 @@ export const CMSPagesPage = () => {
                           to={(page.slug || '').startsWith('/') ? page.slug : `/${page.slug || ''}`}
                           target="_blank"
                           className="p-1.5 text-slate-500 hover:text-gurukul-navy-900 rounded-lg hover:bg-slate-100"
-                          title="वेबसाईटवर पहा"
+                          title={isMarathi ? 'वेबसाईटवर पहा' : 'View on Website'}
                         >
                           <ExternalLink className="w-4 h-4" />
                         </Link>
@@ -886,7 +948,7 @@ export const CMSPagesPage = () => {
                           className="inline-flex items-center gap-1 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-lg text-xs font-bold transition-colors"
                         >
                           <Edit2 className="w-3.5 h-3.5" />
-                          <span>संपादित करा</span>
+                          <span>{isMarathi ? 'संपादित करा' : 'Edit'}</span>
                         </button>
                       </div>
                     </td>
