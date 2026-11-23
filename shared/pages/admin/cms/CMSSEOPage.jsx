@@ -72,15 +72,34 @@ export const CMSSEOPage = () => {
     return safePages.filter(p => p.status !== 'draft');
   }, [safePages]);
 
-  const dynamicSitemapXml = useMemo(() => {
-    const baseUrl = (formData.canonicalUrl || 'https://gurukulbhose.com').replace(/\/$/, '');
+  const { dynamicSitemapXml, totalSitemapUrls } = useMemo(() => {
+    const baseUrl = (formData.canonicalUrl || 'https://gurukulbhose.com')
+      .trim()
+      .replace(/\/+$/, '');
     const today = new Date().toISOString().split('T')[0];
+
+    const normalizePath = (rawPath) => {
+      if (!rawPath || typeof rawPath !== 'string') return '';
+      const cleaned = rawPath.trim().replace(/^\/+|\/+$/g, '');
+      return cleaned ? `/${cleaned}` : '';
+    };
+
+    const escapeXml = (str) =>
+      String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&apos;');
 
     const staticRoutes = [
       { loc: '', changefreq: 'daily', priority: '1.0' },
       { loc: '/about', changefreq: 'monthly', priority: '0.8' },
+      { loc: '/staff', changefreq: 'monthly', priority: '0.8' },
       { loc: '/courses', changefreq: 'weekly', priority: '0.9' },
+      { loc: '/vidyamandir', changefreq: 'weekly', priority: '0.9' },
       { loc: '/gurukul-vidyamandir', changefreq: 'weekly', priority: '0.9' },
+      { loc: '/junior-college', changefreq: 'weekly', priority: '0.9' },
       { loc: '/gurukul-junior-college', changefreq: 'weekly', priority: '0.9' },
       { loc: '/talent-search-academy', changefreq: 'weekly', priority: '0.8' },
       { loc: '/science-academy', changefreq: 'weekly', priority: '0.8' },
@@ -89,46 +108,53 @@ export const CMSSEOPage = () => {
       { loc: '/gallery', changefreq: 'weekly', priority: '0.7' },
       { loc: '/videos', changefreq: 'weekly', priority: '0.7' },
       { loc: '/notices', changefreq: 'daily', priority: '0.8' },
-      { loc: '/contact', changefreq: 'monthly', priority: '0.7' }
+      { loc: '/contact', changefreq: 'monthly', priority: '0.7' },
+      { loc: '/admission-enquiry', changefreq: 'daily', priority: '0.9' }
     ];
 
-    let urls = staticRoutes.map(r => `  <url>
-    <loc>${baseUrl}${r.loc}</loc>
-    <lastmod>${today}</lastmod>
-    <changefreq>${r.changefreq}</changefreq>
-    <priority>${r.priority}</priority>
-  </url>`).join('\n');
+    const seenPaths = new Set();
+    const entries = [];
 
-    // Add published dynamic courses
+    const addEntry = (rawPath, changefreq, priority) => {
+      const normalized = normalizePath(rawPath);
+      if (seenPaths.has(normalized)) return;
+      seenPaths.add(normalized);
+      const fullLoc = normalized ? `${baseUrl}${normalized}` : `${baseUrl}/`;
+      entries.push(`  <url>
+    <loc>${escapeXml(fullLoc)}</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>${changefreq}</changefreq>
+    <priority>${priority}</priority>
+  </url>`);
+    };
+
+    // Add core institutional routes
+    staticRoutes.forEach(r => addEntry(r.loc, r.changefreq, r.priority));
+
+    // Add published dynamic courses (strip leading/trailing slashes)
     publishedCourses.forEach(c => {
-      const slug = c.slug || c.id || c.courseId;
-      if (slug) {
-        urls += `\n  <url>
-    <loc>${baseUrl}/courses/${slug}</loc>
-    <lastmod>${today}</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>`;
+      const rawSlug = c.slug || c.id || c.courseId;
+      const cleanSlug = typeof rawSlug === 'string' ? rawSlug.trim().replace(/^\/+|\/+$/g, '') : '';
+      if (cleanSlug) {
+        const coursePath = cleanSlug.startsWith('courses/') ? `/${cleanSlug}` : `/courses/${cleanSlug}`;
+        addEntry(coursePath, 'weekly', '0.8');
       }
     });
 
-    // Add custom published pages if any
+    // Add custom published pages (deduplicated & normalized to prevent // double slashes)
     publishedPages.forEach(p => {
-      const slug = p.slug;
-      if (slug && !staticRoutes.some(sr => sr.loc === `/${slug}`)) {
-        urls += `\n  <url>
-    <loc>${baseUrl}/${slug}</loc>
-    <lastmod>${today}</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>`;
+      const normalized = normalizePath(p.slug);
+      if (normalized) {
+        addEntry(normalized, 'weekly', '0.7');
       }
     });
 
-    return `<?xml version="1.0" encoding="UTF-8"?>
+    const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-${urls}
+${entries.join('\n')}
 </urlset>`;
+
+    return { dynamicSitemapXml: xml, totalSitemapUrls: entries.length };
   }, [formData.canonicalUrl, publishedCourses, publishedPages]);
 
   const handleCopySitemap = () => {
@@ -414,9 +440,9 @@ ${urls}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 text-center">
               <span className="text-[10px] uppercase font-bold text-slate-400 block">
-                {isMarathi ? 'एकूण पेजेस' : 'Core Pages'}
+                {isMarathi ? 'एकूण साईटमॅप URLs' : 'Total Sitemap URLs'}
               </span>
-              <span className="text-lg font-black text-gurukul-navy-900">13</span>
+              <span className="text-lg font-black text-gurukul-navy-900">{totalSitemapUrls}</span>
             </div>
             <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 text-center">
               <span className="text-[10px] uppercase font-bold text-slate-400 block">
