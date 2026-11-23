@@ -248,14 +248,14 @@ export const Footer = ({ showStaffLink = true }) => {
             {/* Backdrop overlay when Admin Menu is open to prevent background buttons/text bleed */}
             {crmMenuOpen && (
               <div 
-                className="fixed inset-0 bg-slate-950/70 backdrop-blur-[2px] z-40 transition-opacity animate-in fade-in duration-200"
+                className="fixed inset-0 bg-slate-950/70 backdrop-blur-[2px] z-[60] sm:z-40 transition-opacity animate-in fade-in duration-200"
                 onClick={() => setCrmMenuOpen(false)}
                 aria-hidden="true"
               />
             )}
 
             {/* Admin Profile & CRM Hub Popover Button */}
-            <div className={`relative ${crmMenuOpen ? 'z-50' : ''}`} ref={crmMenuRef}>
+            <div className={`relative ${crmMenuOpen ? 'z-[70] sm:z-50' : ''}`} ref={crmMenuRef}>
               <button
                 type="button"
                 onClick={() => setCrmMenuOpen(!crmMenuOpen)}
@@ -276,7 +276,7 @@ export const Footer = ({ showStaffLink = true }) => {
               {/* CRM & Admin Profile Popover Menu (opens upward with 100% solid background) */}
               {crmMenuOpen && (
                 <div 
-                  className="absolute bottom-full mb-3 left-1/2 -translate-x-1/2 sm:left-auto sm:right-0 sm:translate-x-0 w-[calc(100vw-2rem)] max-w-sm sm:w-88 bg-slate-900 rounded-2xl shadow-2xl shadow-black/95 border border-slate-700/90 py-3 z-50 animate-in fade-in slide-in-from-bottom-2 text-left ring-1 ring-white/10 overflow-hidden"
+                  className="fixed inset-x-4 bottom-24 mx-auto max-w-sm z-[70] sm:absolute sm:inset-x-auto sm:bottom-full sm:right-0 sm:mb-3 sm:mx-0 sm:w-96 sm:max-w-[calc(100vw-2rem)] sm:z-50 bg-slate-900 rounded-2xl shadow-2xl shadow-black/95 border border-slate-700/90 py-3 animate-in fade-in slide-in-from-bottom-2 text-left ring-1 ring-white/10 overflow-hidden"
                   style={{ backgroundColor: '#0f172a' }}
                   role="menu"
                 >

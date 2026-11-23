@@ -279,7 +279,7 @@ export const Footer = ({ showStaffLink = true }) => {
               {/* CRM & Admin Profile Popover Menu (centered in viewport on mobile, opens upward on desktop) */}
               {crmMenuOpen && (
                 <div 
-                  className="fixed inset-x-4 bottom-24 mx-auto max-w-sm z-[70] sm:absolute sm:inset-x-auto sm:bottom-full sm:right-0 sm:mb-3 sm:mx-0 sm:w-88 sm:z-50 bg-slate-900 rounded-2xl shadow-2xl shadow-black/95 border border-slate-700/90 py-3 animate-in fade-in slide-in-from-bottom-2 text-left ring-1 ring-white/10 overflow-hidden"
+                  className="fixed inset-x-4 bottom-24 mx-auto max-w-sm z-[70] sm:absolute sm:inset-x-auto sm:bottom-full sm:right-0 sm:mb-3 sm:mx-0 sm:w-96 sm:max-w-[calc(100vw-2rem)] sm:z-50 bg-slate-900 rounded-2xl shadow-2xl shadow-black/95 border border-slate-700/90 py-3 animate-in fade-in slide-in-from-bottom-2 text-left ring-1 ring-white/10 overflow-hidden"
                   style={{ backgroundColor: '#0f172a' }}
                   role="menu"
                 >
